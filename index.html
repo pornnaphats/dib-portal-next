@@ -82,68 +82,11 @@
 
         <nav class="sidebar-nav">
 
-            <div class="nav-section">
-                <a href="#" class="nav-item" data-page="dashboard">
-                    <i data-lucide="layout-dashboard" class="nav-icon"></i><span class="nav-text">Overview</span>
-                </a>
-            </div>
 
-            <div class="nav-section">
-                <span class="nav-label">Accounting &amp; Financial</span>
-                <div class="nav-group">
-                    <a href="#" class="nav-item" data-page="cost">
-                        <i data-lucide="circle-dollar-sign" class="nav-icon"></i><span class="nav-text">Cost</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="project-profitability">
-                        <span class="nav-subdot"></span><span class="nav-text">Project Profitability</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="real-vs-forecast">
-                        <span class="nav-subdot"></span><span class="nav-text">Real vs Forecast</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="project-efficiency">
-                        <span class="nav-subdot"></span><span class="nav-text">Project Efficiency</span>
-                    </a>
-                </div>
-                <a href="#" class="nav-item" data-page="procurement">
-                    <i data-lucide="shopping-cart" class="nav-icon"></i><span class="nav-text">Procurement</span>
-                </a>
-            </div>
-
-            <div class="nav-section">
-                <span class="nav-label">Sale</span>
-                <a href="#" class="nav-item" data-page="sale-pipeline">
-                    <i data-lucide="trending-up" class="nav-icon"></i><span class="nav-text">Sale Pipeline</span>
-                </a>
-                <a href="#" class="nav-item" data-page="cost-estimate">
-                    <i data-lucide="calculator" class="nav-icon"></i><span class="nav-text">Cost Estimate</span>
-                </a>
-                <a href="#" class="nav-item" data-page="sale-support">
-                    <i data-lucide="headphones" class="nav-icon"></i><span class="nav-text">Sale Support</span>
-                </a>
-                <a href="#" class="nav-item" data-page="sale-doc">
-                    <i data-lucide="file-text" class="nav-icon"></i><span class="nav-text">Document</span>
-                </a>
-            </div>
 
             <div class="nav-section">
                 <span class="nav-label">INTERNAL MANAGEMENT</span>
-                <div class="nav-group">
-                    <a href="#" class="nav-item" data-page="company-system">
-                        <i data-lucide="building-2" class="nav-icon"></i><span class="nav-text">Department System</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="learning-skills">
-                        <span class="nav-subdot"></span><span class="nav-text">Learning Skills</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="career-path">
-                        <span class="nav-subdot"></span><span class="nav-text">Career Path</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="core-values">
-                        <span class="nav-subdot"></span><span class="nav-text">Core Values</span>
-                    </a>
-                    <a href="#" class="nav-item sub" data-page="product-service">
-                        <span class="nav-subdot"></span><span class="nav-text">Product Service</span>
-                    </a>
-                </div>
+
                 <div class="nav-group">
                     <a href="#" class="nav-item" data-page="structure-team">
                         <i data-lucide="network" class="nav-icon"></i><span class="nav-text">Structure Team</span>
@@ -237,7 +180,7 @@
     <script src="js/workship.js?v=1780913658857"></script>
     <script src="js/qc_plan.js?v=1780913658857"></script>
     <script src="js/settings.js"></script>
-    <script src="js/app.js?v=1780913658860"></script>
+    <script src="js/app.js?v=20260624_5"></script>
     <script>
       // Diagnostic: Check function availability after all scripts load
       (function() {
@@ -252,7 +195,7 @@
         }
 
         // 2. Check key functions
-        const funcs = ['pageDashboard','pageCost','pageEmployee','pageSchedule','pageLeaveManagement','renderPremiumScopeDashboard','renderQCWorkPlanDashboard'];
+        const funcs = ['pageEmployee','pageSchedule','pageLeaveManagement','renderPremiumScopeDashboard','renderQCWorkPlanDashboard'];
         const missing = funcs.filter(f => typeof window[f] !== 'function');
         if (missing.length > 0) {
           console.error('DIB Diagnostic: Missing functions:', missing.join(', '));

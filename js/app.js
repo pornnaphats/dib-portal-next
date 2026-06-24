@@ -74,7 +74,7 @@ function applyLoginState(payload) {
     // Instant navigate if cached permissions exist (provides immediate skeleton loader)
     if (window.DATA && window.DATA.permissions && Object.keys(window.DATA.permissions).length > 0) {
         if (typeof navigate === 'function') {
-            navigate(window.currentPage || 'dashboard');
+            navigate(window.currentPage || 'structure-team');
         }
     }
 
@@ -289,10 +289,7 @@ window._pageRegistry = {
 };
 
 window.getFirstAllowedPage = function() {
-    if (typeof window.checkPermission !== 'function') return 'dashboard';
-    
-    // Explicitly check dashboard first
-    if (window.checkPermission('dashboard')) return 'dashboard';
+    if (typeof window.checkPermission !== 'function') return 'structure-team';
 
     // Then check all nav items in order
     const navItems = document.querySelectorAll('.nav-item');
@@ -386,7 +383,7 @@ window.navigate = function(pageKey) {
         }
     } else {
         // As requested: Redirect to Learning Skills instead of showing Under Construction
-        window.navigate('learning-skills');
+        window.navigate('structure-team');
     }
 };
 
@@ -531,7 +528,7 @@ if (typeof originalSyncAllData === 'function') {
 
         // Re-navigate after permissions are loaded, in case the initial navigation failed
         if (typeof window.navigate === 'function') {
-            const fallback = typeof window.getFirstAllowedPage === 'function' ? window.getFirstAllowedPage() : 'dashboard';
+            const fallback = typeof window.getFirstAllowedPage === 'function' ? window.getFirstAllowedPage() : 'structure-team';
             window.navigate(window.currentPage && window.checkPermission(window.currentPage) ? window.currentPage : fallback);
         }
     };
