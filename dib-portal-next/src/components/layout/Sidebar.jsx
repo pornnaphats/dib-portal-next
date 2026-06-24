@@ -8,8 +8,26 @@ import {
   Calendar 
 } from "lucide-react";
 
+import { useState, useEffect } from "react";
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const [expandedGroup, setExpandedGroup] = useState("");
+
+  useEffect(() => {
+    if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
+      setExpandedGroup("employee");
+    } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/qc-realcyber") || pathname.includes("/project-scope") || pathname.includes("/public-holiday")) {
+      setExpandedGroup("workship");
+    } else {
+      setExpandedGroup("");
+    }
+  }, [pathname]);
+
+  const toggleGroup = (group, e) => {
+    e.preventDefault();
+    setExpandedGroup(prev => prev === group ? "" : group);
+  };
 
   return (
     <aside className="sidebar">
@@ -35,8 +53,8 @@ export default function Sidebar() {
             </Link>
           </div>
           
-          <div className="nav-group">
-            <Link href="/employee" className={`nav-item ${pathname === "/employee" ? "active" : ""}`}>
+          <div className={`nav-group ${expandedGroup === 'employee' ? 'expanded' : ''}`}>
+            <Link href="/employee" onClick={(e) => toggleGroup('employee', e)} className={`nav-item ${pathname === "/employee" ? "active" : ""}`}>
               <Users className="nav-icon" />
               <span className="nav-text">Employee Detail</span>
             </Link>
@@ -46,8 +64,8 @@ export default function Sidebar() {
             </Link>
           </div>
           
-          <div className="nav-group">
-            <Link href="/workship" className={`nav-item ${pathname === "/workship" ? "active" : ""}`}>
+          <div className={`nav-group ${expandedGroup === 'workship' ? 'expanded' : ''}`}>
+            <Link href="/workship" onClick={(e) => toggleGroup('workship', e)} className={`nav-item ${pathname === "/workship" ? "active" : ""}`}>
               <Calendar className="nav-icon" />
               <span className="nav-text">Plan Workship</span>
             </Link>
