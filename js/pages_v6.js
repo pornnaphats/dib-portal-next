@@ -11390,6 +11390,20 @@ try {
     const projects = [...new Set(tasks.map(t => t.acc))].sort();
     const nodes = [...new Set(tasks.map(t => t.node))].sort();
 
+    window._sidebarSearch = window._sidebarSearch || '';
+    window._sidebarProjectFilter = window._sidebarProjectFilter || 'all';
+    window._sidebarNodeFilter = window._sidebarNodeFilter || 'all';
+
+    let filteredTasks = tasks;
+    if (window._sidebarSearch || window._sidebarProjectFilter !== 'all' || window._sidebarNodeFilter !== 'all') {
+      filteredTasks = tasks.filter(t => {
+        const matchQ = window._sidebarSearch ? (t.title.toLowerCase().includes(window._sidebarSearch) || t.acc.toLowerCase().includes(window._sidebarSearch)) : true;
+        const matchProj = window._sidebarProjectFilter === 'all' || t.acc === window._sidebarProjectFilter;
+        const matchNode = window._sidebarNodeFilter === 'all' || t.node === window._sidebarNodeFilter;
+        return matchQ && matchProj && matchNode;
+      });
+    }
+
     return `
     <div id="taskSidebar" style="display:flex; flex-direction:column; height:100%; background:#fff; font-family:'Kanit', sans-serif">
       <!-- Sidebar Header -->
@@ -11408,7 +11422,7 @@ try {
         <div style="display:flex; flex-direction:column; gap:8px">
           <div style="position:relative">
             <i data-lucide="search" style="width:16px; height:16px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8"></i>
-            <input type="text" id="sidebarSearch" placeholder="Search tasks or projects..." onkeyup="filterSidebarTasks()" 
+            <input type="text" id="sidebarSearch" placeholder="Search tasks or projects..." onkeyup="filterSidebarTasks()" value="${window._sidebarSearch}"
                    style="width:100%; height:44px; padding:0 12px 0 42px; border-radius:14px; border:1.5px solid #f1f5f9; font-size:0.85rem; outline:none; background:#f8fafc; font-family:inherit; transition:all 0.2s; color:#1e293b">
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
@@ -11416,7 +11430,7 @@ try {
               <select id="sidebarProjectFilter" onchange="filterSidebarTasks()" 
                       style="width:100%; height:40px; padding:0 12px; border-radius:12px; border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
                 <option value="all">All Projects</option>
-                ${projects.map(p => `<option value="${p}">${p}</option>`).join('')}
+                ${projects.map(p => `<option value="${p}" ${window._sidebarProjectFilter === p ? 'selected' : ''}>${p}</option>`).join('')}
               </select>
               <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             </div>
@@ -11424,7 +11438,7 @@ try {
               <select id="sidebarNodeFilter" onchange="filterSidebarTasks()" 
                       style="width:100%; height:40px; padding:0 12px; border-radius:12px; border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
                 <option value="all">All Nodes</option>
-                ${nodes.map(n => `<option value="${n}">${n}</option>`).join('')}
+                ${nodes.map(n => `<option value="${n}" ${window._sidebarNodeFilter === n ? 'selected' : ''}>${n}</option>`).join('')}
               </select>
               <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             </div>
@@ -11437,7 +11451,7 @@ try {
 
       <!-- Task List Area -->
       <div id="sidebarTaskList" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px; background:#f8fafc">
-        ${renderUnassignedTasks(tasks)}
+        ${renderUnassignedTasks(filteredTasks)}
       </div>
       
       <style>
@@ -11454,6 +11468,9 @@ try {
   };
 
   window.clearSidebarFilters = function () {
+    window._sidebarSearch = '';
+    window._sidebarProjectFilter = 'all';
+    window._sidebarNodeFilter = 'all';
     const s = document.getElementById('sidebarSearch');
     const p = document.getElementById('sidebarProjectFilter');
     const n = document.getElementById('sidebarNodeFilter');
@@ -11464,15 +11481,15 @@ try {
   };
 
   window.filterSidebarTasks = function () {
-    const q = document.getElementById('sidebarSearch')?.value.toLowerCase() || '';
-    const proj = document.getElementById('sidebarProjectFilter')?.value || 'all';
-    const node = document.getElementById('sidebarNodeFilter')?.value || 'all';
+    window._sidebarSearch = document.getElementById('sidebarSearch')?.value.toLowerCase() || '';
+    window._sidebarProjectFilter = document.getElementById('sidebarProjectFilter')?.value || 'all';
+    window._sidebarNodeFilter = document.getElementById('sidebarNodeFilter')?.value || 'all';
 
     const allTasks = getTasksFromScope();
     const filtered = allTasks.filter(t => {
-      const matchQ = t.title.toLowerCase().includes(q) || t.acc.toLowerCase().includes(q);
-      const matchProj = proj === 'all' || t.acc === proj;
-      const matchNode = node === 'all' || t.node === node;
+      const matchQ = window._sidebarSearch ? (t.title.toLowerCase().includes(window._sidebarSearch) || t.acc.toLowerCase().includes(window._sidebarSearch)) : true;
+      const matchProj = window._sidebarProjectFilter === 'all' || t.acc === window._sidebarProjectFilter;
+      const matchNode = window._sidebarNodeFilter === 'all' || t.node === window._sidebarNodeFilter;
       return matchQ && matchProj && matchNode;
     });
 
