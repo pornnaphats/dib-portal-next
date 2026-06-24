@@ -21,7 +21,7 @@ export default function DataProvider({ children }) {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
         // 1. Fetch Employees
-        const empUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIZCYw5SXao0JSAqonVxudnfjIAAJv94yvR88HxlNcPWSyz_oxyZdoYRi3JYliJ4mNxjnq_oUYmW5S/pub?gid=0&single=true&output=csv";
+        const empUrl = "https://docs.google.com/spreadsheets/d/1a5nLyclYZwFUlauF4lXNwv9X2i_6xQQSFJCnOXuyJVE/export?format=csv&gid=0";
         const empRes = await fetch(empUrl, { signal: controller.signal }).catch(() => ({ text: () => "" }));
         clearTimeout(timeoutId);
         
