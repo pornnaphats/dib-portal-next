@@ -57,14 +57,6 @@ export default function LoginOverlay({ onLogin }) {
         
         <div id="g_id_signin" style={{ display: "flex", justifyContent: "center" }}></div>
         
-        {/* DEV MODE BYPASS */}
-        <button 
-          onClick={() => onLogin({ email: "dev@realsmart.co.th", name: "Dev User", role: "admin" }, "dev-token")}
-          style={{ marginTop: "20px", padding: "10px 20px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.9rem", cursor: "pointer", width: "100%", fontWeight: "500" }}
-        >
-          Skip Login (Dev Mode)
-        </button>
-
         {error && <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "16px" }}>{error}</div>}
       </div>
     </div>
