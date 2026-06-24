@@ -21,6 +21,7 @@ export default function RootLayout({ children }) {
     <html lang="th" className={`${kanit.className} antialiased`}>
       <head>
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
+        <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
       </head>
       <body className="min-h-screen bg-[#f4f7fe] text-[#1a2035] flex overflow-x-hidden">
         <AuthProvider>
