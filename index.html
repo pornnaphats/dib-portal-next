@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="referrer" content="no-referrer">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            if (message === 'Script error.' || message.includes('Script error')) return false;
+            const errBanner = document.createElement('div');
+            errBanner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px 20px;font-size:13px;font-family:monospace;z-index:999999;box-shadow:0 4px 6px rgba(0,0,0,0.2)';
+            errBanner.innerHTML = '<strong>⚠️ Global Error:</strong> ' + message + ' at ' + (source?source.split('/').pop():'') + ':' + lineno + '<br><pre style="margin-top:8px;font-size:11px">' + (error && error.stack ? error.stack : 'No stack') + '</pre>';
+            document.body.appendChild(errBanner);
+            console.error("Global Error Caught:", message, source, lineno, error);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            const errBanner = document.createElement('div');
+            errBanner.style.cssText = 'position:fixed;top:100px;left:0;right:0;background:#f97316;color:#fff;padding:12px 20px;font-size:13px;font-family:monospace;z-index:999999;box-shadow:0 4px 6px rgba(0,0,0,0.2)';
+            errBanner.innerHTML = '<strong>⚠️ Unhandled Promise Rejection:</strong> ' + (event.reason ? (event.reason.message || event.reason) : 'Unknown');
+            document.body.appendChild(errBanner);
+        });
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DIB Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css?v=1780913658857" />
+    <!-- Flatpickr Date Range Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+    <!-- Tom Select -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <!-- html2canvas for Image Export -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+
+<body>
+    <!-- Google Login Overlay -->
+    <div id="googleLoginOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#f8f9fb;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Kanit',sans-serif;">
+        <div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.05);text-align:center;max-width:400px;width:90%;">
+            <div style="font-size:2rem;font-weight:700;color:#2563eb;margin-bottom:8px;">DIB Portal</div>
+            <div style="font-size:0.9rem;color:#64748b;margin-bottom:32px;">Please sign in with your authorized Google account to continue.</div>
+            <div id="g_id_onload"
+                 data-client_id="956684334951-0qc2tg67l38mtgkob5mekm7soddju5cu.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left"
+                 style="display:flex; justify-content:center;">
+            </div>
+            <div id="loginErrorMsg" style="color:#ef4444;font-size:0.8rem;margin-top:16px;display:none;"></div>
+        </div>
+    </div>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">DIB</div>
+                <div class="logo-text">
+                    <span class="logo-name">RealSmart DIB</span>
+                    <span class="logo-sub">Department Portal</span>
+                </div>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <div class="nav-section">
+                <a href="#" class="nav-item" data-page="dashboard">
+                    <i data-lucide="layout-dashboard" class="nav-icon"></i><span class="nav-text">Overview</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Accounting &amp; Financial</span>
+                <div class="nav-group">
+                    <a href="#" class="nav-item" data-page="cost">
+                        <i data-lucide="circle-dollar-sign" class="nav-icon"></i><span class="nav-text">Cost</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="project-profitability">
+                        <span class="nav-subdot"></span><span class="nav-text">Project Profitability</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="real-vs-forecast">
+                        <span class="nav-subdot"></span><span class="nav-text">Real vs Forecast</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="project-efficiency">
+                        <span class="nav-subdot"></span><span class="nav-text">Project Efficiency</span>
+                    </a>
+                </div>
+                <a href="#" class="nav-item" data-page="procurement">
+                    <i data-lucide="shopping-cart" class="nav-icon"></i><span class="nav-text">Procurement</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">Sale</span>
+                <a href="#" class="nav-item" data-page="sale-pipeline">
+                    <i data-lucide="trending-up" class="nav-icon"></i><span class="nav-text">Sale Pipeline</span>
+                </a>
+                <a href="#" class="nav-item" data-page="cost-estimate">
+                    <i data-lucide="calculator" class="nav-icon"></i><span class="nav-text">Cost Estimate</span>
+                </a>
+                <a href="#" class="nav-item" data-page="sale-support">
+                    <i data-lucide="headphones" class="nav-icon"></i><span class="nav-text">Sale Support</span>
+                </a>
+                <a href="#" class="nav-item" data-page="sale-doc">
+                    <i data-lucide="file-text" class="nav-icon"></i><span class="nav-text">Document</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="nav-label">INTERNAL MANAGEMENT</span>
+                <div class="nav-group">
+                    <a href="#" class="nav-item" data-page="company-system">
+                        <i data-lucide="building-2" class="nav-icon"></i><span class="nav-text">Department System</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="learning-skills">
+                        <span class="nav-subdot"></span><span class="nav-text">Learning Skills</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="career-path">
+                        <span class="nav-subdot"></span><span class="nav-text">Career Path</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="core-values">
+                        <span class="nav-subdot"></span><span class="nav-text">Core Values</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="product-service">
+                        <span class="nav-subdot"></span><span class="nav-text">Product Service</span>
+                    </a>
+                </div>
+                <div class="nav-group">
+                    <a href="#" class="nav-item" data-page="structure-team">
+                        <i data-lucide="network" class="nav-icon"></i><span class="nav-text">Structure Team</span>
+                    </a>
+                </div>
+                <div class="nav-group">
+                    <a href="#" class="nav-item" data-page="employee">
+                        <i data-lucide="users" class="nav-icon"></i><span class="nav-text">Employee Detail</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="leave-management">
+                        <span class="nav-subdot"></span><span class="nav-text">Leave Management</span>
+                    </a>
+                </div>
+                <div class="nav-group">
+                    <a href="#" class="nav-item" data-page="workship">
+                        <i data-lucide="calendar" class="nav-icon"></i><span class="nav-text">Plan Workship</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="schedule">
+                        <span class="nav-subdot"></span><span class="nav-text">Schedule</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="project-scope-portal">
+                        <span class="nav-subdot"></span><span class="nav-text">Workship by Scope</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="qc-realcyber-plan">
+                        <span class="nav-subdot"></span><span class="nav-text">RealCyber Plan</span>
+                    </a>
+                    <a href="#" class="nav-item sub" data-page="public-holiday">
+                        <span class="nav-subdot"></span><span class="nav-text">Public Holiday</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title" id="pageTitle">...</h1>
+                <div class="breadcrumb" id="breadcrumb">กำลังดึงข้อมูลระบบ...</div>
+            </div>
+            <div class="topbar-right">
+                <div id="syncStatus" style="display:none; font-size:.7rem; color:var(--text-3); margin-right:12px; font-weight:500"></div>
+                <div class="tb-datetime">
+                    <span class="tb-date" id="topbarDate"></span>
+                    <span class="tb-time" id="topbarTime"></span>
+                </div>
+                <button onclick="if(typeof syncAllData === 'function') syncAllData()" class="tb-icon-btn" title="Refresh Data from Sheets" style="margin-left: 8px; margin-right: 8px; background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.2)">
+                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px"></i>
+                </button>
+                <div class="tb-notification-wrapper" id="notiWrapper">
+                    <button class="tb-icon-btn" id="notiBtn" onclick="toggleNotifications(event)">
+                        <i data-lucide="bell"></i>
+                        <span class="tb-badge" id="notiBadge">3</span>
+                    </button>
+                    <div class="tb-notification-dropdown" id="notiDropdown">
+                        <div class="noti-header">
+                            <h3 class="noti-title">การแจ้งเตือน</h3>
+                            <button class="noti-mark-read" onclick="markAllRead(event)">อ่านทั้งหมด</button>
+                        </div>
+                        <div class="noti-list" id="notiListContainer">
+                            <!-- Dynamic Notifications injected here -->
+                        </div>
+                        <div class="noti-footer">
+                            <a href="#" class="noti-view-all">ดูการแจ้งเตือนทั้งหมด</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="tb-user-menu" id="userMenuWrapper" style="position:relative; cursor:pointer;" onclick="toggleUserMenu(event)">
+                    <div class="tb-avatar">AD</div>
+                                        <div class="tb-user-dropdown" id="userDropdown" style="display:none; position:absolute; top:45px; right:0; background:#fff; box-shadow:0 10px 25px rgba(0,0,0,0.1); border-radius:12px; padding:8px; width:160px; z-index:9999;">
+                        <button class="admin-only" onclick="window.navigate('settings')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'" style="display:none; width:100%; text-align:left; padding:10px 16px; border:none; background:transparent; cursor:pointer; color:#334155; font-family:'Kanit',sans-serif; font-size:0.9rem; font-weight:500; border-radius:8px; align-items:center; gap:8px;">
+                            <i data-lucide="shield" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> <span style="vertical-align:middle;">Permissions</span>
+                        </button>
+                        <button onclick="handleLogout()" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'" style="width:100%; text-align:left; padding:10px 16px; border:none; background:transparent; cursor:pointer; color:#ef4444; font-family:'Kanit',sans-serif; font-size:0.9rem; font-weight:500; border-radius:8px; align-items:center; gap:8px; margin-top:4px;">
+                            <i data-lucide="log-out" style="width:16px; height:16px; margin-right:8px; vertical-align:middle;"></i> <span style="vertical-align:middle;">Log Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="page-content" id="pageContent">
+            <!-- Content will be injected here -->
+        </div>
+    </main>
+
+    <script src="js/data.js?v=1780913658857"></script>
+    <script src="js/empeo_fetch.js?v=1780913658857"></script>
+    <script src="js/empeo_data.js?v=1780913658857"></script>
+    <script src="js/ws_data.js?v=1780913658857"></script>
+    <script src="js/home.js?v=1780913658857"></script>
+    <script src="js/pages_v6.js"></script>
+    <script src="js/workship.js?v=1780913658857"></script>
+    <script src="js/qc_plan.js?v=1780913658857"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/app.js?v=1780913658860"></script>
+    <script>
+      // Diagnostic: Check function availability after all scripts load
+      (function() {
+        // 1. Check if pages.js threw an error
+        if (window._pagesJsError) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#7c3aed;color:#fff;padding:12px 20px;font-size:12px;font-family:monospace;z-index:99999;white-space:pre-wrap;max-height:120px;overflow:auto;';
+          banner.innerHTML = '<strong>⚠️ pages.js Fatal Error:</strong> ' + window._pagesJsError.message + '\n' + (window._pagesJsError.stack || '');
+          document.body.appendChild(banner);
+          console.error('pages.js fatal error:', window._pagesJsError);
+          return;
+        }
+
+        // 2. Check key functions
+        const funcs = ['pageDashboard','pageCost','pageEmployee','pageSchedule','pageLeaveManagement','renderPremiumScopeDashboard','renderQCWorkPlanDashboard'];
+        const missing = funcs.filter(f => typeof window[f] !== 'function');
+        if (missing.length > 0) {
+          console.error('DIB Diagnostic: Missing functions:', missing.join(', '));
+          const banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:#fff;padding:12px 20px;font-size:13px;font-family:monospace;z-index:99999;';
+          banner.innerHTML = '<strong>⚠️ Script Load Error:</strong> Missing functions: ' + missing.join(', ') + ' — Check Console (F12) for details.';
+          document.body.appendChild(banner);
+        } else {
+          console.log('DIB Diagnostic: All', funcs.length, 'page functions loaded successfully ✅');
+          // Diagnostic warning if content remains empty too long
+          const content = document.getElementById('pageContent');
+          if (content && !content.innerHTML.trim()) {
+            console.warn('DIB Diagnostic: pageContent is empty (awaiting syncAllData completion).');
+          }
+        }
+      })();
+    </script>
+</body>
+
+</html>
