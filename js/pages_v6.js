@@ -9682,22 +9682,29 @@ try {
   window.renderScopeTableHeader = function(days) {
     const localNow = new Date();
     const todayStr = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}`;
+    const colOffset = window.isScopeBulkMode ? 46 : 0;
 
     return `
     <tr style="background:#fff; position: sticky; top: 0; z-index: 20;">
-      <th style="width: 300px; min-width: 300px; padding: 18px 20px; text-align: left; position: sticky; left: 0; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
+      ${window.isScopeBulkMode ? `
+      <th style="width: 46px; min-width: 46px; padding: 18px 12px; text-align: center; position: sticky; left: 0; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
+        <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+        </div>
+      </th>
+      ` : ''}
+      <th style="width: 300px; min-width: 300px; padding: 18px 20px; text-align: left; position: sticky; left: ${colOffset}px; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
         <div style="display:flex; align-items:center; gap:8px; height:100%;">
           <i data-lucide="layers" style="width:16px; height:16px; color:#475569;"></i>
           <span>Project / Scope</span>
         </div>
       </th>
-      <th style="width: 120px; min-width: 120px; padding: 18px 12px; text-align: center; position: sticky; left: 300px; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
+      <th style="width: 120px; min-width: 120px; padding: 18px 12px; text-align: center; position: sticky; left: ${300 + colOffset}px; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
         <div style="display:flex; align-items:center; justify-content:center; gap:6px; height:100%;">
           <i data-lucide="git-branch" style="width:14px; height:14px; color:#64748b;"></i>
           <span>Node</span>
         </div>
       </th>
-      <th style="width: 130px; min-width: 130px; padding: 18px 12px; text-align: center; position: sticky; left: 420px; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
+      <th style="width: 130px; min-width: 130px; padding: 18px 12px; text-align: center; position: sticky; left: ${420 + colOffset}px; top: 0; z-index: 22; background: #fff; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); color: #1e293b; font-weight: 700; vertical-align: middle; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
         <div style="display:flex; align-items:center; justify-content:center; gap:6px; height:100%;">
           <i data-lucide="bar-chart-3" style="width:14px; height:14px; color:#64748b;"></i>
           <span>Workload (%)</span>
@@ -9793,8 +9800,10 @@ try {
   };
 
   window.renderScopeTableRows = function(data, days) {
+    const colOffset = window.isScopeBulkMode ? 46 : 0;
+    
     if (!data || data.length === 0) {
-      return `<tr><td colspan="${3 + days.length}" style="padding: 40px; text-align: center; color: var(--text-3)">No data found matching the selected criteria</td></tr>`;
+      return `<tr><td colspan="${(window.isScopeBulkMode ? 4 : 3) + days.length}" style="padding: 40px; text-align: center; color: var(--text-3)">No data found matching the selected criteria</td></tr>`;
     }
 
     const localNow = new Date();
@@ -9839,7 +9848,7 @@ try {
     return data.map(group => `
     <!-- Group Header: ${group.account} -->
     <tr style="background: rgba(37, 99, 235, 0.04)">
-      <td style="padding: 12px 20px; font-weight: 800; color: #2563eb; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 15; background: #f0f7ff">
+      <td colspan="${window.isScopeBulkMode ? 2 : 1}" style="padding: 12px 20px; ${window.isScopeBulkMode ? 'padding-left: 56px;' : ''} font-weight: 800; color: #2563eb; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 15; background: #f0f7ff">
         <div style="display: flex; align-items: center; gap: 8px">
           <i data-lucide="layers" style="width: 16px; height: 16px"></i>
           ${group.account}
@@ -9849,7 +9858,14 @@ try {
     </tr>
     ${group.items.map(item => `
       <tr class="modern-row">
-        <td style="padding: 14px 20px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 0; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+        ${window.isScopeBulkMode ? `
+        <td style="padding: 14px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 0; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+          <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+            <input type="checkbox" class="scope-checkbox" value="${encodeURIComponent(group.account)}|${encodeURIComponent(item.name)}" onchange="checkScopeSelection()" style="width: 16px; height: 16px; cursor: pointer;">
+          </div>
+        </td>
+        ` : ''}
+        <td style="padding: 14px 20px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${colOffset}px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
             <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-2)">${item.name}</div>
             <div style="display: flex; align-items: center; gap: 4px">
@@ -9862,10 +9878,10 @@ try {
             </div>
           </div>
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 300px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${300 + colOffset}px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
           ${renderNodeBadge(item.node)}
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 420px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${420 + colOffset}px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
           <div style="font-size: 0.7rem; font-weight: 700; color: ${item.progress > 120 ? '#991b1b' : 'var(--text-2)'}">${item.progress}%</div>
           <div style="width: 100%; height: 8px; background: #eef2ff; border-radius: 99px; overflow: hidden; margin-top: 4px; border: 1px solid #e2e8f0">
             <div style="width: ${Math.min(item.progress, 100)}%; height: 100%; background: ${(() => {
@@ -10174,10 +10190,23 @@ try {
 
       <!-- TABLE AREA -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px">
-        <h3 class="section-title" style="margin: 0">Scope Workload Details</h3>
-        <button onclick="showAddWorkshipScopeModal()" class="btn btn-primary" style="height: 34px; font-size: 0.8rem">
-          <i data-lucide="plus-circle" style="width: 16px; height: 16px"></i> Add Scope
-        </button>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <h3 class="section-title" style="margin: 0">Scope Workload Details</h3>
+          <button id="bulkDeleteScopeBtn" onclick="bulkDeleteWorkshipScope()" class="btn btn-sm btn-danger" style="display: none; height: 34px; align-items: center; gap: 6px; padding: 0 12px; border-radius: 8px;">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected
+          </button>
+          <button id="bulkDeselectScopeBtn" onclick="toggleAllWorkshipScope({checked: false})" class="btn btn-sm btn-outline" style="display: none; height: 34px; align-items: center; gap: 6px; padding: 0 12px; border-radius: 8px;">
+            <i data-lucide="x-square" style="width: 14px; height: 14px"></i> Clear Selection
+          </button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="toggleScopeBulkMode()" class="btn btn-outline" style="height: 34px; font-size: 0.8rem; background: ${window.isScopeBulkMode ? '#fef2f2' : '#fff'}; color: ${window.isScopeBulkMode ? '#ef4444' : 'var(--text-2)'}; border-color: ${window.isScopeBulkMode ? '#fecaca' : 'var(--border)'}">
+            <i data-lucide="check-square" style="width: 16px; height: 16px"></i> ${window.isScopeBulkMode ? 'Cancel Selection' : 'Select Multiple'}
+          </button>
+          <button onclick="showAddWorkshipScopeModal()" class="btn btn-primary" style="height: 34px; font-size: 0.8rem">
+            <i data-lucide="plus-circle" style="width: 16px; height: 16px"></i> Add Scope
+          </button>
+        </div>
       </div>
 
       <div id="scopeTableWrap" class="table-wrap" style="border: 1px solid var(--border); border-radius: 16px; overflow: auto; max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px)">
@@ -10548,6 +10577,92 @@ try {
     if (window.lucide) window.lucide.createIcons({ root: document.getElementById('addScopeModal') });
   }
 
+  window.isScopeBulkMode = false;
+  window.toggleScopeBulkMode = function() {
+    window.isScopeBulkMode = !window.isScopeBulkMode;
+    if (typeof applyScopeDashboardFilters === 'function') {
+      applyScopeDashboardFilters();
+    }
+    setTimeout(checkScopeSelection, 50);
+  };
+
+  window.checkScopeSelection = function() {
+    const checked = document.querySelectorAll('.scope-checkbox:checked');
+    const btn = document.getElementById('bulkDeleteScopeBtn');
+    const deselectBtn = document.getElementById('bulkDeselectScopeBtn');
+    if (btn) {
+      if (checked.length > 0) {
+        btn.style.display = 'inline-flex';
+        btn.innerHTML = `<i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected (${checked.length})`;
+        if (deselectBtn) deselectBtn.style.display = 'inline-flex';
+        if (window.lucide) {
+          lucide.createIcons({ root: btn });
+          if (deselectBtn) lucide.createIcons({ root: deselectBtn });
+        }
+      } else {
+        btn.style.display = 'none';
+        if (deselectBtn) deselectBtn.style.display = 'none';
+      }
+    }
+    const checkAll = document.getElementById('selectAllScopes');
+    if (checkAll) {
+      const all = document.querySelectorAll('.scope-checkbox');
+      checkAll.checked = all.length > 0 && checked.length === all.length;
+    }
+  };
+
+  window.toggleAllWorkshipScope = function(el) {
+    const checkboxes = document.querySelectorAll('.scope-checkbox');
+    checkboxes.forEach(cb => cb.checked = el.checked);
+    checkScopeSelection();
+  };
+
+  window.bulkDeleteWorkshipScope = function() {
+    const checked = document.querySelectorAll('.scope-checkbox:checked');
+    if (checked.length === 0) return;
+    
+    showConfirmModal({
+      title: 'Confirm Bulk Deletion',
+      message: `Are you sure you want to delete ${checked.length} selected scopes? <br><br><span style="color: #ef4444; font-weight: 600">This action cannot be undone.</span>`,
+      confirmText: 'Delete All',
+      type: 'danger',
+      onConfirm: () => {
+        checked.forEach(cb => {
+          const parts = cb.value.split('|');
+          const account = decodeURIComponent(parts[0]);
+          const name = decodeURIComponent(parts[1]);
+          
+          const groupIndex = window.PREMIUM_SCOPE_DATA.findIndex(g => g.account === account);
+          if (groupIndex > -1) {
+            const itemIndex = window.PREMIUM_SCOPE_DATA[groupIndex].items.findIndex(i => i.name === name);
+            if (itemIndex > -1) {
+              window.PREMIUM_SCOPE_DATA[groupIndex].items.splice(itemIndex, 1);
+            }
+            if (window.PREMIUM_SCOPE_DATA[groupIndex].items.length === 0) {
+              window.PREMIUM_SCOPE_DATA.splice(groupIndex, 1);
+            }
+          }
+
+          const deletedScopes = JSON.parse(localStorage.getItem('ws_deleted_scopes') || '[]');
+          deletedScopes.push({ account, name, time: Date.now() });
+          localStorage.setItem('ws_deleted_scopes', JSON.stringify(deletedScopes));
+
+          window.apiSaveWorkshipScope({
+            action: 'delete_workship_scope',
+            account,
+            detail: name
+          });
+        });
+        
+        if (typeof applyScopeDashboardFilters === 'function') {
+          applyScopeDashboardFilters();
+        }
+        window.showToast(`${checked.length} items deleted successfully`);
+        checkScopeSelection();
+      }
+    });
+  };
+
   window.deleteWorkshipScope = function (account, name) {
     showConfirmModal({
       title: 'Confirm Deletion',
@@ -10767,9 +10882,6 @@ try {
         }
       }
 
-      if (typeof window.filterScheduleUI === 'function') {
-        window.filterScheduleUI();
-      }
 
       // Sync to Google Sheets
       if (typeof window.apiSaveScheduleTask === 'function') {
@@ -11604,6 +11716,10 @@ try {
       // Hide employees marked as hidden in Manage modal
       if (hiddenEmps.includes(String(e.id)) || hiddenEmps.includes(String(e.name))) return;
       if (window._scheduleTeamFilter && dept !== window._scheduleTeamFilter) return;
+
+      // Hide Manager role from Schedule
+      const posStr = String(e.pos || '').trim().toLowerCase();
+      if (posStr === 'manager') return;
 
       const searchStr = window._scheduleSearch;
       if (searchStr) {
