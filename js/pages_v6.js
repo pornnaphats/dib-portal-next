@@ -12136,7 +12136,7 @@ try {
   </div>
 
   <!-- Sidebar right placeholder -->
-  <div id="taskSidebarContainer" style="position:fixed; top:0; right:${sidebarRight}; width:380px; height:100vh; background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,0.1); z-index:1500; transition:right 0.3s cubic-bezier(0.4, 0, 0.2, 1)">
+  <div id="taskSidebarContainer" style="position:fixed; top:0; right:${sidebarRight}; width:380px; height:100vh; background:#fff; box-shadow:-10px 0 30px rgba(0,0,0,0.1); z-index:10000; transition:right 0.3s cubic-bezier(0.4, 0, 0.2, 1)">
     ${window.IS_TASK_SIDEBAR_OPEN ? renderTaskSidebar() : ''}
   </div>
   `;
