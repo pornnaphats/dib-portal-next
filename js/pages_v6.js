@@ -308,7 +308,7 @@ try {
         <div id="${fromId}" style="${boxStyle}color:var(--text-3)" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='var(--border)'">
           <span>From</span>${iconSvg}
         </div>
-        <span style="color:var(--text-3);font-size:.7rem;flex-shrink:0">-֧</span>
+        <span style="color:var(--text-3);font-size:.7rem;flex-shrink:0">-</span>
         <div id="${toId}" style="${boxStyle}color:var(--text-3)" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='var(--border)'">
           <span>To</span>${iconSvg}
         </div>
