@@ -17,9 +17,14 @@ export default function DataProvider({ children }) {
 
     const fetchData = async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
         // 1. Fetch Employees
         const empUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIZCYw5SXao0JSAqonVxudnfjIAAJv94yvR88HxlNcPWSyz_oxyZdoYRi3JYliJ4mNxjnq_oUYmW5S/pub?gid=0&single=true&output=csv";
-        const empRes = await fetch(empUrl);
+        const empRes = await fetch(empUrl, { signal: controller.signal }).catch(() => ({ text: () => "" }));
+        clearTimeout(timeoutId);
+        
         const empText = await empRes.text();
         const empLines = empText.split("\n");
         const employees = [];
@@ -54,7 +59,7 @@ export default function DataProvider({ children }) {
 
         // 2. Fetch Permissions
         const permUrl = "https://docs.google.com/spreadsheets/d/1a5nLyclYZwFUlauF4lXNwv9X2i_6xQQSFJCnOXuyJVE/export?format=csv&gid=1248107333";
-        const permRes = await fetch(permUrl);
+        const permRes = await fetch(permUrl, { signal: controller.signal }).catch(() => ({ text: () => "" }));
         const permText = await permRes.text();
         const permLines = permText.split("\n");
         const permissions = {};
@@ -100,7 +105,11 @@ export default function DataProvider({ children }) {
   }, [user]);
 
   if (loading && user) {
-    return <div className="min-h-screen flex items-center justify-center">Loading system data...</div>;
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", color: "#64748b" }}>
+        กำลังดึงข้อมูลพนักงานและสิทธิ์การใช้งาน...
+      </div>
+    );
   }
 
   return (
