@@ -39,7 +39,7 @@ export default function LoginOverlay({ onLogin }) {
     // Render the Google button when the component mounts
     if (window.google && window.google.accounts) {
       window.google.accounts.id.initialize({
-        client_id: "956684334951-0qc2tg67l38mtgkob5mekm7soddju5cu.apps.googleusercontent.com",
+        client_id: "88823611083-n2i3gf88f89f3tar6n8ck2d7ihn5ejsi.apps.googleusercontent.com",
         callback: window.handleCredentialResponse,
       });
       window.google.accounts.id.renderButton(
