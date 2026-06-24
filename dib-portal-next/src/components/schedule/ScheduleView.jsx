@@ -1,92 +1,85 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, Plus, Calendar } from "lucide-react";
+import { Search, Filter, Plus, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useData } from "../providers/DataProvider";
-import { DndContext, DragOverlay, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import TaskSidebar from "./TaskSidebar";
 import ScheduleGrid from "./ScheduleGrid";
 
 export default function ScheduleView() {
-  const { employees } = useData();
+  const { employees, scheduleTasks } = useData();
   const [search, setSearch] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: "T1", code: "T-001", name: "Design UI", scope: "UX/UI", status: "pending" },
-    { id: "T2", code: "T-002", name: "Develop API", scope: "Backend", status: "pending" },
-    { id: "T3", code: "T-003", name: "Write Tests", scope: "QA", status: "pending" },
-  ]);
-  const [scheduleData, setScheduleData] = useState({}); // { "empId-date": "T1" }
-  const [activeId, setActiveId] = useState(null);
+  const [teamFilter, setTeamFilter] = useState("all");
+  
+  // Date range state
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id);
+  const handlePrevWeek = () => {
+    const d = new Date(currentDate);
+    d.setDate(d.getDate() - 7);
+    setCurrentDate(d);
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    setActiveId(null);
-    if (!over) return;
-
-    // over.id should be in format "empId_date"
-    const targetCellId = String(over.id);
-    if (targetCellId.includes("_")) {
-      const taskId = active.id;
-      setScheduleData((prev) => ({
-        ...prev,
-        [targetCellId]: taskId,
-      }));
-    }
+  const handleNextWeek = () => {
+    const d = new Date(currentDate);
+    d.setDate(d.getDate() + 7);
+    setCurrentDate(d);
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex w-full h-full">
-        {/* Main Schedule Area */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden relative border-r border-[#e2e8f0]">
-          {/* Top Controls */}
-          <div className="p-4 border-b border-[#e2e8f0] flex flex-wrap gap-4 items-center bg-[#f8fafc] z-10 sticky top-0">
-            <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="ค้นหาชื่อพนักงาน..." 
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition-colors">
-                <Filter size={16} />
-                <span>Filters</span>
-              </button>
-            </div>
+    <div className="flex flex-col w-full h-full bg-white relative">
+      {/* Top Controls */}
+      <div className="p-4 border-b border-[#e2e8f0] flex flex-wrap gap-4 items-center justify-between bg-white z-20 sticky top-0">
+        <div className="flex items-center gap-4">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="ค้นหาชื่อพนักงาน หรือโปรเจกต์..." 
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-
-          {/* Schedule Grid */}
-          <div className="flex-1 overflow-auto bg-[#f8fafc]">
-            <ScheduleGrid employees={employees} searchQuery={search} scheduleData={scheduleData} tasks={tasks} />
-          </div>
+          
+          <select 
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white"
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+          >
+            <option value="all">ทุกทีม</option>
+            <option value="Sertec">Sertec</option>
+            <option value="ACE">ACE</option>
+            <option value="ONIX">ONIX</option>
+          </select>
         </div>
 
-        {/* Task Sidebar */}
-        <TaskSidebar tasks={tasks} />
-
-        {/* Drag Overlay for smooth animation */}
-        <DragOverlay>
-          {activeId ? (
-            <div className="p-2 bg-white border border-indigo-500 rounded-md shadow-lg text-sm font-medium text-indigo-700">
-              {tasks.find(t => t.id === activeId)?.name || "Task"}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg p-1">
+            <button onClick={handlePrevWeek} className="p-1 hover:bg-gray-200 rounded text-gray-600">
+              <ChevronLeft size={18} />
+            </button>
+            <div className="px-4 py-1 text-sm font-medium text-gray-700 min-w-[120px] text-center">
+              {currentDate.toLocaleDateString('th-TH', { month: 'short', year: 'numeric' })}
             </div>
-          ) : null}
-        </DragOverlay>
+            <button onClick={handleNextWeek} className="p-1 hover:bg-gray-200 rounded text-gray-600">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
       </div>
-    </DndContext>
+
+      {/* Schedule Grid */}
+      <div className="flex-1 overflow-auto bg-[#f4f7fe] p-4 relative">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e2e8f0] overflow-hidden">
+           <ScheduleGrid 
+             employees={employees} 
+             searchQuery={search} 
+             teamFilter={teamFilter}
+             scheduleTasks={scheduleTasks} 
+             baseDate={currentDate}
+           />
+        </div>
+      </div>
+    </div>
   );
 }
