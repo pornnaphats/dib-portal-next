@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import LoginOverlay from "@/components/auth/LoginOverlay";
-import Script from "next/script";
+
 
 const AuthContext = createContext(null);
 
@@ -45,7 +45,6 @@ export default function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-      <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
       {!user ? <LoginOverlay onLogin={login} /> : children}
     </AuthContext.Provider>
   );
