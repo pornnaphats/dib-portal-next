@@ -23,11 +23,11 @@ export default function RootLayout({ children }) {
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
         <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
       </head>
-      <body className="min-h-screen bg-[#f4f7fe] text-[#1a2035] flex overflow-x-hidden">
+      <body className="h-screen max-h-screen bg-[#f4f7fe] text-[#1a2035] flex overflow-hidden">
         <AuthProvider>
           <DataProvider>
             <Sidebar />
-            <main className="main-content">
+            <main className="main-content" style={{ height: "100vh", overflow: "hidden" }}>
               {children}
             </main>
           </DataProvider>

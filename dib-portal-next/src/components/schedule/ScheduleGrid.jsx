@@ -49,7 +49,7 @@ export default function ScheduleGrid({ employees, searchQuery, teamFilter, sched
     const map = {};
     (scheduleTasks || []).forEach(t => {
       if (!t.person || !t.date) return;
-      const key = `${t.person}_${t.date}`;
+      const key = `${t.personId}_${t.date}`;
       if (!map[key]) map[key] = [];
       map[key].push(t);
     });
@@ -107,7 +107,7 @@ export default function ScheduleGrid({ employees, searchQuery, teamFilter, sched
 
                 {/* Day Columns */}
                 {dates.map((d) => {
-                  const cellId = `${emp.id}_${d.id}`;
+                  const cellId = `${emp.name}_${d.id}`;
                   const dailyTasks = tasksByPersonDay[cellId] || [];
                   const totalPercent = dailyTasks.reduce((sum, t) => sum + (t.hours || 0), 0);
                   

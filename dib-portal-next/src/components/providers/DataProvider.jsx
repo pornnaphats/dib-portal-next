@@ -104,13 +104,7 @@ export default function DataProvider({ children }) {
     fetchData();
   }, [user]);
 
-  if (loading && user) {
-    return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem", color: "#64748b" }}>
-        กำลังดึงข้อมูลพนักงานและสิทธิ์การใช้งาน...
-      </div>
-    );
-  }
+
 
   return (
     <DataContext.Provider value={data}>

@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 export default function Sidebar() {
   const pathname = usePathname();
   const [expandedGroup, setExpandedGroup] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
@@ -24,6 +25,16 @@ export default function Sidebar() {
     }
   }, [pathname]);
 
+  const handleToggle = () => {
+    const newCollapsed = !isCollapsed;
+    setIsCollapsed(newCollapsed);
+    if (newCollapsed) {
+      document.body.classList.add("sidebar-collapsed");
+    } else {
+      document.body.classList.remove("sidebar-collapsed");
+    }
+  };
+
   const toggleGroup = (group, e) => {
     e.preventDefault();
     setExpandedGroup(prev => prev === group ? "" : group);
@@ -33,13 +44,24 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="logo">
-          <div className="logo-icon">DIB</div>
+          <div className="logo-icon" style={{ width: "34px", height: "34px" }}>
+            <svg viewBox="0 0 40 40" style={{ width: "100%", height: "100%" }}>
+              <circle cx="20" cy="20" r="20" fill="#635BFF" />
+              <g transform="translate(20, 20) rotate(-45)">
+                <line x1="-12" y1="0" x2="12" y2="0" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                <line x1="-8" y1="-8" x2="4" y2="-8" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+                <line x1="-4" y1="8" x2="8" y2="8" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+              </g>
+            </svg>
+          </div>
           <div className="logo-text">
             <span className="logo-name">RealSmart DIB</span>
             <span className="logo-sub">Department Portal</span>
           </div>
         </div>
-        <button className="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <button className="sidebar-toggle" id="sidebarToggle" onClick={handleToggle}>
+          {isCollapsed ? ">" : "<"}
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -53,8 +75,8 @@ export default function Sidebar() {
             </Link>
           </div>
           
-          <div className={`nav-group ${expandedGroup === 'employee' ? 'expanded' : ''}`}>
-            <Link href="/employee" onClick={(e) => toggleGroup('employee', e)} className={`nav-item ${pathname === "/employee" ? "active" : ""}`}>
+          <div className="nav-group expanded">
+            <Link href="/employee" className={`nav-item ${pathname === "/employee" ? "active" : ""}`}>
               <Users className="nav-icon" />
               <span className="nav-text">Employee Detail</span>
             </Link>
@@ -64,9 +86,18 @@ export default function Sidebar() {
             </Link>
           </div>
           
-          <div className={`nav-group ${expandedGroup === 'workship' ? 'expanded' : ''}`}>
-            <Link href="/workship" onClick={(e) => toggleGroup('workship', e)} className={`nav-item ${pathname === "/workship" ? "active" : ""}`}>
-              <Calendar className="nav-icon" />
+          <div className="nav-group expanded">
+            <Link href="/workship" className={`nav-item ${pathname === "/workship" ? "active" : ""}`}>
+              <span className="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <path d="M17 14h-10" />
+                  <path d="M13 18H7" />
+                </svg>
+              </span>
               <span className="nav-text">Plan Workship</span>
             </Link>
             <Link href="/schedule" className={`nav-item sub ${pathname === "/schedule" ? "active" : ""}`}>

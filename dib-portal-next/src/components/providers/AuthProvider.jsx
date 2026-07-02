@@ -22,6 +22,8 @@ export default function AuthProvider({ children }) {
       } catch (e) {
         console.error("Failed to parse user info", e);
       }
+    } else {
+      // No session — show login
     }
     setLoading(false);
   }, []);
@@ -39,9 +41,7 @@ export default function AuthProvider({ children }) {
     window.location.reload();
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-[#f4f7fe]">Loading...</div>;
-  }
+
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
