@@ -114,18 +114,40 @@ if (typeof window !== 'undefined') {
   };
 
   window.renderDateFilter = function(onchangeFn = 'initCostCharts()', position = 'auto', onClearFn = null, showClear = true, extraFilterHtml = '', dateRangeVarName = '_currentDateRange') {
-    const id = 'drp_' + (++_datePickerCounter);
-    const fromId = id + '_from';
-    const toId = id + '_to';
+    const cleanFn = onchangeFn.replace(/[^a-zA-Z0-9]/g, '_');
+    const cleanVar = dateRangeVarName.replace(/[^a-zA-Z0-9]/g, '_');
+    const id = `drp_${cleanFn}_${cleanVar}`;
     const wrapperId = id + '_wrap';
+    const labelId = id + '_label';
+    const prevId = id + '_prev';
+    const nextId = id + '_next';
 
-    // Persistence: Check if we have a saved range for this page
-    const savedRange = window[dateRangeVarName] || '';
+    // Calculate default current week (Saturday to Friday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diffToSat = dayOfWeek === 6 ? 0 : dayOfWeek + 1;
+    const defaultStart = new Date(now);
+    defaultStart.setDate(now.getDate() - diffToSat);
+    const defaultEnd = new Date(defaultStart);
+    defaultEnd.setDate(defaultStart.getDate() + 6);
+    const formatDateISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const defaultRangeStr = `${formatDateISO(defaultStart)} to ${formatDateISO(defaultEnd)}`;
 
-    setTimeout(() => {
+    // Persistence: Check if we have a saved range for this page, otherwise default to current week
+    const savedRange = window[dateRangeVarName] || defaultRangeStr;
+    if (!window[dateRangeVarName]) {
+      window[dateRangeVarName] = defaultRangeStr;
+    }
+
+    window['initFlatpickr_' + id] = () => {
       const hiddenEl = document.getElementById(id);
       const wrapper = document.getElementById(wrapperId);
-      if (!hiddenEl || hiddenEl._flatpickr || !wrapper) return;
+      if (!hiddenEl || !wrapper) return null;
+      if (hiddenEl._flatpickr) return hiddenEl._flatpickr;
+
+      const label = document.getElementById(labelId);
+      const prevBtn = document.getElementById(prevId);
+      const nextBtn = document.getElementById(nextId);
 
       const fp = flatpickr(hiddenEl, {
         mode: 'range',
@@ -133,7 +155,7 @@ if (typeof window !== 'undefined') {
           const [y, m, day] = d.split('-').map(Number);
           return new Date(y, m - 1, day);
         }) : null,
-        dateFormat: 'd/m/Y',
+        dateFormat: 'Y-m-d',
         locale: {
           firstDayOfWeek: 0,
           rangeSeparator: ' to ',
@@ -150,10 +172,10 @@ if (typeof window !== 'undefined') {
         showOutsideDays: false,
         disableMobile: true,
         allowInput: false,
-        static: true,
+        static: false,
         position: position,
-        monthSelectorType: 'dropdown', // enable click to show month dropdown
-        yearSelectorType: 'dropdown', // enable click to show year dropdown
+        monthSelectorType: 'dropdown',
+        yearSelectorType: 'dropdown',
         onReady: function (selectedDates, dateStr, instance) {
           const createGrid = (type) => {
             const container = instance.calendarContainer;
@@ -199,7 +221,6 @@ if (typeof window !== 'undefined') {
             }
           };
 
-          // Direct click handlers for month and year labels (using Flatpickr classes)
           const monthLabel = instance.calendarContainer.querySelector('.flatpickr-monthDropdown-month');
           const yearLabel = instance.calendarContainer.querySelector('.cur-year');
           if (monthLabel) {
@@ -211,34 +232,17 @@ if (typeof window !== 'undefined') {
             yearLabel.onclick = () => createGrid('year');
           }
 
-          // Hide grid when clicking elsewhere in calendar
           instance.calendarContainer.addEventListener('mousedown', (e) => {
             if (!e.target.closest('.custom-grid-overlay') && !e.target.closest('.flatpickr-month')) {
               const grid = instance.calendarContainer.querySelector('.custom-grid-overlay');
               if (grid) grid.style.display = 'none';
             }
           });
+
+          updateDisplay(selectedDates);
         },
         onChange: function (selectedDates, dateStr, instance) {
-          const fromBox = document.getElementById(fromId);
-          const toBox = document.getElementById(toId);
-
-          const fmtDisp = d => {
-            if (!d) return '';
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear() + 543;
-            return `${day}/${month}/${year}`;
-          };
-
-          if (fromBox && toBox) {
-            fromBox.querySelector('span').textContent = selectedDates[0] ? fmtDisp(selectedDates[0]) : 'From';
-            fromBox.style.color = selectedDates[0] ? 'var(--text)' : 'var(--text-3)';
-            toBox.querySelector('span').textContent = selectedDates[1] ? fmtDisp(selectedDates[1]) : 'To';
-            toBox.style.color = selectedDates[1] ? 'var(--text)' : 'var(--text-3)';
-          }
-
-          // Store globally for persistence
+          updateDisplay(selectedDates);
           const rangeVal = selectedDates[0] ? (instance.formatDate(selectedDates[0], 'Y-m-d') + (selectedDates[1] ? ' to ' + instance.formatDate(selectedDates[1], 'Y-m-d') : '')) : '';
           hiddenEl.value = rangeVal;
           window[dateRangeVarName] = rangeVal;
@@ -251,36 +255,90 @@ if (typeof window !== 'undefined') {
           if (selectedDates.length === 1) {
             try { eval(onchangeFn); } catch (e) { }
           }
-        },
-        onReady: function (selectedDates, dateStr, instance) {
-          const fromBox = document.getElementById(fromId);
-          const toBox = document.getElementById(toId);
-          const fmtDisp = d => {
-            if (!d) return '';
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear() + 543;
-            return `${day}/${month}/${year}`;
-          };
-
-          if (fromBox && toBox && selectedDates.length > 0) {
-            fromBox.querySelector('span').textContent = fmtDisp(selectedDates[0]);
-            fromBox.style.color = 'var(--text)';
-            if (selectedDates[1]) {
-              toBox.querySelector('span').textContent = fmtDisp(selectedDates[1]);
-              toBox.style.color = 'var(--text)';
-            }
-          }
         }
       });
 
-      // Explicitly open on click
-      const openFp = (e) => {
-        e.stopPropagation();
-        fp.open();
-      };
-      document.getElementById(fromId)?.addEventListener('click', openFp);
-      document.getElementById(toId)?.addEventListener('click', openFp);
+      function updateDisplay(selectedDates) {
+        if (!label) return;
+        if (selectedDates.length > 0) {
+          const monthsTH = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+          ];
+          const formatThaiDate = (d) => {
+            if (!d) return '';
+            const day = d.getDate();
+            const month = monthsTH[d.getMonth()];
+            const year = d.getFullYear() + 543;
+            return `${day} ${month} ${year}`;
+          };
+          if (selectedDates.length === 2) {
+            const start = selectedDates[0];
+            const end = selectedDates[1];
+            const startDay = start.getDate();
+            const startMonth = monthsTH[start.getMonth()];
+            const startYear = start.getFullYear() + 543;
+
+            const endDay = end.getDate();
+            const endMonth = monthsTH[end.getMonth()];
+            const endYear = end.getFullYear() + 543;
+
+            if (startYear === endYear) {
+              if (start.getMonth() === end.getMonth()) {
+                label.textContent = `${startDay} – ${endDay} ${startMonth} ${startYear}`;
+              } else {
+                label.textContent = `${startDay} ${startMonth} – ${endDay} ${endMonth} ${startYear}`;
+              }
+            } else {
+              label.textContent = `${startDay} ${startMonth} ${startYear} – ${endDay} ${endMonth} ${endYear}`;
+            }
+          } else {
+            label.textContent = formatThaiDate(selectedDates[0]);
+          }
+        } else {
+          label.textContent = 'เลือกช่วงเวลา...';
+        }
+      }
+
+      // Prev Button shift
+      if (prevBtn) {
+        prevBtn.onclick = (e) => {
+          e.stopPropagation();
+          const selected = fp.selectedDates;
+          if (selected.length === 2) {
+            const diff = Math.round((selected[1] - selected[0]) / (1000 * 60 * 60 * 24)) + 1;
+            const newStart = new Date(selected[0]);
+            newStart.setDate(newStart.getDate() - diff);
+            const newEnd = new Date(selected[1]);
+            newEnd.setDate(newEnd.getDate() - diff);
+            fp.setDate([newStart, newEnd], true);
+          } else {
+            const newDate = selected[0] ? new Date(selected[0]) : new Date();
+            newDate.setDate(newDate.getDate() - 7);
+            fp.setDate([newDate], true);
+          }
+        };
+      }
+
+      // Next Button shift
+      if (nextBtn) {
+        nextBtn.onclick = (e) => {
+          e.stopPropagation();
+          const selected = fp.selectedDates;
+          if (selected.length === 2) {
+            const diff = Math.round((selected[1] - selected[0]) / (1000 * 60 * 60 * 24)) + 1;
+            const newStart = new Date(selected[0]);
+            newStart.setDate(newStart.getDate() + diff);
+            const newEnd = new Date(selected[1]);
+            newEnd.setDate(newEnd.getDate() + diff);
+            fp.setDate([newStart, newEnd], true);
+          } else {
+            const newDate = selected[0] ? new Date(selected[0]) : new Date();
+            newDate.setDate(newDate.getDate() + 7);
+            fp.setDate([newDate], true);
+          }
+        };
+      }
 
       // Clear function
       const clearBtn = document.getElementById(id + '_clear');
@@ -288,10 +346,6 @@ if (typeof window !== 'undefined') {
         clearBtn.onclick = (e) => {
           e.stopPropagation();
           fp.clear();
-          document.getElementById(fromId).querySelector('span').textContent = 'From';
-          document.getElementById(fromId).style.color = 'var(--text-3)';
-          document.getElementById(toId).querySelector('span').textContent = 'To';
-          document.getElementById(toId).style.color = 'var(--text-3)';
           if (onClearFn) {
             try { eval(onClearFn); } catch (err) { }
           } else {
@@ -299,35 +353,39 @@ if (typeof window !== 'undefined') {
           }
         };
       }
+      return fp;
+    };
+
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window['initFlatpickr_' + id]) {
+        window['initFlatpickr_' + id]();
+      }
     }, 100);
 
-    const boxStyle = `display:flex;align-items:center;justify-content:space-between;gap:8px;
-    background: var(--surface2);border:1px solid var(--border);border-radius: var(--radius-sm);
-    padding:0 12px;font-size:.8rem;cursor:pointer;min-width:120px;height:34px;box-sizing:border-box;
-    transition:border-color .2s;`;
-    const iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#635bff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
 
     return `
-    <div id="${wrapperId}" class="date-range-wrapper" style="display:flex;flex-direction:column;position:relative">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="${fromId}" style="${boxStyle}color:var(--text-3)" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='var(--border)'">
-          <span>From</span>${iconSvg}
-        </div>
-        <span style="color:var(--text-3);font-size:.7rem;flex-shrink:0">-</span>
-        <div id="${toId}" style="${boxStyle}color:var(--text-3)" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='var(--border)'">
-          <span>To</span>${iconSvg}
-        </div>
-        ${extraFilterHtml || ''}
-        ${showClear ? `
-        <button id="${id}_clear" class="text-[12px] font-semibold px-4 py-1.5 btn btn-danger btn-sm" style="  white-space:nowrap; border-radius: 99px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:6px">
-          <i data-lucide="rotate-ccw" style="width:13px; height:13px"></i>
-          Clear All Filter
+    <div id="${wrapperId}" class="date-range-wrapper" style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <div style="display:flex; align-items:center; background:#fff; border:1px solid #e4e8ef; border-radius:9999px; overflow:hidden; height:34px; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:all 0.2s; flex-shrink:0;">
+        <button id="${prevId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#5a6282; display:flex; align-items:center; height:100%; border-right:1px solid #eef2f6; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        ` : ''}
+        <div onclick="const input = this.parentNode.querySelector('input'); if (input) { if (input._flatpickr) { input._flatpickr.open(); } else if (window['initFlatpickr_${id}']) { const fp = window['initFlatpickr_${id}'](); if (fp) fp.open(); } }" style="display:flex; align-items:center; gap:8px; padding:0 14px; font-size:0.8rem; font-weight:700; color:#24204D; cursor:pointer; user-select:none; height:100%; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+          ${iconSvg}
+          <span id="${labelId}">Select Date Range</span>
+        </div>
+        <button id="${nextId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#5a6282; display:flex; align-items:center; height:100%; border-left:1px solid #eef2f6; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <input id="${id}" type="text" style="position:absolute; width:0; height:0; opacity:0; pointer-events:none" readonly>
       </div>
-      <input id="${id}" type="text" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" readonly>
+      ${extraFilterHtml || ''}
+      ${showClear ? `
+      <button id="${id}_clear" class="btn btn-danger btn-sm" style="padding:6px 12px; font-size:.7rem; white-space:nowrap; border-radius:99px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; height:34px;">
+        <i data-lucide="rotate-ccw" style="width:13px; height:13px"></i>
+        Clear All Filter
+      </button>
+      ` : ''}
     </div>`;
   }
 

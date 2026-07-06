@@ -458,7 +458,30 @@ window.renderQCWorkPlanDashboard = function() {
           let cellContent = '';
           let totalPct = 0;
 
-          if (dayPlans.length > 0 || scheduleTasks.length > 0) {
+          if (leave) {
+            const leaveTypeMap = {
+              'ลาพักร้อน': { label: 'Vacation Leave', color: '#0ea5e9' },
+              'ลากิจ': { label: 'Business Leave', color: '#f97316' },
+              'ลาป่วย': { label: 'Sick Leave', color: '#ef4444' },
+              'วันหยุดชดเชย': { label: 'Compensatory', color: '#10b981' },
+              'ลาคลอด / ลาเลี้ยงดูบุตร': { label: 'Maternity Leave', color: '#8b5cf6' },
+              'ลาเพื่อการฌาปนกิจศพ': { label: 'Compassionate', color: '#64748b' },
+              'อบรม / สัมมนา': { label: 'Training', color: '#14b8a6' },
+            };
+            const lvInfo = leaveTypeMap[leave.type] || { label: leave.type || 'On Leave', color: '#635BFF' };
+            const tasksCount = dayPlans.length + scheduleTasks.length;
+            const tasksText = tasksCount > 0 ? `<div style="font-size:0.5rem; color:#94a3b8; margin-top:2px;">${tasksCount} task(s) scheduled</div>` : '';
+            
+            cellContent = `
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; min-height:40px; padding:4px;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                  <div style="font-size:0.68rem; font-weight:800; color:${lvInfo.color}; letter-spacing:0.06em;">ON LEAVE</div>
+                  <div style="font-size:0.52rem; color:#fff; font-weight:700; background:${lvInfo.color}; padding:2px 8px; border-radius:99px; letter-spacing:0.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; text-align:center;">${lvInfo.label}</div>
+                </div>
+                ${tasksText}
+              </div>
+            `;
+          } else if (dayPlans.length > 0 || scheduleTasks.length > 0) {
             const totalItems = dayPlans.length + scheduleTasks.length;
             const limit = 2;
             let renderedCount = 0;
@@ -567,13 +590,6 @@ window.renderQCWorkPlanDashboard = function() {
             `;
           } else if (isOff) {
             cellContent = `<div style="flex:1; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:.65rem; font-weight:700; letter-spacing:1px; height:100%; min-height:40px;">DAY OFF</div>`;
-          } else if (leave) {
-            cellContent = `
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#fff1f2; border:1px dashed #fecaca; border-radius:6px; gap:2px; height:100%; min-height:40px; padding:4px;">
-                <span style="color:#e11d48; font-size:.65rem; font-weight:800; text-transform:uppercase">${leave.type}</span>
-                <span style="color:#f43f5e; font-size:.55rem; font-weight:600">LEAVE</span>
-              </div>
-            `;
           } else {
             cellContent = `<div style="display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-size:0.55rem; font-weight:500; font-style:italic; height:100%; min-height:40px;">No task</div>`;
           }
@@ -602,40 +618,39 @@ window.renderQCWorkPlanDashboard = function() {
     // Modern colors and backgrounds
     let bg = '#ffffff';
     let dateColor = '#1e293b'; // Premium dark slate for date numbers
-    let dayColor = '#64748b';  // Slate-gray for day name
+    let dayColor = '#94a3b8';  // Slate-gray for day name
     let borderBottom = '1px solid #e4e8ef';
+    let shadowStyle = 'box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 #e4e8ef';
     
     if (d.isToday) {
-      bg = '#eff6ff'; // Light blue for today
-      dateColor = '#2563eb'; // Royal blue
-      dayColor = '#1d4ed8';  // Dark blue
+      bg = '#faf8ff'; // Light purple tint for today
+      dateColor = '#635BFF';
+      dayColor = '#635BFF'; // Purple
+      shadowStyle = 'box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -2px 0 #635BFF';
     } else if (isHoliday) {
       bg = '#fff1f2'; // Soft rose/pink for holiday
       dateColor = '#be123c'; // Rose-700
       dayColor = '#e11d48';  // Rose-600
     } else if (isWeekend) {
       bg = '#f8fafc'; // Softer weekend slate background
-      dateColor = '#334155'; // Darker gray for weekend dates
-      dayColor = '#475569';  // Gray for weekend days
+      dateColor = '#475569'; // Darker gray for weekend dates
+      dayColor = '#94a3b8';  // Gray for weekend days
     }
     
-    // Negative spread bottom shadow only, preventing horizontal double shadows
-    const shadowStyle = 'box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 #e4e8ef';
-
     // Day name in elegant uppercase and letter-spaced font
-    const dayText = `<div style="font-size:0.7rem; color:${dayColor}; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px">${d.dayName}</div>`;
+    const dayText = `<div style="font-size:0.62rem; color:${dayColor}; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:5px">${d.dayName}</div>`;
     
     // Date badge for today, or simple bold number for others
     let dateText = '';
     if (d.isToday) {
       dateText = `
-        <div style="display:inline-flex; align-items:center; justify-content:center; gap:4px; background:#dbeafe; color:#2563eb; padding:2px 8px; border-radius:99px; font-size:0.82rem; font-weight:700;">
-          <span style="width:6px; height:6px; border-radius:50%; background:#2563eb; display:inline-block;"></span>
-          Today, ${d.label}
+        <div style="display:inline-flex; align-items:center; justify-content:center; gap:5px; background:linear-gradient(135deg, #635BFF, #818cf8); color:#ffffff; padding:3px 12px; border-radius:99px; font-size:0.78rem; font-weight:700; box-shadow:0 4px 12px rgba(99,91,255,0.35);">
+          <span style="width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.7); display:inline-block;"></span>
+          ${d.label}
         </div>
       `;
     } else {
-      dateText = `<div style="font-size:0.85rem; color:${dateColor}; font-weight:700;">${d.label}</div>`;
+      dateText = `<div style="font-size:0.82rem; color:${dateColor}; font-weight:700;">${d.label}</div>`;
     }
 
     const holidayBadge = isHoliday 
@@ -698,20 +713,20 @@ window.renderQCWorkPlanDashboard = function() {
       .stat-icon {
         width: 32px; height: 32px;
         display: inline-flex; align-items: center; justify-content: center;
-        border-radius: 8px; margin-right: 8px;
+        border-radius: 50%; margin-right: 8px;
       }
 
       /* Specific Card Colors */
       .card-total { background: linear-gradient(135deg, #f8fafc, #e0f2fe); border: 1px solid #bae6fd; }
-      .card-total .stat-icon { color: #0284c7; background-color: #e0f2fe; }
+      .card-total .stat-icon { color: #fff; background-color: #0284c7; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4); }
       .card-qc1 { background-color: #eff6ff; border: 1px solid #bfdbfe; }
-      .card-qc1 .stat-icon { color: #3b82f6; background-color: #dbeafe; }
+      .card-qc1 .stat-icon { color: #fff; background-color: #3b82f6; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); }
       .card-qc2 { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
-      .card-qc2 .stat-icon { color: #22c55e; background-color: #dcfce7; }
+      .card-qc2 .stat-icon { color: #fff; background-color: #22c55e; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4); }
       .card-web { background-color: #faf5ff; border: 1px solid #e9d5ff; }
-      .card-web .stat-icon { color: #8b5cf6; background-color: #f3e8ff; }
+      .card-web .stat-icon { color: #fff; background-color: #8b5cf6; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4); }
       .card-manual { background-color: #fffbeb; border: 1px solid #fde68a; }
-      .card-manual .stat-icon { color: #d97706; background-color: #fef3c7; }
+      .card-manual .stat-icon { color: #fff; background-color: #d97706; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4); }
       
       .stat-footer { display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-top: 12px; align-items: center; }
 
@@ -822,7 +837,7 @@ window.renderQCWorkPlanDashboard = function() {
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
           <div style="height:34px; display:flex; align-items:center">
-             ${renderDateFilter('qcReloadPlan()', 'above', null, false)}
+             ${renderDateFilter('qcReloadPlan()', 'auto', null, false)}
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden">
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:#64748b"></i>
@@ -832,21 +847,21 @@ window.renderQCWorkPlanDashboard = function() {
             <option value="">ทุกทีม (All Teams)</option>
             ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._qcTeamFilter === t ? 'selected' : ''}>ทีม ${t}</option>`).join('')}
           </select>
-          <button class="btn" onclick="qcClearFilters()" style="height:34px; padding:0 14px; font-size:.75rem; border-radius:8px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit';">
+          <button class="btn" onclick="qcClearFilters()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit';">
              <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filter
           </button>
           <div style="width:1px; height:20px; background:#e2e8f0; margin:0 2px"></div>
 
-          <button class="btn" onclick="qcShowManageEmployeesModal()" style="height:34px; padding:0 14px; font-size:.75rem; border-radius:8px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
+          <button class="btn" onclick="qcShowManageEmployeesModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
              <i data-lucide="users" style="width:14px; height:14px"></i> จัดการพนักงาน
           </button>
           
-          <button class="btn" onclick="qcShowSettingsModal()" style="height:34px; padding:0 14px; font-size:.75rem; border-radius:8px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
+          <button class="btn" onclick="qcShowSettingsModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
              <i data-lucide="settings" style="width:14px; height:14px"></i> ตั้งค่า % งาน
           </button>
 
 
-          <button class="btn-auto-plan" onclick="qcShowAutoPlanModal()" style="height:34px; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:8px; padding:0 16px; font-size:0.8rem; font-weight:600; cursor:pointer; font-family:'Kanit'; box-shadow:0 2px 8px rgba(139,92,246,0.2); margin-top:0; transition: all 0.2s;">
+          <button class="btn-auto-plan" onclick="qcShowAutoPlanModal()" style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; padding:6px 12px; font-size:.7rem; font-weight:600; cursor:pointer; font-family:'Kanit'; box-shadow:0 2px 8px rgba(139,92,246,0.2); margin-top:0; transition: all 0.2s;">
             <i data-lucide="zap" style="width:14px; height:14px;"></i> จัดแผนงานอัตโนมัติ
           </button>
 
@@ -855,46 +870,71 @@ window.renderQCWorkPlanDashboard = function() {
 
       <!-- TOP ROW: Stat Cards -->
       <div class="qc-top-row">
-        <div class="qc-stat-card card-total">
-          <div class="stat-card-title">เคสทั้งหมด</div>
-          <div class="stat-card-value">
-            <i data-lucide="layers" class="stat-icon"></i> ${(totalCases || 0).toLocaleString('en-US')} <span class="stat-card-unit">เคส</span>
+        <!-- Card 1: เคสทั้งหมด -->
+        <div class="qc-stat-card card-total" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4)">
+            <i data-lucide="layers" style="width: 20px; height: 20px"></i>
           </div>
-          <div class="stat-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3;">
-            <div style="font-weight: 700; color: #0284c7;">QC: ${(totalQcCases || 0).toLocaleString('en-US')} เคส | Manual: ${(totalManualCases || 0).toLocaleString('en-US')} เคส</div>
-            <div style="font-size: 0.68rem; opacity: 0.85;">Website: ${(websiteCases || 0).toLocaleString('en-US')} | Social: ${(socialCases || 0).toLocaleString('en-US')}</div>
-          </div>
-        </div>
-
-        <div class="qc-stat-card card-qc1">
-          <div class="stat-card-title">QC1</div>
-          <div class="stat-card-value">
-            <i data-lucide="file-text" class="stat-icon"></i> ${(qc1Cases || 0).toLocaleString('en-US')} <span class="stat-card-unit">เคส</span>
-          </div>
-          <div class="stat-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3;">
-            <div style="font-weight: 600; opacity: 0.9;">${Math.round(totalCases > 0 ? qc1Cases / totalCases * 100 : 0)}% ของทั้งหมด</div>
-            <div style="font-size: 0.65rem; opacity: 0.85; margin-top:2px;">Website: ${(qc1WebCases || 0).toLocaleString('en-US')} | Social: ${(qc1SocialCases || 0).toLocaleString('en-US')}</div>
+          <div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">เคสทั้งหมด</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${(totalCases || 0).toLocaleString('en-US')} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">เคส</span>
+            </div>
+            <div class="stat-footer" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3; margin-top: 4px;">
+              <div style="font-weight: 700; color: #0284c7;">QC: ${(totalQcCases || 0).toLocaleString('en-US')} เคส | Manual: ${(totalManualCases || 0).toLocaleString('en-US')} เคส</div>
+              <div style="font-size: 0.68rem; opacity: 0.85;">Website: ${(websiteCases || 0).toLocaleString('en-US')} | Social: ${(socialCases || 0).toLocaleString('en-US')}</div>
+            </div>
           </div>
         </div>
 
-        <div class="qc-stat-card card-qc2">
-          <div class="stat-card-title">QC2</div>
-          <div class="stat-card-value">
-            <i data-lucide="shield-check" class="stat-icon"></i> ${(qc2Cases || 0).toLocaleString('en-US')} <span class="stat-card-unit">เคส</span>
+        <!-- Card 2: QC1 -->
+        <div class="qc-stat-card card-qc1" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #3b82f6; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
+            <i data-lucide="file-text" style="width: 20px; height: 20px"></i>
           </div>
-          <div class="stat-footer" style="flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3;">
-            <div style="font-weight: 600; opacity: 0.9;">${Math.round(totalCases > 0 ? qc2Cases / totalCases * 100 : 0)}% ของทั้งหมด</div>
-            <div style="font-size: 0.65rem; opacity: 0.85; margin-top:2px;">Website: ${(qc2WebCases || 0).toLocaleString('en-US')} | Social: ${(qc2SocialCases || 0).toLocaleString('en-US')}</div>
+          <div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">QC1</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${(qc1Cases || 0).toLocaleString('en-US')} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">เคส</span>
+            </div>
+            <div class="stat-footer" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3; margin-top: 4px;">
+              <div style="font-weight: 600; opacity: 0.9;">${Math.round(totalCases > 0 ? qc1Cases / totalCases * 100 : 0)}% ของทั้งหมด</div>
+              <div style="font-size: 0.65rem; opacity: 0.85; margin-top: 2px;">Website: ${(qc1WebCases || 0).toLocaleString('en-US')} | Social: ${(qc1SocialCases || 0).toLocaleString('en-US')}</div>
+            </div>
           </div>
         </div>
 
-        <div class="qc-stat-card card-manual">
-          <div class="stat-card-title">Manual Cases</div>
-          <div class="stat-card-value">
-            <i data-lucide="hand" class="stat-icon"></i>
-            ${(manualCases || 0).toLocaleString('en-US')} <span class="stat-card-unit">เคส</span>
+        <!-- Card 3: QC2 -->
+        <div class="qc-stat-card card-qc2" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #22c55e; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4)">
+            <i data-lucide="shield-check" style="width: 20px; height: 20px"></i>
           </div>
-          <div class="stat-footer"><span>${Math.round(totalCases > 0 ? manualCases / totalCases * 100 : 0)}% ของทั้งหมด</span></div>
+          <div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">QC2</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${(qc2Cases || 0).toLocaleString('en-US')} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">เคส</span>
+            </div>
+            <div class="stat-footer" style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; line-height: 1.3; margin-top: 4px;">
+              <div style="font-weight: 600; opacity: 0.9;">${Math.round(totalCases > 0 ? qc2Cases / totalCases * 100 : 0)}% ของทั้งหมด</div>
+              <div style="font-size: 0.65rem; opacity: 0.85; margin-top: 2px;">Website: ${(qc2WebCases || 0).toLocaleString('en-US')} | Social: ${(qc2SocialCases || 0).toLocaleString('en-US')}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Manual Cases -->
+        <div class="qc-stat-card card-manual" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4)">
+            <i data-lucide="hand" style="width: 20px; height: 20px"></i>
+          </div>
+          <div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Manual Cases</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${(manualCases || 0).toLocaleString('en-US')} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">เคส</span>
+            </div>
+            <div class="stat-footer" style="margin-top: 4px;">
+              <span>${Math.round(totalCases > 0 ? manualCases / totalCases * 100 : 0)}% ของทั้งหมด</span>
+            </div>
+          </div>
         </div>
       </div>
 

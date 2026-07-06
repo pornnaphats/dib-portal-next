@@ -15,6 +15,7 @@ export default function HolidayView() {
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
+    document.body.dataset.page = "public-holiday";
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -78,7 +79,7 @@ export default function HolidayView() {
 
   return (
     <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
-      <div id="pageContent" ref={containerRef} className="w-full"></div>
+      <div id="pageContent" ref={containerRef} className="w-full" data-page="public-holiday"></div>
     </div>
   );
 }

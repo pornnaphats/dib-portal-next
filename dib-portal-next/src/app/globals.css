@@ -1076,6 +1076,7 @@ input[type="submit"] {
 .toolbar select.form-input,
 .toolbar .custom-select-wrapper .select-input,
 [id^="custom_wrap_filter"] .select-input,
+.search-box,
 #scopeFilterProject,
 #scopeFilterNode,
 #ws2Acc {
@@ -1098,6 +1099,21 @@ input[type="submit"] {
 #custom_wrap_empBirthMonth .custom-select-dropdown,
 #custom_wrap_empBirthYear .custom-select-dropdown {
   min-width: 100% !important;
+}
+
+/* Prevent outline/purple border on click/focus for all buttons, links and select inputs */
+button:focus,
+button:active,
+.btn:focus,
+.btn:active,
+.select-input:focus,
+.select-input:active,
+input[type="button"]:focus,
+input[type="submit"]:focus,
+a:focus,
+a:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 

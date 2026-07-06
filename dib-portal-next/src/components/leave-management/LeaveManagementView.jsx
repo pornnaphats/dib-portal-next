@@ -18,6 +18,7 @@ export default function LeaveManagementView() {
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
+    document.body.dataset.page = "leave-management";
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -117,7 +118,7 @@ export default function LeaveManagementView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
+    <div className="w-full h-full bg-transparent p-6 overflow-y-auto" data-page="leave-management">
       <LeaveManagementReact />
     </div>
   );

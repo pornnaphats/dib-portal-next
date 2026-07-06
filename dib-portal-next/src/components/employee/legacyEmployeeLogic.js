@@ -214,37 +214,50 @@ window.pageEmployee = function() {
     };
 
     window.applyEmployeeFilters = () => {
-      const allEmps = DATA.employees;
+      const allEmps = DATA.employees || [];
       const totalEmps = allEmps.length;
 
-      const pos = document.getElementById('filterPos').value;
-      const team = document.getElementById('filterTeam').value;
-      const status = document.getElementById('filterStatus').value;
-      const search = document.getElementById('filterSearch').value.toLowerCase();
+      const posEl = document.getElementById('filterPos');
+      const teamEl = document.getElementById('filterTeam');
+      const statusEl = document.getElementById('filterStatus');
+      const searchEl = document.getElementById('filterSearch');
+
+      const pos = posEl ? posEl.value : "";
+      const team = teamEl ? teamEl.value : "";
+      const status = statusEl ? statusEl.value : "";
+      const search = searchEl ? searchEl.value.toLowerCase() : "";
 
       const filtered = allEmps.filter(e => {
+        if (!e) return false;
         return (!pos || e.pos === pos) &&
           (!team || e.dept === team) &&
           (!status || e.status === status) &&
           (!search ||
-            e.name.toLowerCase().includes(search) ||
-            (e.nameEn && e.nameEn.toLowerCase().includes(search)) ||
-            (e.nickname && e.nickname.toLowerCase().includes(search)) ||
-            e.id.toLowerCase().includes(search)
+            (e.name && String(e.name).toLowerCase().includes(search)) ||
+            (e.nameEn && String(e.nameEn).toLowerCase().includes(search)) ||
+            (e.nickname && String(e.nickname).toLowerCase().includes(search)) ||
+            (e.id && String(e.id).toLowerCase().includes(search))
           );
       });
 
       const tableBody = document.getElementById('employeeTableBody');
-      tableBody.innerHTML = renderEmployeeRows(filtered);
-      if (window.lucide) lucide.createIcons({ root: tableBody });
+      if (tableBody) {
+        tableBody.innerHTML = renderEmployeeRows(filtered);
+        if (window.lucide) lucide.createIcons({ root: tableBody });
+      }
       renderEmployeePagination(filtered.length);
     };
 
     window.clearEmployeeFilters = () => {
-      document.getElementById('filterPos').value = "";
-      document.getElementById('filterTeam').value = "";
-      document.getElementById('filterStatus').value = "";
-      document.getElementById('filterSearch').value = "";
+      const posEl = document.getElementById('filterPos');
+      const teamEl = document.getElementById('filterTeam');
+      const statusEl = document.getElementById('filterStatus');
+      const searchEl = document.getElementById('filterSearch');
+
+      if (posEl) posEl.value = "";
+      if (teamEl) teamEl.value = "";
+      if (statusEl) statusEl.value = "";
+      if (searchEl) searchEl.value = "";
       applyEmployeeFilters();
     };
 
@@ -252,7 +265,7 @@ window.pageEmployee = function() {
 
   <div class="fade-in" style="display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:24px">
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#f5f3ff;color:#6366f1;display:flex;align-items:center;justify-content:center"><i data-lucide="users" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(99, 102, 241, 0.4)"><i data-lucide="users" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานทั้งหมด</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${totalEmployees} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -260,7 +273,7 @@ window.pageEmployee = function() {
       </div>
     </div>
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#eff6ff;color:#3b82f6;display:flex;align-items:center;justify-content:center"><i data-lucide="user-check" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(59, 130, 246, 0.4)"><i data-lucide="user-check" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานประจำ</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stActive} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -268,7 +281,7 @@ window.pageEmployee = function() {
       </div>
     </div>
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#fff7ed;color:#f97316;display:flex;align-items:center;justify-content:center"><i data-lucide="user" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#f97316;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(249, 115, 22, 0.4)"><i data-lucide="user" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานสัญญาจ้าง</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stContract} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -276,7 +289,7 @@ window.pageEmployee = function() {
       </div>
     </div>
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#f0fdf4;color:#10b981;display:flex;align-items:center;justify-content:center"><i data-lucide="user-plus" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(16, 185, 129, 0.4)"><i data-lucide="user-plus" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">ทดลองงาน</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stProbation} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -284,7 +297,7 @@ window.pageEmployee = function() {
       </div>
     </div>
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center"><i data-lucide="user-minus" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#64748b;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(100, 116, 139, 0.4)"><i data-lucide="user-minus" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานลาออก</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stResigned} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -292,7 +305,7 @@ window.pageEmployee = function() {
       </div>
     </div>
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:10px;background:#fff1f2;color:#f43f5e;display:flex;align-items:center;justify-content:center"><i data-lucide="calendar-off" style="width:20px;height:20px"></i></div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#f43f5e;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(244, 63, 94, 0.4)"><i data-lucide="calendar-off" style="width:20px;height:20px"></i></div>
       <div>
         <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานที่ลางานวันนี้</div>
         <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stLeaveToday} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
@@ -5185,7 +5198,7 @@ window.pageEmployee = function() {
       <!-- Top Action Bar -->
       <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
         <div style="height:34px; display:flex; align-items:center">
-          ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'above', null, true, searchHtml) : ''}
+          ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'auto', null, true, searchHtml) : ''}
         </div>
         <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:0 16px; border-radius:8px; height:34px; font-size:.7rem; font-weight:600; flex-shrink:0; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
           <i data-lucide="settings" style="width:14px; height:14px"></i> จัดการชุดงาน (Templates)
@@ -6919,16 +6932,20 @@ window.pageEmployee = function() {
       return null;
     };
 
-    return data.map(group => `
+    return data.map(group => {
+      const groupCol = typeof window.colorForProject === 'function' ? window.colorForProject(group.account) : '#2563eb';
+      const headerBg = groupCol + '0a'; // 4% opacity
+      const headerBorder = groupCol + '15'; // 8% opacity
+      return `
     <!-- Group Header: ${group.account} -->
-    <tr style="background: rgba(37, 99, 235, 0.04)">
-      <td style="padding: 12px 20px; font-weight: 800; color: #2563eb; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 15; background: #f0f7ff">
+    <tr style="background: ${headerBorder}">
+      <td style="padding: 12px 20px; font-weight: 800; color: ${groupCol}; border-bottom: 1px solid var(--border); position: sticky; left: 0; z-index: 15; background: ${headerBg}">
         <div style="display: flex; align-items: center; gap: 8px">
-          <i data-lucide="layers" style="width: 16px; height: 16px"></i>
+          <i data-lucide="layers" style="width: 16px; height: 16px; color: ${groupCol}"></i>
           ${group.account}
         </div>
       </td>
-      <td colspan="${2 + days.length}" style="border-bottom: 1px solid var(--border); background: #f0f7ff"></td>
+      <td colspan="${2 + days.length}" style="border-bottom: 1px solid var(--border); background: ${headerBg}"></td>
     </tr>
     ${group.items.map(item => `
       <tr class="modern-row">
@@ -7025,7 +7042,7 @@ window.pageEmployee = function() {
 
         return `
             <td style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: ${cellBg}">
-              ${displayNames ? `<div style="font-size: 0.75rem; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 6px; display: inline-block">${displayNames}</div>` : '<span style="color: #e2e8f0">-</span>'}
+              ${displayNames ? `<div style="font-size: 0.75rem; font-weight: 700; color: ${groupCol}; background: ${groupCol}10; border: 1px solid ${groupCol}20; padding: 4px 8px; border-radius: 6px; display: inline-block">${displayNames}</div>` : '<span style="color: #e2e8f0">-</span>'}
               ${matchedTasks.length > 0 && !displayNames ? `<span style="color:red; font-size:10px">HIDDEN MATCH</span>` : ''}
             </td>
           `;
@@ -7033,7 +7050,8 @@ window.pageEmployee = function() {
       </tr>
     `).join('')}
     <tr style="height: 12px; background: transparent"><td colspan="${3 + days.length}"></td></tr>
-  `).join('');
+    `;
+    }).join('');
   }
 
   window.renderNodeBadge = function(node) {
@@ -7263,7 +7281,7 @@ window.pageEmployee = function() {
         </button>
       </div>
 
-      <div id="scopeTableWrap" class="table-wrap" style="border: 1px solid var(--border); border-radius: 16px; overflow: auto; max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px)">
+      <div id="scopeTableWrap" class="table-wrap" style="border: 1px solid var(--border); border-radius: 16px; overflow: auto; max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - var(--sidebar-w) - 60px)">
         <table class="data-table" style="border: none; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0">
           <thead id="scopeTableHead">
             ${renderScopeTableHeader(getDashboardDays())}
@@ -7406,10 +7424,13 @@ window.pageEmployee = function() {
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
             <div style="display: flex; gap: 8px">
-              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value)" style="flex: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc">
-                <option value="" selected disabled>---Select Project---</option>
-                ${accounts.map(a => `<option value="${a}">${a}</option>`).join('')}
-                <option value="NEW">+ Add New Project</option>
+              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value); this.style.color = (this.value && this.value !== 'NEW') ? window.colorForProject(this.value) : '';" style="flex: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; transition: color 0.2s;">
+                <option value="" selected disabled style="color: #64748b;">---Select Project---</option>
+                ${accounts.map(a => {
+                  const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
+                  return `<option value="${a}" style="color: ${c}; font-weight: 600;">● ${a}</option>`;
+                }).join('')}
+                <option value="NEW" style="color: #6366f1; font-weight: 700;">+ Add New Project</option>
               </select>
               <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 16px; border: 1.5px solid #6366f1; border-radius: 12px; font-family: inherit; outline: none;">
             </div>
@@ -7587,9 +7608,12 @@ window.pageEmployee = function() {
           <!-- Account Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
-            <select id="scopeAccount" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc">
-              ${accounts.map(a => `<option value="${a}" ${a === acc ? 'selected' : ''}>${a}</option>`).join('')}
-              ${!accounts.includes(acc) ? `<option value="${acc}" selected>${acc}</option>` : ''}
+            <select id="scopeAccount" onchange="this.style.color = window.colorForProject(this.value);" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; color: ${typeof window.colorForProject === 'function' ? window.colorForProject(acc) : '#6366f1'}; transition: color 0.2s;">
+              ${accounts.map(a => {
+                const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
+                return `<option value="${a}" style="color: ${c}; font-weight: 600;" ${a === acc ? 'selected' : ''}>● ${a}</option>`;
+              }).join('')}
+              ${!accounts.includes(acc) ? `<option value="${acc}" style="color: ${window.colorForProject(acc)}; font-weight: 600;" selected>● ${acc}</option>` : ''}
             </select>
           </div>
 
@@ -8145,8 +8169,9 @@ window.pageEmployee = function() {
               <div style="padding:40px; text-align:center; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:20px; color:#94a3b8; font-size:0.9rem; font-weight:500">No tasks assigned for this day</div>
             ` : dayTasks.map(t => {
       const nodeCol = colorForNode(t.node);
+      const projCol = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : nodeCol;
       return `
-                <div style="padding:16px; border-radius:16px; background:#fff; border:1px solid #f1f5f9; border-left:4px solid ${nodeCol}; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center">
+                <div style="padding:16px; border-radius:16px; background:#fff; border:1px solid #f1f5f9; border-left:4px solid ${projCol}; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center">
                   <div style="min-width:0; flex:1">
                     <div style="font-weight:700; color:#1e293b; font-size:0.9rem; margin-bottom:4px">${t.title}</div>
                     <div style="display:flex; align-items:center; gap:8px">
@@ -8276,7 +8301,7 @@ window.pageEmployee = function() {
           acc: acc.account,
           node: item.node || 'Other',
           hours: item.progress || 0, // Use progress from Scope
-          color: typeof colorForNode === 'function' ? colorForNode(item.node) : '#6366f1'
+          color: typeof window.colorForProject === 'function' ? window.colorForProject(acc.account) : '#6366f1'
         });
       });
     });
@@ -8294,7 +8319,7 @@ window.pageEmployee = function() {
       </div>`;
     }
     return tasks.map(t => {
-      const col = t.color || '#6366f1';
+      const col = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : (t.color || '#6366f1');
       return `
         <div class="task-card" draggable="true" 
              ondragstart="handleTaskDragStart(event, '${t.id}')" 
@@ -8774,7 +8799,7 @@ window.pageSchedule = function() {
         <!-- Right: Filters and Actions -->
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
           <div style="height:34px; display:flex; align-items:center">
-             ${renderDateFilter('filterScheduleUI()', 'above', '', false)}
+             ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden">
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:var(--text-3)"></i>
@@ -8811,7 +8836,7 @@ window.pageSchedule = function() {
       `).join('')}
     </div>
 
-    <div class="${fadeClass}" style="width:100%; max-width:calc(100vw - 320px); overflow:hidden">
+    <div class="${fadeClass}" style="width:100%; max-width:calc(100vw - var(--sidebar-w) - 60px); overflow:hidden">
       <div class="card" style="padding:0; overflow:hidden">
         <div id="scheduleTableWrap" class="table-wrap" style="overflow-x:auto; overflow-y:auto; max-height:calc(100vh - 240px); background:#fff; width:100%">
           <table style="width:max-content; min-width:100%; border-collapse:collapse; table-layout:fixed">
@@ -8971,11 +8996,12 @@ window.pageSchedule = function() {
                               <div class="scheduler-scrollbar" style="max-height:110px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; padding-right:2px; margin-bottom:22px">
                                 ${dayTasks.map(t => {
             const nodeCol = colorForNode(t.node);
+            const projCol = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : nodeCol;
             return `
                                     <div draggable="true" ondragstart="handleTaskDragStart(event, 'scheduled-${t.id}')" 
-                                         style="padding:5px 8px; border-radius:6px; background:#fff; border:1px solid #e2e8f0; border-left:3px solid ${nodeCol}; font-size:.65rem; cursor:pointer; transition:all 0.2s; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.02)" 
+                                         style="padding:5px 8px; border-radius:6px; background:#fff; border:1px solid #e2e8f0; border-left:3px solid ${projCol}; font-size:.65rem; cursor:pointer; transition:all 0.2s; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.02)" 
                                          onclick="openTaskEditor('${t.id}')">
-                                      <div style="font-weight:700; color:${nodeCol}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:14px; margin-bottom:2px">${t.title}</div>
+                                      <div style="font-weight:700; color:${projCol}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:14px; margin-bottom:2px">${t.title}</div>
                                       <div style="font-size:0.55rem; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; padding-right:14px">${t.acc || ''}</div>
                                       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px;">
                                         <div style="font-size:.55rem; font-weight:600; color:#64748b;">${t.node || ''}</div>

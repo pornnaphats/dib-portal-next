@@ -5,7 +5,7 @@ export default function Page() {
   return (
     <>
       <Topbar title="Public Holiday" breadcrumb="Internal / Plan Workship / Public Holiday" />
-      <div className="page-content" style={{ padding: 0 }}>
+      <div className="page-content" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", padding: 0 }}>
         <HolidayView />
       </div>
     </>

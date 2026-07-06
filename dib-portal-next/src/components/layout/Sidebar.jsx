@@ -33,6 +33,9 @@ export default function Sidebar() {
     } else {
       document.body.classList.remove("sidebar-collapsed");
     }
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 300);
   };
 
   const toggleGroup = (group, e) => {

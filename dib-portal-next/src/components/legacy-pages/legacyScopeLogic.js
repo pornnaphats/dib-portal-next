@@ -18,24 +18,27 @@ const getWorkloadColor = (hours) => {
     const qVal = document.getElementById('scopeSearch')?.value.toLowerCase() || '';
 
     // Filter logic for Grouped Data
-    let filtered = window.PREMIUM_SCOPE_DATA.map(group => {
+    let filtered = (window.PREMIUM_SCOPE_DATA || []).map(group => {
+      if (!group) return null;
       // 1. Check Project Filter
       if (pVal !== 'all' && group.account !== pVal) return null;
 
       // 2. Filter items by Node and Search Query
-      let filteredItems = group.items;
+      let filteredItems = group.items || [];
 
       // Node Filter
       if (nVal !== 'all') {
-        filteredItems = filteredItems.filter(item => item.node === nVal);
+        filteredItems = filteredItems.filter(item => item && item.node === nVal);
       }
 
       // Search Query Filter (Project name or Scope name)
       if (qVal) {
-        filteredItems = filteredItems.filter(item =>
-          item.name.toLowerCase().includes(qVal) ||
-          group.account.toLowerCase().includes(qVal)
-        );
+        filteredItems = filteredItems.filter(item => {
+          if (!item) return false;
+          const itemName = (item.name || '').toLowerCase();
+          const groupAccount = (group.account || '').toLowerCase();
+          return itemName.includes(qVal) || groupAccount.includes(qVal);
+        });
       }
 
       if (filteredItems.length === 0) return null;
@@ -83,6 +86,8 @@ const getWorkloadColor = (hours) => {
 
   window.getDashboardDays = function() {
     let startDate, endDate;
+    const monthNamesShort = window.monthNamesShort || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayNamesFull = window.dayNamesFull || ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     if (window._currentDateRange && window._currentDateRange.includes(' to ')) {
       const [s, e] = window._currentDateRange.split(' to ');
@@ -185,7 +190,7 @@ const getWorkloadColor = (hours) => {
       </th>
       ${days.map(d => {
       const isWeekend = d.dayIdx === 0 || d.dayIdx === 6;
-      const holidayName = isThaiHoliday ? isThaiHoliday(d.dateObj) : null;
+      const holidayName = (typeof window !== 'undefined' && typeof window.isThaiHoliday === 'function') ? window.isThaiHoliday(d.dateObj) : null;
       const isHoliday = !!holidayName;
       const isToday = d.iso === todayStr;
 
@@ -320,33 +325,13 @@ const getWorkloadColor = (hours) => {
     };
 
     const getAccColorStyles = (acc) => {
-      if (!acc) return { text: '#2563eb', bg: '#f0f7ff', border: 'rgba(37, 99, 235, 0.04)' };
-      const a = acc.trim().toUpperCase();
-      
-      const PALETTE = [
-        '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#14b8a6', '#f43f5e', '#06b6d4',
-        '#84cc16', '#eab308', '#f97316', '#d946ef', '#6366f1', '#2563eb', '#4f46e5', '#a21caf',
-        '#be185d', '#6d28d9', '#15803d', '#1d4ed8', '#0369a1', '#0f766e', '#b91c1c', '#c2410c',
-        '#4d7c0f', '#0284c7', '#047857', '#4338ca', '#b45309', '#0891b2', '#7e22ce', '#0f766e'
-      ];
-
-      if (a.includes('AFNC')) return { text: '#2563eb', bg: '#f0f7ff', border: 'rgba(37, 99, 235, 0.08)' }; // Blue
-      if (a.includes('ACE')) return { text: '#7c3aed', bg: '#f5f3ff', border: 'rgba(124, 58, 237, 0.08)' }; // Purple
-      if (a.includes('SERTEC')) return { text: '#db2777', bg: '#fdf2f8', border: 'rgba(219, 39, 119, 0.08)' }; // Pink
-      if (a.includes('ONIX')) return { text: '#d97706', bg: '#fffbeb', border: 'rgba(217, 119, 6, 0.08)' }; // Amber
-      if (a.includes('SALE')) return { text: '#059669', bg: '#ecfdf5', border: 'rgba(5, 150, 105, 0.08)' }; // Emerald
-      if (a.includes('CALL')) return { text: '#0d9488', bg: '#f0fdfa', border: 'rgba(13, 148, 136, 0.08)' }; // Teal
-      
-      let hash = 0;
-      for (let i = 0; i < a.length; i++) {
-        hash = a.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const idx = Math.abs(hash) % PALETTE.length;
-      const baseColor = PALETTE[idx];
+      const baseColor = (typeof window !== 'undefined' && typeof window.colorForProject === 'function')
+        ? window.colorForProject(acc)
+        : '#2563eb';
       return {
         text: baseColor,
         bg: baseColor + '0a',
-        border: baseColor + '18'
+        border: baseColor + '15'
       };
     };
 
@@ -451,7 +436,7 @@ const getWorkloadColor = (hours) => {
         const displayNames = uniqueAssignees.join(', ');
 
         const isWeekend = d.dayIdx === 0 || d.dayIdx === 6;
-        const isHoliday = typeof isThaiHoliday === 'function' ? !!isThaiHoliday(d.dateObj) : false;
+        const isHoliday = (typeof window !== 'undefined' && typeof window.isThaiHoliday === 'function') ? !!window.isThaiHoliday(d.dateObj) : false;
         const isToday = d.iso === todayStr;
 
         let cellBg = '#fff';
@@ -465,7 +450,7 @@ const getWorkloadColor = (hours) => {
 
         return `
             <td style="padding: 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: ${cellBg}">
-              ${displayNames ? `<div style="font-size: 0.75rem; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 6px; display: inline-block">${displayNames}</div>` : '<span style="color: #e2e8f0">-</span>'}
+              ${displayNames ? `<div style="font-size: 0.75rem; font-weight: 700; color: ${accStyle.text}; background: ${accStyle.text}10; border: 1px solid ${accStyle.text}20; padding: 4px 8px; border-radius: 6px; display: inline-block">${displayNames}</div>` : '<span style="color: #e2e8f0">-</span>'}
               ${matchedTasks.length > 0 && !displayNames ? `<span style="color:red; font-size:10px">HIDDEN MATCH</span>` : ''}
             </td>
           `;
@@ -740,8 +725,8 @@ const getWorkloadColor = (hours) => {
       <div class="stats-grid" style="margin-bottom: 24px">
         <!-- Card: Total Projects -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-            <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary)"></i>
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
+            <i data-lucide="briefcase" style="width: 20px; height: 20px"></i>
           </div>
           <div style="min-width: 0">
             <div style="font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px">Managed Projects</div>
@@ -752,8 +737,8 @@ const getWorkloadColor = (hours) => {
         
         <!-- Card: Total Scopes -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-            <i data-lucide="pie-chart" style="width: 20px; height: 20px; color: var(--primary)"></i>
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
+            <i data-lucide="pie-chart" style="width: 20px; height: 20px"></i>
           </div>
           <div style="min-width: 0">
             <div style="font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px">Total Scopes</div>
@@ -764,11 +749,11 @@ const getWorkloadColor = (hours) => {
 
         <!-- Card: Allocation Circle -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--warn-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--warn); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4)">
              <div style="width: 32px; height: 32px; position: relative">
               <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
-                <circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="4"></circle>
-                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--warn)" stroke-width="4" stroke-dasharray="${avgLoad}, 100" stroke-linecap="round"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255, 255, 255, 0.2)" stroke-width="4"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="4" stroke-dasharray="${avgLoad}, 100" stroke-linecap="round"></circle>
               </svg>
             </div>
           </div>
@@ -781,8 +766,8 @@ const getWorkloadColor = (hours) => {
 
         <!-- Card: High Workload -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--danger-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-            <i data-lucide="trending-up" style="width: 20px; height: 20px; color: var(--danger)"></i>
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--danger); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4)">
+            <i data-lucide="trending-up" style="width: 20px; height: 20px"></i>
           </div>
           <div style="min-width: 0">
             <div style="font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px">High Load (>50%)</div>
@@ -793,8 +778,8 @@ const getWorkloadColor = (hours) => {
 
         <!-- Card: Normal Workload -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-            <i data-lucide="bar-chart-2" style="width: 20px; height: 20px; color: var(--accent)"></i>
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
+            <i data-lucide="bar-chart-2" style="width: 20px; height: 20px"></i>
           </div>
           <div style="min-width: 0">
             <div style="font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px">Normal Load</div>
@@ -805,8 +790,8 @@ const getWorkloadColor = (hours) => {
 
         <!-- Card: Low Workload -->
         <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
-            <i data-lucide="minus" style="width: 20px; height: 20px; color: var(--primary)"></i>
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
+            <i data-lucide="minus" style="width: 20px; height: 20px"></i>
           </div>
           <div style="min-width: 0">
             <div style="font-size: 0.68rem; color: var(--text-3); margin-bottom: 1px">Low Load</div>
@@ -837,7 +822,7 @@ const getWorkloadColor = (hours) => {
         </div>
       </div>
 
-      <div id="scopeTableWrap" class="table-wrap scope-table-container" style="max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px); overflow: auto;">
+      <div id="scopeTableWrap" class="table-wrap scope-table-container" style="max-height: calc(100vh - 260px); background: var(--surface); width: 100%; max-width: calc(100vw - var(--sidebar-w) - 60px); overflow: auto;">
         <table class="data-table" style="border: none; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0">
           <thead id="scopeTableHead">
             ${renderScopeTableHeader(getDashboardDays())}
@@ -980,10 +965,13 @@ const getWorkloadColor = (hours) => {
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
             <div style="display: flex; gap: 8px">
-              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value)" style="flex: 1; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
-                <option value="" selected disabled>---Select Project---</option>
-                ${accounts.map(a => `<option value="${a}">${a}</option>`).join('')}
-                <option value="NEW">+ Add New Project</option>
+              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value); this.style.color = (this.value && this.value !== 'NEW') ? window.colorForProject(this.value) : '';" style="flex: 1; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px; font-weight: 600; transition: color 0.2s;">
+                <option value="" selected disabled style="color: #64748b;">---Select Project---</option>
+                ${accounts.map(a => {
+                  const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
+                  return `<option value="${a}" style="color: ${c}; font-weight: 600;">● ${a}</option>`;
+                }).join('')}
+                <option value="NEW" style="color: #6366f1; font-weight: 700;">+ Add New Project</option>
               </select>
               <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 20px; border: 1.5px solid #6366f1; border-radius: 99px; font-family: inherit; outline: none; font-size: 13px;">
             </div>
@@ -1156,9 +1144,12 @@ const getWorkloadColor = (hours) => {
           <!-- Account Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
-            <select id="scopeAccount" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
-              ${accounts.map(a => `<option value="${a}" ${a === acc ? 'selected' : ''}>${a}</option>`).join('')}
-              ${!accounts.includes(acc) ? `<option value="${acc}" selected>${acc}</option>` : ''}
+            <select id="scopeAccount" onchange="this.style.color = window.colorForProject(this.value);" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px; font-weight: 600; color: ${typeof window.colorForProject === 'function' ? window.colorForProject(acc) : '#6366f1'}; transition: color 0.2s;">
+              ${accounts.map(a => {
+                const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
+                return `<option value="${a}" style="color: ${c}; font-weight: 600;" ${a === acc ? 'selected' : ''}>● ${a}</option>`;
+              }).join('')}
+              ${!accounts.includes(acc) ? `<option value="${acc}" style="color: ${window.colorForProject(acc)}; font-weight: 600;" selected>● ${acc}</option>` : ''}
             </select>
           </div>
 
@@ -1527,8 +1518,8 @@ const getWorkloadColor = (hours) => {
     const dObj = new Date(dateIso);
     const dayIndex = dObj.getDay();
     let isPublic = false;
-    if (typeof isThaiHoliday === 'function') {
-      isPublic = !!isThaiHoliday(dObj);
+    if (typeof window !== 'undefined' && typeof window.isThaiHoliday === 'function') {
+      isPublic = !!window.isThaiHoliday(dObj);
     }
 
     const person = (window.DATA.employees || []).find(emp => emp.id === personId);
@@ -1735,8 +1726,9 @@ const getWorkloadColor = (hours) => {
               <div style="padding:40px; text-align:center; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:20px; color:#94a3b8; font-size:0.9rem; font-weight:500">No tasks assigned for this day</div>
             ` : dayTasks.map(t => {
       const nodeCol = colorForNode(t.node);
+      const projCol = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : nodeCol;
       return `
-                <div style="padding:16px; border-radius: 50%; background: var(--surface); border:1px solid #f1f5f9; border-left:4px solid ${nodeCol}; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
+                <div style="padding:16px; border-radius:16px; background: var(--surface); border:1px solid #f1f5f9; border-left:4px solid ${projCol}; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
                   <div style="min-width:0; flex:1">
                     <div style="font-weight:700; color:#1e293b; font-size:0.9rem; margin-bottom:4px">${t.title}</div>
                     <div style="display:flex; align-items:center; gap:8px">
@@ -1747,7 +1739,7 @@ const getWorkloadColor = (hours) => {
                   </div>
                   <div style="display:flex; align-items:center; gap:16px">
                     <div style="font-size:1rem; font-weight:800; color:#1e293b">${t.hours}%</div>
-                    <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" style="background:#fef2f2; color:#ef4444; border:none; width:32px;  border-radius: var(--radius-sm); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'" class="text-[12px] font-semibold px-4 py-1.5">
+                    <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" style="background:#fef2f2; color:#ef4444; border:none; width:32px; height:32px; border-radius:10px !important; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
                       <i data-lucide="trash-2" style="width:16px; height:16px"></i>
                     </button>
                   </div>
@@ -1757,7 +1749,7 @@ const getWorkloadColor = (hours) => {
             ${holidayTasks.map(ht => {
               if (!ht.assignments || ht.assignments.length === 0) {
                 return `
-                  <div style="padding:16px; border-radius: 50%; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
+                  <div style="padding:16px; border-radius:16px; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
                     <div style="min-width:0; flex:1">
                       <div style="font-weight:700; color:#f59e0b; font-size:0.9rem; margin-bottom:4px">${ht.holidayName || 'Holiday'}</div>
                       <div style="display:flex; align-items:center; gap:8px">
@@ -1782,7 +1774,7 @@ const getWorkloadColor = (hours) => {
               }
               if (!Array.isArray(parsedAssignments) || parsedAssignments.length === 0) {
                 return `
-                  <div style="padding:16px; border-radius: 50%; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
+                  <div style="padding:16px; border-radius:16px; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
                     <div style="min-width:0; flex:1">
                       <div style="font-weight:700; color:#f59e0b; font-size:0.9rem; margin-bottom:4px">${ht.section || 'Operation'}</div>
                       <div style="display:flex; align-items:center; gap:8px">
@@ -1796,7 +1788,7 @@ const getWorkloadColor = (hours) => {
                 `;
               }
               return parsedAssignments.map(a => `
-                <div style="padding:16px; border-radius: 50%; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
+                <div style="padding:16px; border-radius:16px; background: var(--surface); border:1px solid #fcd34d; border-left:4px solid #f59e0b; box-shadow: var(--shadow); display:flex; justify-content:space-between; align-items:center">
                   <div style="min-width:0; flex:1">
                     <div style="font-weight:700; color:#f59e0b; font-size:0.9rem; margin-bottom:4px">${a.project || '-'}</div>
                     <div style="display:flex; align-items:center; gap:8px">
@@ -1866,7 +1858,7 @@ const getWorkloadColor = (hours) => {
           acc: acc.account,
           node: item.node || 'Other',
           hours: item.progress || 0, // Use progress from Scope
-          color: typeof colorForNode === 'function' ? colorForNode(item.node) : '#6366f1'
+          color: typeof window.colorForProject === 'function' ? window.colorForProject(acc.account) : '#6366f1'
         });
       });
     });
@@ -1884,7 +1876,7 @@ const getWorkloadColor = (hours) => {
       </div>`;
     }
     return tasks.map(t => {
-      const col = t.color || '#6366f1';
+      const col = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : (t.color || '#6366f1');
       return `
         <div class="task-card" draggable="true" 
              ondragstart="handleTaskDragStart(event, '${t.id}')" 

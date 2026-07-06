@@ -345,7 +345,7 @@ window.pageSchedule = function() {
         <!-- Right: Filters and Actions -->
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
           <div style="height:34px; display:flex; align-items:center">
-             ${renderDateFilter('filterScheduleUI()', 'above', '', false)}
+             ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden">
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:var(--text-3)"></i>
@@ -382,7 +382,7 @@ window.pageSchedule = function() {
       `).join('')}
     </div>
 
-    <div class="${fadeClass}" style="width:100%; max-width:calc(100vw - 320px); overflow:hidden">
+    <div class="${fadeClass}" style="width:100%; max-width:calc(100vw - var(--sidebar-w) - 60px); overflow:hidden">
       <div class="card" style="padding:0; overflow:hidden">
         <div id="scheduleTableWrap" class="table-wrap" style="overflow-x:auto; overflow-y:auto; max-height:calc(100vh - 240px); background:#fff; width:100%">
           <table style="width:max-content; min-width:100%; border-collapse:collapse; table-layout:fixed">
@@ -542,11 +542,12 @@ window.pageSchedule = function() {
                               <div class="scheduler-scrollbar" style="max-height:110px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; padding-right:2px; margin-bottom:22px">
                                 ${dayTasks.map(t => {
             const nodeCol = colorForNode(t.node);
+            const projCol = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : nodeCol;
             return `
                                     <div draggable="true" ondragstart="handleTaskDragStart(event, 'scheduled-${t.id}')" 
-                                         style="padding:5px 8px; border-radius:6px; background:#fff; border:1px solid #e2e8f0; border-left:3px solid ${nodeCol}; font-size:.65rem; cursor:pointer; transition:all 0.2s; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.02)" 
+                                         style="padding:5px 8px; border-radius:6px; background:#fff; border:1px solid #e2e8f0; border-left:3px solid ${projCol}; font-size:.65rem; cursor:pointer; transition:all 0.2s; position:relative; box-shadow:0 1px 2px rgba(0,0,0,0.02)" 
                                          onclick="openTaskEditor('${t.id}')">
-                                      <div style="font-weight:700; color:${nodeCol}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:14px; margin-bottom:2px">${t.title}</div>
+                                      <div style="font-weight:700; color:${projCol}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:14px; margin-bottom:2px">${t.title}</div>
                                       <div style="font-size:0.55rem; color:#64748b; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.8; padding-right:14px">${t.acc || ''}</div>
                                       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px;">
                                         <div style="font-size:.55rem; font-weight:600; color:#64748b;">${t.node || ''}</div>

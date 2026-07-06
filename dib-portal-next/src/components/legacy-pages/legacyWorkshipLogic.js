@@ -212,7 +212,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
   <!-- STAT ROW (3 cards) -->
   <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px">
     <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
         <i data-lucide="users" style="width: 20px; height: 20px"></i>
       </div>
       <div>
@@ -224,7 +224,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
       </div>
     </div>
     <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn-light); color: var(--warn); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4)">
         <i data-lucide="briefcase" style="width: 20px; height: 20px"></i>
       </div>
       <div>
@@ -236,7 +236,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
       </div>
     </div>
     <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
         <i data-lucide="trending-up" style="width: 20px; height: 20px"></i>
       </div>
       <div>
@@ -386,7 +386,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
   <!-- STATS -->
   <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px">
     <div class="stat-card fade-in" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
         <i data-lucide="users" style="width: 20px; height: 20px"></i>
       </div>
       <div>
@@ -398,7 +398,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
       </div>
     </div>
     <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn-light); color: var(--warn); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4)">
         <i data-lucide="briefcase" style="width: 20px; height: 20px"></i>
       </div>
       <div>
@@ -410,7 +410,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
       </div>
     </div>
     <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
         <i data-lucide="trending-up" style="width: 20px; height: 20px"></i>
       </div>
       <div>

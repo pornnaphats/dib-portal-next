@@ -41,31 +41,6 @@ const getPosStyle = (pos) => {
   return { bg: '#f1f5f9', text: '#475569' };
 };
 
-const colorForAcc = (acc) => {
-  if (!acc) return '#635BFF';
-  const a = acc.trim().toUpperCase();
-  
-  const PALETTE = [
-    '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#14b8a6', '#f43f5e', '#06b6d4',
-    '#84cc16', '#eab308', '#f97316', '#d946ef', '#6366f1', '#2563eb', '#4f46e5', '#a21caf',
-    '#be185d', '#6d28d9', '#15803d', '#1d4ed8', '#0369a1', '#0f766e', '#b91c1c', '#c2410c',
-    '#4d7c0f', '#0284c7', '#047857', '#4338ca', '#b45309', '#0891b2', '#7e22ce', '#0f766e'
-  ];
-
-  if (a.includes('AFNC')) return '#3b82f6'; // Blue
-  if (a.includes('ACE')) return '#8b5cf6';  // Purple
-  if (a.includes('SERTEC')) return '#ec4899'; // Pink
-  if (a.includes('ONIX')) return '#f59e0b';   // Amber/Orange
-  if (a.includes('SALE')) return '#10b981';   // Emerald/Green
-  if (a.includes('CALL')) return '#14b8a6';   // Teal
-  
-  let hash = 0;
-  for (let i = 0; i < a.length; i++) {
-    hash = a.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const idx = Math.abs(hash) % PALETTE.length;
-  return PALETTE[idx];
-};
 
 const formatScheduleName = (fullNameEn) => {
   if (!fullNameEn || fullNameEn === '-') return '';
@@ -119,6 +94,43 @@ const getLeaveRequestsForDate = (dateIso, p) => {
 window.getLeaveRequestsForDate = getLeaveRequestsForDate;
 
 export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter, scheduleTasks, startDate, endDate }) {
+  const projectColorMap = useMemo(() => {
+    const projects = new Set();
+    if (typeof window !== "undefined" && window.PREMIUM_SCOPE_DATA) {
+      window.PREMIUM_SCOPE_DATA.forEach(group => {
+        if (group.account) projects.add(group.account.trim());
+      });
+    }
+    if (scheduleTasks) {
+      scheduleTasks.forEach(t => {
+        if (t.acc) projects.add(t.acc.trim());
+      });
+    }
+    if (typeof window !== "undefined" && window.SCHEDULE_TASKS) {
+      window.SCHEDULE_TASKS.forEach(t => {
+        if (t.acc) projects.add(t.acc.trim());
+      });
+    }
+    const sortedProjects = Array.from(projects).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const map = {};
+    const PALETTE = [
+      '#2563eb', '#8b5cf6', '#db2777', '#d97706', '#059669', '#0d9488', '#e11d48', '#0891b2',
+      '#4f46e5', '#16a34a', '#ea580c', '#c026d3', '#0284c7', '#7c3aed', '#dc2626', '#0f766e',
+      '#1d4ed8', '#7e22ce', '#be185d', '#b45309', '#047857', '#0e7490', '#be123c', '#0369a1',
+      '#4338ca', '#15803d', '#c2410c', '#a21caf', '#6d28d9', '#b91c1c', '#115e59',
+      '#1e40af', '#5b21b6', '#9d174d', '#92400e', '#166534', '#065f46', '#9f1239', '#075985',
+      '#3730a3', '#064e3b', '#7f1d1d', '#7c2d12', '#78350f', '#14532d', '#134e5e', '#581c87'
+    ];
+    sortedProjects.forEach((proj, index) => {
+      map[proj.toUpperCase()] = PALETTE[index % PALETTE.length];
+    });
+    return map;
+  }, [scheduleTasks]);
+
+  const colorForAcc = (acc) => {
+    if (!acc) return '#635BFF';
+    return projectColorMap[acc.trim().toUpperCase()] || '#635BFF';
+  };
 
   const { days, teams, tasksByPersonDay } = useMemo(() => {
     const daysArr = [];

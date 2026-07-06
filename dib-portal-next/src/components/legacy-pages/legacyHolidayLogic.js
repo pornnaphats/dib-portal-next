@@ -331,9 +331,9 @@
       <!-- Top Action Bar -->
       <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
         <div style="height:38px; display:flex; align-items:center">
-          ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'above', null, true, searchHtml) : ''}
+          ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'auto', null, true, searchHtml) : ''}
         </div>
-        <button onclick="window.openManageTemplatesModal()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-secondary" style="display:flex; align-items:center; gap:6px;  border-radius: 99px;    flex-shrink:0; background:#f1f5f9; color:#475569; border:none; cursor:pointer; transition: background 0.2s;">
+        <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:10px; font-size:.7rem; font-weight:600; flex-shrink:0; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
           <i data-lucide="settings" style="width:14px; height:14px"></i> จัดการชุดงาน (Templates)
         </button>
       </div>
@@ -342,7 +342,7 @@
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px">
         <!-- Card 1 -->
         <div class="stat-card fade-in" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); color: #6366f1; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #6366f1; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
             <i data-lucide="calendar" style="width: 20px; height: 20px"></i>
           </div>
           <div>
@@ -355,7 +355,7 @@
         </div>
         <!-- Card 2 -->
         <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4)">
             <i data-lucide="check-circle" style="width: 20px; height: 20px"></i>
           </div>
           <div>
@@ -368,7 +368,7 @@
         </div>
         <!-- Card 3 -->
         <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(245, 158, 11, 0.1); color: #f59e0b; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4)">
             <i data-lucide="clock" style="width: 20px; height: 20px"></i>
           </div>
           <div>
@@ -381,7 +381,7 @@
         </div>
         <!-- Card 4 -->
         <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
-          <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(99, 102, 241, 0.1); color: #818cf8; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #818cf8; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(129, 140, 248, 0.4)">
             <i data-lucide="calendar-plus" style="width: 20px; height: 20px"></i>
           </div>
           <div>

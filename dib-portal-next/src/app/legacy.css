@@ -1,21 +1,21 @@
 /* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Prompt', sans-serif; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
 
 :root {
   --bg: #f4f7fe;
   --surface: #ffffff;
   --surface2: #f8f9fb;
   --border: #e4e8ef;
-  --primary: #635BFF;
-  --primary-light: #eef2ff;
-  --primary-dark: #5048E5;
+  --primary: #2d6ef7;
+  --primary-light: #e8efff;
+  --primary-dark: #1a4fcf;
   --accent: #00c896;
   --accent-light: #e0faf3;
   --warn: #f59e0b;
   --warn-light: #fef3c7;
   --danger: #ef4444;
   --danger-light: #fee2e2;
-  --text: #24204D;
+  --text: #1a2035;
   --text-2: #4b5675;
   --text-3: #8f97b0;
   --sidebar-w: 260px;
@@ -26,9 +26,9 @@
   --transition: .2s ease;
 }
 
-html { font-size: 14px; }
+html { font-size: 15px; }
 body {
-  font-family: 'Prompt', sans-serif;
+  font-family: 'Kanit', sans-serif;
   background: var(--bg);
   color: var(--text);
   display: flex;
@@ -47,8 +47,8 @@ body.sidebar-collapsed {
 }
 .sidebar {
   width: var(--sidebar-w);
-  background: #24204D;
-  border-right: 1px solid #1e1b4b;
+  background: #18182b; /* Dark Navy theme */
+  border-right: none;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -63,10 +63,20 @@ body.sidebar-collapsed {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
 .logo { display: flex; align-items: center; gap: 8px; }
-
+.logo-icon {
+  background: none;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: font-size var(--transition);
+}
 .logo-text { display: flex; flex-direction: column; line-height: 1.2; margin-left: 2px; transition: opacity var(--transition); white-space: nowrap; }
 .logo-name { font-weight: 600; font-size: 1.05rem; color: #fff; }
 .logo-sub { font-size: .75rem; color: #a1a1aa; font-weight: 400; }
@@ -86,14 +96,14 @@ body.sidebar-collapsed {
   padding: 16px 20px 8px;
   font-size: .65rem;
   font-weight: 700;
-  color: #a1a1aa;
-  letter-spacing: .08em;
+  color: #6b7280;
+  letter-spacing: .06em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
 }
 .nav-label::after {
-  display: none;
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05);
 }
 
 .nav-item {
@@ -113,10 +123,9 @@ body.sidebar-collapsed {
 }
 .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
 .nav-item.active {
-  background: var(--primary);
-  color: #ffffff;
+  background: #6366f1;
+  color: #fff;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(99,91,255,0.25);
 }
 .nav-item.sub {
   padding-left: 44px;
@@ -134,7 +143,7 @@ body.sidebar-collapsed {
 .nav-icon svg {
   width: 18px; height: 18px;
   stroke: currentColor;
-  stroke-width: 1.5; /* Thinner, more delicate icons */
+  stroke-width: 1.8;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -226,13 +235,13 @@ body.sidebar-collapsed .nav-item.sub { display: none !important; }
 .topbar-search svg { color: var(--text-3); flex-shrink: 0; }
 .topbar-search input {
   border: none; outline: none; background: none;
-  font-size: .82rem; color: var(--text); flex: 1;
+  font-family: 'Kanit', sans-serif; font-size: .82rem; color: var(--text); flex: 1;
 }
 .topbar-search input::placeholder { color: var(--text-3); }
 .search-kbd {
   background: var(--border); color: var(--text-3);
   border-radius: 4px; padding: 2px 6px; font-size: .65rem;
-  white-space: nowrap; flex-shrink: 0;
+  font-family: monospace; white-space: nowrap; flex-shrink: 0;
 }
 
 /* Right icons */
@@ -279,9 +288,9 @@ body.sidebar-collapsed .nav-item.sub { display: none !important; }
 .card {
   background: var(--surface);
   border-radius: var(--radius);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  padding: 24px;
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--border);
+  padding: 22px;
+  box-shadow: var(--shadow);
 }
 .card-title {
   font-size: 1rem; font-weight: 600; color: var(--text);
@@ -384,13 +393,13 @@ body.sidebar-collapsed .nav-item.sub { display: none !important; }
 }
 .search-box input {
   border: none; outline: none; background: none;
-  font-size: .84rem; color: var(--text); width: 100%;
+  font-family: 'Kanit', sans-serif; font-size: .84rem; color: var(--text); width: 100%;
 }
 .search-box input::placeholder { color: var(--text-3); }
 
 .btn {
-  padding: 6px 16px; border-radius: 99px;
-  font-family: 'Prompt', sans-serif; font-size: 12px; font-weight: 600;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-family: 'Kanit', sans-serif; font-size: .84rem; font-weight: 500;
   cursor: pointer; border: none; transition: background var(--transition), transform var(--transition);
   display: inline-flex; align-items: center; gap: 6px;
 }
@@ -405,9 +414,9 @@ body.sidebar-collapsed .nav-item.sub { display: none !important; }
 
 /* ===== SELECT ===== */
 .select-input {
-  height: 42px; padding: 0 16px; border: 1px solid var(--border);
-  border-radius: 99px; background: var(--surface);
-  font-size: .84rem;
+  height: 42px; padding: 0 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface);
+  font-family: 'Kanit', sans-serif; font-size: .84rem;
   color: var(--text); outline: none; cursor: pointer;
   display: inline-flex; align-items: center;
 }
@@ -416,44 +425,13 @@ body.sidebar-collapsed .nav-item.sub { display: none !important; }
 .form-group { margin-bottom: 14px; }
 .form-label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
 .form-input {
-  width: 100%; height: 42px; padding: 0 20px;
-  border: 1px solid var(--border); border-radius: 99px !important;
-  font-size: .88rem; color: var(--text);
-  background: var(--surface); outline: none; transition: all var(--transition);
+  width: 100%; height: 42px; padding: 0 13px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Kanit', sans-serif; font-size: .88rem; color: var(--text);
+  background: var(--surface); outline: none; transition: border var(--transition);
   display: flex; align-items: center;
 }
-.form-input:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  background-color: #ffffff !important;
-  outline: none !important;
-}
-
-select.form-input {
-  appearance: none !important;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 16px center !important;
-  background-size: 14px !important;
-  padding-right: 40px !important;
-  background-color: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-}
-
-.select-input:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-
-.form-input-wrapper {
-  transition: all 0.2s !important;
-}
-.form-input-wrapper:focus-within {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  background-color: #ffffff !important;
-}
-
+.form-input:focus, .select-input:focus { border-color: var(--primary); }
 textarea.form-input, textarea.select-input {
   height: auto;
   align-items: flex-start;
@@ -500,7 +478,7 @@ textarea.form-input, textarea.select-input {
 }
 .tab-btn {
   padding: 10px 24px; background: none; border: none;
-  font-family: 'Prompt', sans-serif; font-size: .85rem; font-weight: 600;
+  font-family: 'Kanit', sans-serif; font-size: .85rem; font-weight: 600;
   color: var(--text-2); cursor: pointer; border-radius: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex; align-items: center; gap: 8px;
@@ -621,7 +599,7 @@ textarea.form-input, textarea.select-input {
 
 /* ===== FLATPICKR MINIMALIST REDESIGN ===== */
 .flatpickr-calendar {
-  font-family: 'Prompt', sans-serif !important;
+  font-family: 'Kanit', sans-serif !important;
   border-radius: 12px !important;
   box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
   border: none !important;
@@ -635,7 +613,7 @@ textarea.form-input, textarea.select-input {
 .flatpickr-month { color: #2d3748 !important; }
 .flatpickr-current-month { font-size: 0.9rem !important; font-weight: 500 !important; }
 .flatpickr-current-month .flatpickr-monthYear-month { color: #2d3748 !important; }
-.flatpickr-current-month .cur-year { color: #635BFF !important; font-weight: 500 !important; }
+.flatpickr-current-month .cur-year { color: #3182ce !important; font-weight: 400 !important; }
 
 .flatpickr-prev-month, .flatpickr-next-month {
   padding: 10px !important;
@@ -693,8 +671,8 @@ span.flatpickr-weekday {
   visibility: hidden !important;
 }
 
-.flatpickr-day.today { border: 1.5px solid #635BFF !important; color: #635BFF !important; font-weight: 600 !important; }
-.flatpickr-day:hover { background: #eef2ff !important; color: #635BFF !important; }
+.flatpickr-day.today { border: 1px solid #f0fdf4 !important; color: #22c55e !important; }
+.flatpickr-day:hover { background: #f0fdf4 !important; color: #166534 !important; }
 .flatpickr-day.flatpickr-disabled { opacity: 0.25 !important; cursor: not-allowed !important; pointer-events: none !important; }
 
 .numInputWrapper:hover { background: transparent !important; }
@@ -957,6 +935,106 @@ span.flatpickr-weekday {
 }
 
 
+/* Overrides to prevent purple outline and highlight on button select-inputs */
+        button.select-input:focus {
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+        button.select-input:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
+
+/* Make Save, Edit, Cancel, and other action buttons pill-shaped across all pages */
+.btn,
+.btn-primary,
+.btn-outline,
+.btn-danger,
+.btn-success,
+.btn-sm,
+.tab-btn,
+button,
+input[type="button"],
+input[type="submit"] {
+  border-radius: 9999px !important;
+}
+
+/* Style for custom filter dropdown list containers */
+[id^="listFilter"],
+.custom-select-dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  padding: 6px !important;
+  z-index: 9999 !important;
+}
+
+/* Style for custom filter dropdown list items */
+[id^="listFilter"] > div,
+.custom-select-option {
+  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  border-radius: 8px !important;
+  color: #4b5675 !important;
+  font-weight: 500 !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+  font-family: 'Kanit', sans-serif !important;
+}
+
+/* Hover and active states for custom filter items - exactly matching the user's image, no bold */
+[id^="listFilter"] > div:hover,
+.custom-select-option:hover {
+  background-color: #f5f3ff !important; /* light purple background */
+  color: #24204d !important; /* dark blue text */
+  font-weight: 500 !important; /* NOT bold */
+}
+
+/* Ensure all custom select wrapper triggers are rounded by default */
+.custom-select-wrapper .select-input {
+  border-radius: 8px !important; /* ทรงมนแบบเดิม */
+}
+
+/* Ensure all filter select inputs and select elements are pill-shaped (only for toolbars/filters) */
+.toolbar .select-input,
+.toolbar select.form-input,
+.toolbar .custom-select-wrapper .select-input,
+[id^="custom_wrap_filter"] .select-input,
+.search-box,
+#scopeFilterProject,
+#scopeFilterNode,
+#ws2Acc {
+  border-radius: 9999px !important; /* ทรงเม็ดยา */
+}
+
+/* Reduce padding for birthday dropdown triggers so the text is fully visible */
+#custom_wrap_empBirthDay .select-input,
+#custom_wrap_empBirthMonth .select-input,
+#custom_wrap_empBirthYear .select-input {
+  padding-left: 8px !important;
+  padding-right: 22px !important;
+  background-position: right 6px center !important;
+  background-size: 10px !important;
+  font-size: 11.5px !important;
+}
+
+/* Make the dropdown menu pop-ups for birthday selects match the inputs' narrow widths */
+#custom_wrap_empBirthDay .custom-select-dropdown,
+#custom_wrap_empBirthMonth .custom-select-dropdown,
+#custom_wrap_empBirthYear .custom-select-dropdown {
+  min-width: 100% !important;
+}
+
+
+
+
+
+
+
+
 
 
 /* Notification Dropdown */
@@ -1089,44 +1167,6 @@ span.flatpickr-weekday {
   text-decoration: underline;
 }
 
-/* Card & KPI Card Style Overrides */
-.card, 
-.stat-card, 
-.qc-card, 
-.qc-stat-card, 
-.emp-card, 
-.skill-card, 
-.pipeline-card, 
-.pipeline-col,
-.org-card,
-.card-total,
-.card-qc1,
-.card-qc2,
-.card-web,
-.card-manual {
-  border: none !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02) !important;
-}
-
-/* Remove borders on tables or other container cards */
-.estimate-table,
-.table-wrap,
-.data-table {
-  border: none !important;
-}
-
-
-/* Overrides to prevent purple outline and highlight on button select-inputs */
-        button.select-input:focus {
-          border-color: #e2e8f0 !important;
-          box-shadow: none !important;
-          outline: none !important;
-        }
-        button.select-input:hover {
-          border-color: #cbd5e1 !important;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
-        }
-
 /* Make Save, Edit, Cancel, and other action buttons pill-shaped across all pages */
 .btn,
 .btn-primary,
@@ -1184,6 +1224,7 @@ input[type="submit"] {
 .toolbar select.form-input,
 .toolbar .custom-select-wrapper .select-input,
 [id^="custom_wrap_filter"] .select-input,
+.search-box,
 #scopeFilterProject,
 #scopeFilterNode,
 #ws2Acc {
@@ -1207,6 +1248,9 @@ input[type="submit"] {
 #custom_wrap_empBirthYear .custom-select-dropdown {
   min-width: 100% !important;
 }
+
+
+
 
 
 
