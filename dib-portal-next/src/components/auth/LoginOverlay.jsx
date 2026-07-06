@@ -38,7 +38,7 @@ export default function LoginOverlay({ onLogin }) {
 
     if (window.google && window.google.accounts) {
       window.google.accounts.id.initialize({
-        client_id: "88823611083-n2i3gf88f89f3tar6n8ck2d7ihn5ejsi.apps.googleusercontent.com",
+        client_id: "620760567653-qmb5vintk2a14sgluvl2lc6bhe5qhsub.apps.googleusercontent.com",
         callback: window.handleCredentialResponse,
       });
       // Hidden SDK button for callback wiring

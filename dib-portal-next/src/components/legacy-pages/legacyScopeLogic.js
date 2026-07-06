@@ -376,10 +376,10 @@ const getWorkloadColor = (hours) => {
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
             <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-2)">${item.name}</div>
             <div style="display: flex; align-items: center; gap: 4px">
-              <button class="text-[12px] font-semibold px-4 py-1.5 btn-icon" title="แก้ไข" onclick="showEditWorkshipScopeModal('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}', '${item.node}', ${item.progress})" style="width: 28px;  border-radius: 50%; background: var(--primary-light); color: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+              <button class="btn-icon" title="แก้ไข" onclick="showEditWorkshipScopeModal('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}', '${item.node}', ${item.progress})" style="width: 28px; height: 28px; padding: 0; border-radius: 50%; background: var(--primary-light); color: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                 <i data-lucide="edit-3" style="width: 14px; height: 14px"></i>
               </button>
-              <button class="text-[12px] font-semibold px-4 py-1.5 btn-icon" title="ลบ" onclick="deleteWorkshipScope('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}')" style="width: 28px;  border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+              <button class="btn-icon" title="ลบ" onclick="deleteWorkshipScope('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}')" style="width: 28px; height: 28px; padding: 0; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                 <i data-lucide="trash-2" style="width: 14px; height: 14px"></i>
               </button>
             </div>
@@ -583,10 +583,16 @@ const getWorkloadColor = (hours) => {
           border-radius: 99px !important;
           border: 1.5px solid var(--border) !important;
           background: var(--surface) !important;
-          padding: 0 16px !important;
+          padding: 0 32px 0 16px !important;
           font-weight: 500;
           transition: all 0.2s ease !important;
           box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 14px center !important;
+          background-size: 12px !important;
         }
         #scopeFilterProject:hover,
         #scopeFilterNode:hover,
@@ -674,7 +680,7 @@ const getWorkloadColor = (hours) => {
           border-radius: 24px !important;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
           border: 1px solid var(--border) !important;
-          overflow: hidden !important;
+          overflow: auto !important;
         }
       </style>
 
@@ -831,7 +837,7 @@ const getWorkloadColor = (hours) => {
         </div>
       </div>
 
-      <div id="scopeTableWrap" class="table-wrap scope-table-container" style="max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px)">
+      <div id="scopeTableWrap" class="table-wrap scope-table-container" style="max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px); overflow: auto;">
         <table class="data-table" style="border: none; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0">
           <thead id="scopeTableHead">
             ${renderScopeTableHeader(getDashboardDays())}

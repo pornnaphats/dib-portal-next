@@ -145,7 +145,7 @@ export async function fetchAndSetLegacyData() {
         }
       }
     } catch (err) {
-      console.error('Error fetching project scopes from Supabase:', err);
+      console.warn('Error fetching project scopes from Supabase:', err.message || err);
     }
   }
 
@@ -177,7 +177,7 @@ export async function fetchAndSetLegacyData() {
         }
       }
     } catch (err) {
-      console.error('Error fetching holidays from Supabase:', err);
+      console.warn('Error fetching holidays from Supabase:', err.message || err);
     }
   }
 
@@ -231,7 +231,7 @@ export async function fetchAndSetLegacyData() {
         }
       }
     } catch (err) {
-      console.error('Error fetching holiday shifts from Supabase:', err);
+      console.warn('Error fetching holiday shifts from Supabase:', err.message || err);
     }
   }
 
@@ -277,7 +277,7 @@ export async function fetchAndSetLegacyData() {
       }
     }
   } catch (err) {
-    console.error('Failed to fetch employees from Supabase:', err);
+    console.warn('Failed to fetch employees from Supabase:', err.message || err);
   }
   })());
 
@@ -329,7 +329,7 @@ export async function fetchAndSetLegacyData() {
       }
     }
   } catch (err) {
-    console.error('Failed to fetch leave requests from Supabase', err);
+    console.warn('Failed to fetch leave requests from Supabase:', err.message || err);
   }
   })());
 
@@ -375,7 +375,7 @@ export async function fetchAndSetLegacyData() {
       }
     }
   } catch (err) {
-    console.error('Failed to fetch schedule tasks from Supabase:', err);
+    console.warn('Failed to fetch schedule tasks from Supabase:', err.message || err);
   }
   })());
 

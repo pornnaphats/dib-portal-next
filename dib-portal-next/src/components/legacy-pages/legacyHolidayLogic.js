@@ -311,7 +311,7 @@
                 ${statusHtml}
               </td>
               <td rowspan="${tasks.length}" style="padding: 16px 24px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: top; position: sticky; top: 50px; background: var(--surface); z-index: 2; transition: background 0.2s;">
-                <button class="text-[12px] font-semibold px-4 py-1.5 btn-icon" onclick="toggleHolidayDropdown(event, ${groupIdx}, '${h.name.replace(/'/g, "\\'")}', '${h.date}')" style="background: none; border: none; color: #94a3b8; cursor: pointer">
+                <button class="btn-icon" onclick="toggleHolidayDropdown(event, ${groupIdx}, '${h.name.replace(/'/g, "\\'")}', '${h.date}')" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                   <i data-lucide="more-horizontal" style="width: 18px; height: 18px"></i>
                 </button>
               </td>
@@ -2094,10 +2094,10 @@
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
             <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-2)">${item.name}</div>
             <div style="display: flex; align-items: center; gap: 4px">
-              <button class="text-[12px] font-semibold px-4 py-1.5 btn-icon" title="แก้ไข" onclick="showEditWorkshipScopeModal('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}', '${item.node}', ${item.progress})" style="width: 28px;  border-radius: 50%; background: var(--primary-light); color: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+              <button class="btn-icon" title="แก้ไข" onclick="showEditWorkshipScopeModal('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}', '${item.node}', ${item.progress})" style="width: 28px; height: 28px; padding: 0; border-radius: 50%; background: var(--primary-light); color: var(--primary); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                 <i data-lucide="edit-3" style="width: 14px; height: 14px"></i>
               </button>
-              <button class="text-[12px] font-semibold px-4 py-1.5 btn-icon" title="ลบ" onclick="deleteWorkshipScope('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}')" style="width: 28px;  border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+              <button class="btn-icon" title="ลบ" onclick="deleteWorkshipScope('${group.account.replace(/'/g, "\\'")}', '${item.name.replace(/'/g, "\\'")}')" style="width: 28px; height: 28px; padding: 0; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.6; transition: opacity 0.2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
                 <i data-lucide="trash-2" style="width: 14px; height: 14px"></i>
               </button>
             </div>
