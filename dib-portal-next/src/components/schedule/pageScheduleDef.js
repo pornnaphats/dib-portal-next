@@ -1,3 +1,15 @@
+const getWorkloadColor = (hours) => {
+  if (typeof window !== 'undefined' && typeof window.getWorkloadColor === 'function') {
+    return window.getWorkloadColor(hours);
+  }
+  if (hours === 0) return 'var(--text-3)';
+  if (hours < 50) return '#ef4444';
+  if (hours <= 80) return '#facc15';
+  if (hours <= 100) return '#22c55e';
+  if (hours <= 120) return '#166534';
+  return '#991b1b';
+};
+
 window.pageSchedule = function() {
     window._scheduleSearch = window._scheduleSearch || '';
     window._scheduleTeamFilter = window._scheduleTeamFilter || '';

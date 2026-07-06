@@ -32,8 +32,6 @@ export default function EmployeeView() {
       createIcons: (params) => (params && params.root === null) ? null : lucide.createIcons({ icons: lucide.icons, ...params })
     };
     
-    window.showConfirmModal = (opts) => { if (confirm(opts.message)) opts.onConfirm(); };
-    window.showAlert = (title, message) => alert(message);
     window.showToast = (message) => console.log(message);
     
     window.navigate = (page) => {
@@ -85,7 +83,7 @@ export default function EmployeeView() {
       <style dangerouslySetInnerHTML={{__html: `
         /* Premium Purple Theme Select Inputs */
         .select-input {
-          height: 38px !important;
+          height: 34px !important;
           border: 1px solid #e2e8f0 !important;
           border-radius: 99px !important;
           padding: 0 16px !important;
@@ -113,10 +111,19 @@ export default function EmployeeView() {
           border-color: #635BFF !important;
           box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15) !important;
         }
+        button.select-input:focus {
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+        button.select-input:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
 
         /* Search Box styling */
         .search-box {
-          height: 38px !important;
+          height: 34px !important;
           border: 1px solid #e2e8f0 !important;
           border-radius: 99px !important;
           padding: 0 16px !important;
@@ -124,9 +131,13 @@ export default function EmployeeView() {
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
           transition: all 0.2s ease !important;
         }
+        .search-box:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
         .search-box:focus-within {
-          border-color: #635BFF !important;
-          box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15) !important;
+          border-color: #cbd5e1 !important;
+          box-shadow: none !important;
         }
         .search-box input {
           font-family: 'Kanit', sans-serif !important;
@@ -141,7 +152,7 @@ export default function EmployeeView() {
           font-family: 'Kanit', sans-serif !important;
           font-weight: 600 !important;
           border-radius: 99px !important;
-          height: 38px !important;
+          height: 34px !important;
           padding: 0 20px !important;
           font-size: 13px !important;
           box-shadow: 0 4px 12px rgba(99, 91, 255, 0.2) !important;
@@ -158,19 +169,20 @@ export default function EmployeeView() {
 
         /* Clear Filter Button */
         button[onclick="clearEmployeeFilters()"] {
-          height: 38px !important;
+          height: 34px !important;
           border-radius: 99px !important;
-          border: 1px solid rgba(239, 68, 68, 0.2) !important;
-          background-color: rgba(239, 68, 68, 0.06) !important;
-          color: #ef4444 !important;
-          font-weight: 600 !important;
+          border: 1px solid #e2e8f0 !important;
+          background-color: #ffffff !important;
+          color: #64748b !important;
+          font-weight: 500 !important;
           font-size: 13px !important;
           padding: 0 20px !important;
           transition: all 0.2s ease !important;
         }
         button[onclick="clearEmployeeFilters()"]:hover {
-          background-color: rgba(239, 68, 68, 0.1) !important;
-          border-color: #ef4444 !important;
+          background-color: #ffffff !important;
+          border-color: #cbd5e1 !important;
+          color: #24204D !important;
           transform: translateY(-1px) !important;
         }
       `}} />

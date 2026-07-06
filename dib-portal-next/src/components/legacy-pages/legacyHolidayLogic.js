@@ -398,8 +398,8 @@
       <div class="card" style="padding: 0; border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 8px 30px rgba(0,0,0,0.03)">
         <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center">
           <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">รายการวันหยุดนักขัตฤกษ์</h3>
-          <select class="select-input" style="width: 160px; height: 38px;" onchange="window.filterHolidaysByYear(this.value)">
-            <option value="">-- ทั้งหมดทุกปี --</option>
+          <select class="select-input" style="width: 95px; height: 38px;" onchange="window.filterHolidaysByYear(this.value)">
+            <option value="">-- ปีทั้งหมด --</option>
             ${yearOptions}
           </select>
         </div>

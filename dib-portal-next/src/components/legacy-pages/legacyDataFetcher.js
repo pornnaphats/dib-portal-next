@@ -333,5 +333,51 @@ export async function fetchAndSetLegacyData() {
   }
   })());
 
+  promises.push((async () => {
+  // 8. Fetch Schedule Tasks from Supabase
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseKey) {
+      const res = await fetch(`${supabaseUrl}/rest/v1/schedule_tasks?select=*&limit=5000`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      });
+      if (res.ok) {
+        const rawTasks = await res.json();
+        const colorForNode = (node) => {
+          const nodeColors = {
+            'Monitor': '#2563eb',
+            'Report': '#d97706',
+            'Internal': '#475569',
+            'Content': '#c026d3',
+            'Graphic': '#16a34a',
+            'Coordinator': '#e11d48',
+            'AI': '#7c3aed',
+            'Adhoc': '#ea580c',
+            'Meeting': '#059669',
+            'AE': '#0369a1',
+            'Production': '#7e22ce',
+            'Seminar': '#0f766e',
+            'Other': '#64748b'
+          };
+          return nodeColors[node] || nodeColors['Other'];
+        };
+        window.SCHEDULE_TASKS = rawTasks.map(t => ({
+          id: t.id,
+          date: t.date,
+          person: t.person_id,
+          acc: t.project || '',
+          node: t.node || 'Other',
+          title: t.work_detail || '',
+          hours: parseInt(t.percentage) || 0,
+          color: colorForNode(t.node)
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch schedule tasks from Supabase:', err);
+  }
+  })());
+
   await Promise.all(promises);
 }

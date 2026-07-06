@@ -8,10 +8,11 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
 export default function ScheduleView() {
-  const { employees, scheduleTasks } = useData();
+  const { employees } = useData();
   const [search, setSearch] = useState("");
   const [teamFilter, setTeamFilter] = useState("all");
   const [leaveLoaded, setLeaveLoaded] = useState(false);
+  const [tasks, setTasks] = useState([]);
   const dateInputRef = useRef(null);
   const fpInstance = useRef(null);
 
@@ -124,6 +125,33 @@ export default function ScheduleView() {
     // Import legacy modal logic so qcShowManageEmployeesModal is available
     import("../legacy-pages/legacyQcPlanLogic.js").catch(() => {});
 
+    // Import legacy employee & sidebar logic
+    import("../employee/legacyEmployeeLogic.js").then(() => {
+      // Sync tasks state initially
+      setTasks([...(window.SCHEDULE_TASKS || [])]);
+
+      // Wrap window functions to keep React state in sync
+      const origHandleTaskDrop = window.handleTaskDrop;
+      window.handleTaskDrop = function(...args) {
+        if (typeof origHandleTaskDrop === 'function') {
+          origHandleTaskDrop(...args);
+        }
+        setTasks([...(window.SCHEDULE_TASKS || [])]);
+      };
+
+      const origDeleteScheduledTask = window.deleteScheduledTask;
+      window.deleteScheduledTask = function(...args) {
+        if (typeof origDeleteScheduledTask === 'function') {
+          origDeleteScheduledTask(...args);
+        }
+        setTasks([...(window.SCHEDULE_TASKS || [])]);
+      };
+      
+      window.refreshReactSchedule = () => {
+        setTasks([...(window.SCHEDULE_TASKS || [])]);
+      };
+    }).catch(() => {});
+
     return () => {
       if (fpInstance.current) {
         fpInstance.current.destroy();
@@ -138,11 +166,18 @@ export default function ScheduleView() {
     }
   }, [weekStart]);
 
+  // Sync tasks when leaves or general data finishes loading
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.SCHEDULE_TASKS) {
+      setTasks([...window.SCHEDULE_TASKS]);
+    }
+  }, [leaveLoaded]);
+
   // Unique teams from employees (filter out "-" and invalid values)
   const teams = [...new Set((employees || []).map(e => e.dept || e.team || "").filter(t => t && t !== "-"))].sort();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "#f4f5fb" }}>
+    <div id="scheduleMainContent" style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "#f4f5fb", transition: "padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}>
       {/* Top Controls */}
       <div style={{
         padding: "12px 16px 8px 16px",
@@ -151,7 +186,7 @@ export default function ScheduleView() {
         flexWrap: "nowrap",
         gap: "8px",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
         position: "sticky",
         top: 0,
         zIndex: 20,
@@ -244,7 +279,7 @@ export default function ScheduleView() {
         </div>
 
         {/* Right Controls: Search & Team Filters */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", minWidth: 0, overflow: "hidden" }}>
           <div style={{ position: "relative", flex: 1, minWidth: "100px", maxWidth: "280px" }}>
             <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#b0b8cc" }} size={14} />
             <input
@@ -424,12 +459,28 @@ export default function ScheduleView() {
             employees={employees}
             searchQuery={search}
             teamFilter={teamFilter}
-            scheduleTasks={scheduleTasks}
+            scheduleTasks={tasks}
             startDate={toIso(weekStart)}
             endDate={toIso(weekEnd)}
           />
         </div>
       </div>
+
+      {/* Sidebar right placeholder */}
+      <div 
+        id="taskSidebarContainer" 
+        style={{ 
+          position: "fixed", 
+          top: 0, 
+          right: "-380px", 
+          width: "380px", 
+          height: "100vh", 
+          background: "#fff", 
+          boxShadow: "-10px 0 30px rgba(0,0,0,0.1)", 
+          zIndex: 10000, 
+          transition: "right 0.3s cubic-bezier(0.4, 0, 0.2, 1)" 
+        }} 
+      />
     </div>
   );
 }

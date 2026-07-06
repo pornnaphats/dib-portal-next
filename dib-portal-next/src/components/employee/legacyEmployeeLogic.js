@@ -1,3 +1,19 @@
+const getWorkloadColor = (hours) => {
+  if (typeof window !== 'undefined' && typeof window.getWorkloadColor === 'function' && window.getWorkloadColor !== getWorkloadColor) {
+    return window.getWorkloadColor(hours);
+  }
+  if (hours === 0) return 'var(--text-3)';
+  if (hours < 50) return '#ef4444';
+  if (hours <= 80) return '#facc15';
+  if (hours <= 100) return '#22c55e';
+  if (hours <= 120) return '#166534';
+  return '#991b1b';
+};
+if (typeof window !== 'undefined') {
+  window.getWorkloadColor = getWorkloadColor;
+}
+
+
 window.pageEmployee = function() {
     setTimeout(() => {
       const contentEl = document.getElementById('pageContent');
@@ -366,8 +382,8 @@ window.pageEmployee = function() {
 
   <div style="display:grid; grid-template-columns:1fr; gap:20px">
     <!-- Left: Data Table -->
-    <div class="card fade-in" style="padding:0; overflow:hidden">
-      <div style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:nowrap; overflow-x:auto">
+    <div class="card fade-in" style="padding:0; overflow:visible">
+      <div class="toolbar" style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:wrap; overflow:visible">
         <select id="filterPos" onchange="applyEmployeeFilters()" class="select-input" style="width:140px; flex-shrink:0">
           <option value="">ตำแหน่งทั้งหมด</option>
           <option value="Director">Director</option>
@@ -393,11 +409,11 @@ window.pageEmployee = function() {
           <i data-lucide="search" style="width:14px; height:14px; color:var(--text-3)"></i>
           <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="font-size:.75rem">
         </div>
-        <button onclick="clearEmployeeFilters()" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; font-family:Kanit; font-size:.7rem; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; white-space:nowrap; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+        <button onclick="clearEmployeeFilters()" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; font-family:Kanit; font-size:.7rem; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; white-space:nowrap; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
           <i data-lucide="rotate-ccw" style="width:14px; height:14px"></i> Clear All Filter
         </button>
         <div style="width:1px; height:20px; background:var(--border); margin:0 4px"></div>
-        <button onclick="openEmployeeModal()" class="btn btn-primary" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; font-size:.7rem; flex-shrink:0">
+        <button onclick="openEmployeeModal()" class="btn btn-primary" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; font-size:.7rem; flex-shrink:0">
           <i data-lucide="user-plus" style="width:16px; height:16px"></i> เพิ่มพนักงาน
         </button>
       </div>
@@ -2512,10 +2528,10 @@ window.pageEmployee = function() {
           approvedBy: (status === 'pending' || status === 'รอการอนุมัติ') ? '-' : (DATA.leaveRequests[idx].approvedBy === '-' ? 'Admin User' : DATA.leaveRequests[idx].approvedBy),
         };
 
-        // Save update to Google Sheets
+        // Save update to Database
         apiSaveLeave({ ...DATA.leaveRequests[idx], action: 'edit' }).then((success) => {
           if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Google Sheets ไม่สำเร็จ', 'error');
+            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
           }
         });
       }
@@ -2549,10 +2565,10 @@ window.pageEmployee = function() {
 
       DATA.leaveRequests.unshift(newReq);
 
-      // Save to Google Sheets
+      // Save to Database
       apiSaveLeave({ ...newReq, action: 'add' }).then((success) => {
         if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Google Sheets ไม่สำเร็จ', 'error');
+            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
         }
       });
     }
@@ -7656,49 +7672,58 @@ window.pageEmployee = function() {
 
 
 
-  window.apiSaveWorkshipScope = function (data) {
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
-    const payload = {
-      ...data,
-      timestamp: new Date().toISOString()
+  window.apiSaveWorkshipScope = async function (data) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase config is missing for Scope Sync");
+      return;
+    }
+
+    const headers = {
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
     };
 
-    console.log("Scope Sync: Sending payload:", payload);
+    console.log("Scope Sync: Sending payload to Supabase:", data);
 
     try {
-      // Create a unique iframe for each request to avoid collisions
-      const iframeId = 'sync_iframe_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      const iframe = document.createElement('iframe');
-      iframe.id = iframeId;
-      iframe.name = iframeId;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      if (data.action === 'add_workship_scope' || data.action === 'edit_workship_scope') {
+        const payload = {
+          id: data.id || ('SCOPE_' + Date.now()),
+          project: data.account,
+          node: data.node,
+          work_detail: data.detail,
+          percentage: parseInt(data.percent) || 0
+        };
 
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = GAS_URL;
-      form.target = iframeId;
-
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-
-      document.body.appendChild(form);
-      form.submit();
-
-      // Cleanup after a while
-      setTimeout(() => {
-        if (form && form.parentNode) document.body.removeChild(form);
-        if (iframe && iframe.parentNode) document.body.removeChild(iframe);
-      }, 5000);
-
-      console.log("Scope Sync: Request submitted successfully.");
+        await fetch(`${supabaseUrl}/rest/v1/project_scopes`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+      } else if (data.action === 'delete_workship_scope') {
+        let deleteUrl = `${supabaseUrl}/rest/v1/project_scopes`;
+        if (data.id) {
+          deleteUrl += `?id=eq.${data.id}`;
+        } else {
+          deleteUrl += `?project=eq.${encodeURIComponent(data.account)}&work_detail=eq.${encodeURIComponent(data.detail)}`;
+        }
+        await fetch(deleteUrl, {
+          method: 'DELETE',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          }
+        });
+      }
+      console.log("Scope Sync: Request completed successfully.");
     } catch (err) {
       console.error("Scope Sync Error:", err);
     }
-  }
+  };
 
   window.colorForNode = function (node) {
     const nodeColors = {
@@ -7968,102 +7993,66 @@ window.pageEmployee = function() {
 
 
   window.apiSaveScheduleTask = async function (task, person, dateIso) {
-    // URL for Workship Scope & Schedule backend
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
-    const payload = {
-      action: 'update_schedule',
-      date: dateIso,
-      name: person.nickname || person.name,
-      project: task.acc || '',
-      node: task.node || '',
-      work_detail: task.title || '',
-      percentage: task.hours || 0,
-      old_date: task.oldDate || '',
-      old_name: task.oldName || '',
-      taskId: task.id // Passed in case backend wants to use it for matching
-    };
+    if (typeof window.showToast === 'function') {
+      window.showToast('Saving schedule data...', 'success');
+    }
 
+    // 2. Sync to Supabase
     try {
-      let iframe = document.getElementById('hidden_schedule_sync_iframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'hidden_schedule_sync_iframe';
-        iframe.name = 'hidden_schedule_sync_iframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-      }
-
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = WEB_APP_URL;
-      form.target = 'hidden_schedule_sync_iframe';
-
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-
-      document.body.appendChild(form);
-      form.submit();
-
-      setTimeout(() => {
-        if (form.parentNode) document.body.removeChild(form);
-      }, 1000);
-
-      if (typeof window.showToast === 'function') {
-        window.showToast('Saving schedule data...', 'success');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (supabaseUrl && supabaseKey) {
+        const headers = {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        };
+        const dbPayload = {
+          id: task.id || ('TASK_' + Date.now()),
+          date: dateIso,
+          person_id: person.id,
+          project: task.acc || '',
+          node: task.node || '',
+          work_detail: task.title || '',
+          percentage: parseInt(task.hours) || 0
+        };
+        await fetch(`${supabaseUrl}/rest/v1/schedule_tasks`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(dbPayload)
+        });
+        console.log("Schedule saved to Supabase successfully.");
       }
     } catch (err) {
-      console.error('Error syncing schedule:', err);
+      console.error('Error saving schedule to Supabase:', err);
       if (typeof window.showToast === 'function') {
-        window.showToast('Error saving schedule data', 'error');
+        window.showToast('Error saving to database', 'error');
       }
     }
   };
 
   window.apiDeleteScheduleTask = async function (task, person) {
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
-    const payload = {
-      action: 'delete_schedule',
-      old_date: task.date || '',
-      old_name: person ? (person.nickname || person.name) : '',
-      work_detail: task.title || ''
-    };
+    if (typeof window.showToast === 'function') {
+      window.showToast('Task removed from schedule', 'success');
+    }
 
+    // 2. Sync to Supabase
     try {
-      let iframe = document.getElementById('hidden_schedule_sync_iframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = 'hidden_schedule_sync_iframe';
-        iframe.name = 'hidden_schedule_sync_iframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-      }
-
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = WEB_APP_URL;
-      form.target = 'hidden_schedule_sync_iframe';
-
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'payload';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-
-      document.body.appendChild(form);
-      form.submit();
-
-      setTimeout(() => {
-        if (form.parentNode) document.body.removeChild(form);
-      }, 1000);
-
-      if (typeof window.showToast === 'function') {
-        window.showToast('Task removed from schedule', 'success');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (supabaseUrl && supabaseKey) {
+        await fetch(`${supabaseUrl}/rest/v1/schedule_tasks?id=eq.${task.id}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`
+          }
+        });
+        console.log("Schedule deleted from Supabase successfully.");
       }
     } catch (err) {
-      console.error('Error deleting schedule:', err);
+      console.error('Error deleting schedule from Supabase:', err);
     }
   };
 
@@ -8129,7 +8118,7 @@ window.pageEmployee = function() {
     });
 
     const combinedTotalHours = dayTasks.reduce((sum, t) => sum + (Number(t.hours) || 0), 0) + holidayTotalPct;
-    const wlColor = getWorkloadColor(combinedTotalHours);
+    const wlColor = (window.getWorkloadColor || getWorkloadColor)(combinedTotalHours);
 
     const modalId = 'dayDetailModal';
     const html = `
@@ -8956,7 +8945,7 @@ window.pageSchedule = function() {
           // Tasks for this person & day
           const dayTasks = tasksByPersonDay[`${p.id}_${d.dateIso}`] || [];
           const totalHours = dayTasks.reduce((sum, t) => sum + (Number(t.hours) || 0), 0);
-          const wlColor = getWorkloadColor(totalHours);
+          const wlColor = (window.getWorkloadColor || getWorkloadColor)(totalHours);
 
           let holidayTotalPct = 0;
           let holidayAssignmentCount = 0;
@@ -8970,7 +8959,7 @@ window.pageSchedule = function() {
               holidayAssignmentCount += 1;
             }
           });
-          const wlColorHoliday = getWorkloadColor(holidayTotalPct);
+          const wlColorHoliday = (window.getWorkloadColor || getWorkloadColor)(holidayTotalPct);
 
           return `
                         <td ondragover="event.preventDefault(); this.style.background='rgba(99,102,241,0.05)'" 
@@ -9081,5 +9070,438 @@ window.pageSchedule = function() {
   </div>
   `;
   }
+
+  window.openEmployeeModal = function (editId = "") {
+    const isEdit = !!editId;
+    const modalId = 'addEmployeeModal';
+    const dataObj = window.DATA || DATA || {};
+    const emp = isEdit ? (dataObj.employees || []).find(e => e.id === editId) : null;
+
+    if (isEdit && !emp) {
+      if (typeof window.showAlert === 'function') {
+        window.showAlert('ไม่พบข้อมูล', 'ไม่พบข้อมูลพนักงานที่ต้องการแก้ไข', 'error');
+      } else {
+        alert('ไม่พบข้อมูลพนักงานที่ต้องการแก้ไข');
+      }
+      return;
+    }
+
+    const posOrder = ['director', 'manager', 'assistant manager', 'senior', 'junior'];
+    const uniquePositions = [...new Set((dataObj.employees || []).map(e => (e.pos || '').trim()).filter(Boolean))].sort((a, b) => {
+        const ai = posOrder.findIndex(o => a.toLowerCase().includes(o));
+        const bi = posOrder.findIndex(o => b.toLowerCase().includes(o));
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+    });
+
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px)">
+      <div style="background:#fff; width:100%; max-width:550px; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.15); display:flex; flex-direction:column; overflow:hidden; animation: modalIn 0.3s ease-out">
+        <div style="padding:24px; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+          <h3 style="font-family:Kanit; font-size:1.1rem; font-weight:700; color:var(--text); margin:0">${isEdit ? 'แก้ไขข้อมูลพนักงาน' : 'เพิ่มพนักงานใหม่'}</h3>
+          <button onclick="document.getElementById('${modalId}').remove()" style="background:none; border:none; cursor:pointer; color:var(--text-3)"><i data-lucide="x" style="width:20px; height:20px"></i></button>
+        </div>
+        
+        <div style="padding:24px; overflow-y:auto; max-height:calc(100vh - 150px)">
+          <!-- Row 1: ID, Nickname -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label">รหัสพนักงาน</label>
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:10px; overflow:hidden; height:42px">
+                <span style="padding:0 10px; font-family:Kanit; font-weight:700; color:var(--text-3); background:#f1f5f9; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.75rem">RS</span>
+                <input type="text" id="empIdDigits" class="form-input" style="border:none; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="000" value="${isEdit ? emp.id.replace('RS', '') : ''}">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ชื่อเล่น</label>
+              <input type="text" id="empNick" class="form-input" style="height:42px" value="${isEdit ? emp.nickname : ''}" placeholder="ชื่อเล่น">
+            </div>
+          </div>
+          
+          <!-- Row 2: Name Thai, Name English -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label">ชื่อ-นามสกุล (ไทย)</label>
+              <input type="text" id="empName" class="form-input" style="height:42px" value="${isEdit ? emp.name : ''}" placeholder="ระบุชื่อภาษาไทย">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ชื่อ-นามสกุล (อังกฤษ)</label>
+              <input type="text" id="empNameEn" class="form-input" style="height:42px" value="${isEdit ? (emp.nameEn || '') : ''}" placeholder="Name in English">
+            </div>
+          </div>
+
+          <!-- Row 3: Email, Birthday -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label">E-mail</label>
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:10px; overflow:hidden; height:42px">
+                <input type="text" id="empEmailUser" class="form-input" style="border:none; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="username" value="${isEdit ? (emp.email || '').split('@')[0] : ''}">
+                <span style="padding:0 10px; font-family:Kanit; font-weight:600; color:var(--text-3); background:#f1f5f9; border-left:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.7rem">@realsmart.co.th</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">วันเกิด</label>
+              <div style="display:flex; gap:4px; height:42px">
+                <select id="empBirthDay" class="form-input" style="flex:1; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                  <option value="" disabled selected>วัน</option>
+                  ${Array.from({ length: 31 }, (_, i) => i + 1).map(d => `<option value="${d}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[0] == d ? 'selected' : ''}>${d}</option>`).join('')}
+                </select>
+                <select id="empBirthMonth" class="form-input" style="flex:1.5; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                  <option value="" disabled selected>เดือน</option>
+                  ${['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, i) => `<option value="${i + 1}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[1] == i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+                </select>
+                <select id="empBirthYear" class="form-input" style="flex:1.2; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                  <option value="" disabled selected>พ.ศ.</option>
+                  ${Array.from({ length: 80 }, (_, i) => 2567 - i).map(y => `<option value="${y}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[2] == y ? 'selected' : ''}>${y}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 4: Position, Team -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label">ตำแหน่ง</label>
+              <select id="empPos" onchange="handlePosChange()" class="form-input" style="appearance:auto">
+                <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกตำแหน่ง</option>
+                ${uniquePositions.map(p => `<option value="${p}" ${isEdit && emp.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ทีม</label>
+              <select id="empTeam" onchange="handleTeamChange()" class="form-input" style="appearance:auto">
+                <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกทีม</option>
+                <option value="ACE" ${isEdit && emp.dept === 'ACE' ? 'selected' : ''}>ACE</option>
+                <option value="Sertec" ${isEdit && emp.dept === 'Sertec' ? 'selected' : ''}>Sertec</option>
+                <option value="ONIX" ${isEdit && emp.dept === 'ONIX' ? 'selected' : ''}>ONIX</option>
+                <option value="Sale Support" ${isEdit && emp.dept === 'Sale Support' ? 'selected' : ''}>Sale Support</option>
+                <option value="Call Center" ${isEdit && emp.dept === 'Call Center' ? 'selected' : ''}>Call Center</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 5: Shift, Offdays -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
+            <div class="form-group">
+              <label class="form-label">กะเวลาทำงาน</label>
+              <select id="empShift" class="form-input" style="appearance:auto">
+                <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกกะเวลา</option>
+                <option value="06:00 - 15:00" ${isEdit && emp.shift === '06:00 - 15:00' ? 'selected' : ''}>06:00 - 15:00</option>
+                <option value="09:00 - 18:00" ${isEdit && emp.shift === '09:00 - 18:00' ? 'selected' : ''}>09:00 - 18:00</option>
+                <option value="15:00 - 00:00" ${isEdit && emp.shift === '15:00 - 00:00' ? 'selected' : ''}>15:00 - 00:00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">วันหยุด</label>
+              <select id="empOff" class="form-input" style="appearance:auto">
+                <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกวันหยุด</option>
+                <option value="เสาร์ - อาทิตย์" ${isEdit && emp.offdays === 'เสาร์ - อาทิตย์' ? 'selected' : ''}>เสาร์ - อาทิตย์</option>
+                <option value="จันทร์ - อังคาร" ${isEdit && emp.offdays === 'จันทร์ - อังคาร' ? 'selected' : ''}>จันทร์ - อังคาร</option>
+                <option value="พุธ - พฤหัสบดี" ${isEdit && emp.offdays === 'พุธ - พฤหัสบดี' ? 'selected' : ''}>พุธ - พฤหัสบดี</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 6: Type, Status -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+            <div class="form-group">
+              <label class="form-label">ประเภทพนักงาน</label>
+              <select id="empType" onchange="handleTypeChange()" class="form-input" style="appearance:auto">
+                <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกประเภท</option>
+                <option value="พนักงานประจำ" ${isEdit && emp.empType === 'พนักงานประจำ' ? 'selected' : ''}>พนักงานประจำ</option>
+                <option value="พนักงานสัญญาจ้าง" ${isEdit && emp.empType === 'พนักงานสัญญาจ้าง' ? 'selected' : ''}>พนักงานสัญญาจ้าง</option>
+                <option value="พนักงานทดลองงาน" ${isEdit && emp.empType === 'พนักงานทดลองงาน' ? 'selected' : ''}>พนักงานทดลองงาน</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">สถานะ</label>
+              <select id="empStatus" class="form-input" style="appearance:auto">
+                <option value="active" ${(!isEdit || emp.status === 'active') ? 'selected' : ''}>ปฏิบัติงาน</option>
+                <option value="resigned" ${isEdit && emp.status === 'resigned' ? 'selected' : ''}>ลาออก</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="padding:20px 28px; background:var(--surface2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px">
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline">ยกเลิก</button>
+          <button id="saveEmpBtn" onclick="submitEmployeeData('${editId || ''}')" class="btn btn-primary" style="min-width:140px">
+            <i data-lucide="save" style="width:16px; height:16px"></i> ${isEdit ? 'อัปเดตข้อมูล' : 'บันทึกพนักงาน'}
+          </button>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+  `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById(modalId) });
+
+    // Pre-select birthday dropdowns if editing
+    if (isEdit && emp.birthdate) {
+      const parts = emp.birthdate.split('/');
+      if (parts.length === 3) {
+        document.getElementById('empBirthDay').value = parseInt(parts[0]);
+        document.getElementById('empBirthMonth').value = parseInt(parts[1]);
+      }
+    }
+
+    // Handle position/team/type changes to disable/enable fields
+    window.handlePosChange = function () {
+      const pos = document.getElementById('empPos').value;
+      const teamSelect = document.getElementById('empTeam');
+      const shiftSelect = document.getElementById('empShift');
+      const offSelect = document.getElementById('empOff');
+      const type = document.getElementById('empType').value;
+      const team = teamSelect.value;
+
+      // Director or Contract: No team
+      if (pos === 'Director' || type === 'พนักงานสัญญาจ้าง') {
+        teamSelect.value = "";
+        teamSelect.disabled = true;
+        teamSelect.style.background = "#f1f5f9";
+      } else {
+        teamSelect.disabled = false;
+        teamSelect.style.background = "#fff";
+      }
+
+      // Team Call Center: No shift, no offdays
+      if (team === 'Call Center') {
+        shiftSelect.value = "";
+        shiftSelect.disabled = true;
+        shiftSelect.style.background = "#f1f5f9";
+        offSelect.value = "";
+        offSelect.disabled = true;
+        offSelect.style.background = "#f1f5f9";
+      } else {
+        shiftSelect.disabled = false;
+        shiftSelect.style.background = "#fff";
+        offSelect.disabled = false;
+        offSelect.style.background = "#fff";
+      }
+    };
+
+    window.handleTypeChange = function () {
+      window.handlePosChange();
+    };
+
+    window.handleTeamChange = function () {
+      window.handlePosChange();
+    };
+
+    // Initial call if editing
+    if (isEdit) window.handlePosChange();
+  };
+
+  window.submitEmployeeData = async function (editId = "") {
+    const isEdit = !!editId;
+    const btn = document.getElementById('saveEmpBtn');
+
+    // Get digits and combine with RS prefix
+    const digits = document.getElementById('empIdDigits').value.trim();
+    const id = "RS" + digits;
+
+    const name = document.getElementById('empName').value;
+    const nameEn = document.getElementById('empNameEn').value;
+    const nick = document.getElementById('empNick').value;
+
+    // Get birthday from 3 dropdowns
+    const bDay = document.getElementById('empBirthDay').value;
+    const bMonth = document.getElementById('empBirthMonth').value;
+    const bYear = document.getElementById('empBirthYear').value;
+    const birth = (bDay && bMonth) ? `${bDay}/${bMonth}/${bYear || '-'}` : "-";
+
+    const pos = document.getElementById('empPos').value;
+    const team = document.getElementById('empTeam').value;
+    const status = document.getElementById('empStatus').value;
+    const shift = document.getElementById('empShift').value;
+    const off = document.getElementById('empOff').value;
+    const empType = document.getElementById('empType').value;
+
+    const emailUser = document.getElementById('empEmailUser').value.trim();
+    const email = emailUser ? `${emailUser}@realsmart.co.th` : '';
+
+    const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
+
+    if (!digits || !name || !nick) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัส ชื่อ และชื่อเล่นพนักงาน', 'warning'); return; }
+
+    if ((bDay || bMonth) && (!bDay || !bMonth)) {
+      alertFn('ข้อมูลไม่สมบูรณ์', 'กรุณาเลือกทั้งวันและเดือนเกิดให้ครบถ้วน', 'warning');
+      return;
+    }
+    if (!pos) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกตำแหน่งของพนักงาน', 'warning'); return; }
+
+    if (pos !== 'Director' && empType !== 'พนักงานสัญญาจ้าง' && !team) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกทีมที่พนักงานสังกัด', 'warning'); return; }
+    if (team !== 'Call Center' && !shift) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกกะเวลาทำงาน', 'warning'); return; }
+    if (team !== 'Call Center' && !off) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกวันหยุดพนักงาน', 'warning'); return; }
+
+    if (!empType) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกประเภทพนักงาน', 'warning'); return; }
+    if (!status) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกสถานะปัจจุบัน', 'warning'); return; }
+
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="spin" data-lucide="refresh-cw" style="width:16px; height:16px; animation:spin 1s linear infinite"></i> กำลังบันทึก...';
+    btn.disabled = true;
+    if (window.lucide) window.lucide.createIcons({ root: btn });
+
+    const payload = {
+      action: isEdit ? 'edit' : 'add',
+      id: id.trim(),
+      name: name.trim(),
+      nameEn: nameEn.trim(),
+      nickname: nick || '-',
+      email: email || '-',
+      birthdate: birth || '-',
+      position: pos || '-',
+      team: team || '-',
+      shift: shift || '-',
+      offdays: off || '-',
+      status: status,
+      empType: empType
+    };
+
+    const dataObj = window.DATA || DATA || {};
+
+    try {
+      const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
+
+      console.log("Submitting Employee Data...", payload);
+
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+
+      console.log("Sync request sent to Google Sheets");
+
+      if (isEdit) {
+        const idx = (dataObj.employees || []).findIndex(e => e.id === editId);
+        if (idx !== -1) {
+          dataObj.employees[idx] = {
+            ...dataObj.employees[idx],
+            ...payload,
+            dept: payload.team,
+            pos: payload.position
+          };
+        }
+      } else {
+        if (!dataObj.employees) dataObj.employees = [];
+        dataObj.employees.push({
+          ...payload,
+          dept: payload.team,
+          pos: payload.position
+        });
+      }
+
+      if (document.getElementById('addEmployeeModal')) {
+        document.getElementById('addEmployeeModal').remove();
+      }
+      const contentEl = document.getElementById('pageContent');
+      if (contentEl) {
+        contentEl.innerHTML = window.pageEmployee();
+        if (window.lucide) window.lucide.createIcons({ root: contentEl });
+        if (typeof window.initEmployeeCharts === 'function') {
+          setTimeout(window.initEmployeeCharts, 100);
+        }
+      }
+
+      if (typeof window.showToast === 'function') {
+        window.showToast(isEdit ? 'Data updated successfully' : 'New employee added successfully', 'success');
+      }
+
+    } catch (err) {
+      console.error("Submission Error:", err);
+      if (typeof window.showToast === 'function') window.showToast('Error submitting data', 'error');
+    } finally {
+      if (btn) {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        if (window.lucide) window.lucide.createIcons({ root: btn });
+      }
+    }
+  };
+
+  window.editEmployee = function (id) {
+    window.openEmployeeModal(id);
+  };
+
+  window.deleteEmployee = async function (id) {
+    const confirmFn = window.showConfirmModal || showConfirmModal;
+    const dataObj = window.DATA || DATA || {};
+    
+    if (typeof confirmFn === 'function') {
+      confirmFn({
+        title: 'Confirm Deletion',
+        message: 'Are you sure you want to permanently delete employee ' + id + '? This action cannot be undone.',
+        confirmText: 'Delete Permanently',
+        cancelText: 'Cancel',
+        type: 'danger',
+        onConfirm: async () => {
+          try {
+            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
+
+            await fetch(WEB_APP_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain' },
+              body: JSON.stringify({ action: 'delete', id: id })
+            });
+
+            if (dataObj.employees) {
+              dataObj.employees = dataObj.employees.filter(e => e.id !== id);
+              if (window.DATA) window.DATA.employees = dataObj.employees;
+            }
+
+            const contentEl = document.getElementById('pageContent');
+            if (contentEl) {
+              contentEl.innerHTML = window.pageEmployee();
+              if (window.lucide) window.lucide.createIcons({ root: contentEl });
+              if (typeof window.initEmployeeCharts === 'function') {
+                setTimeout(window.initEmployeeCharts, 100);
+              }
+            }
+
+            if (typeof window.showToast === 'function') {
+              window.showToast('Data deleted successfully', 'success');
+            }
+          } catch (err) {
+            console.error("Error deleting employee:", err);
+            if (typeof window.showToast === 'function') {
+              window.showToast('Error deleting data', 'error');
+            }
+          }
+        }
+      });
+    } else {
+      if (confirm('Are you sure you want to permanently delete employee ' + id + '? This action cannot be undone.')) {
+        try {
+          const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
+          await fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'delete', id: id })
+          });
+          if (dataObj.employees) {
+            dataObj.employees = dataObj.employees.filter(e => e.id !== id);
+            if (window.DATA) window.DATA.employees = dataObj.employees;
+          }
+          const contentEl = document.getElementById('pageContent');
+          if (contentEl) {
+            contentEl.innerHTML = window.pageEmployee();
+            if (window.lucide) window.lucide.createIcons({ root: contentEl });
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  };
 
   

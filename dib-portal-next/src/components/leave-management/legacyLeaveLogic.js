@@ -509,10 +509,10 @@
           approvedBy: (status === 'pending' || status === 'รอการอนุมัติ') ? '-' : (window.DATA.leaveRequests[idx].approvedBy === '-' ? 'Admin User' : window.DATA.leaveRequests[idx].approvedBy),
         };
 
-        // Save update to Google Sheets
+        // Save update to Database
         apiSaveLeave({ ...window.DATA.leaveRequests[idx], action: 'edit' }).then((success) => {
           if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Google Sheets ไม่สำเร็จ', 'error');
+            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
           }
         });
       }
@@ -546,10 +546,10 @@
 
       window.DATA.leaveRequests.unshift(newReq);
 
-      // Save to Google Sheets
+      // Save to Database
       apiSaveLeave({ ...newReq, action: 'add' }).then((success) => {
         if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Google Sheets ไม่สำเร็จ', 'error');
+            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
         }
       });
     }

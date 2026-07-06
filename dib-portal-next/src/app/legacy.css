@@ -1115,3 +1115,102 @@ span.flatpickr-weekday {
   border: none !important;
 }
 
+
+/* Overrides to prevent purple outline and highlight on button select-inputs */
+        button.select-input:focus {
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+        button.select-input:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
+
+/* Make Save, Edit, Cancel, and other action buttons pill-shaped across all pages */
+.btn,
+.btn-primary,
+.btn-outline,
+.btn-danger,
+.btn-success,
+.btn-sm,
+.tab-btn,
+button,
+input[type="button"],
+input[type="submit"] {
+  border-radius: 9999px !important;
+}
+
+/* Style for custom filter dropdown list containers */
+[id^="listFilter"],
+.custom-select-dropdown {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  padding: 6px !important;
+  z-index: 9999 !important;
+}
+
+/* Style for custom filter dropdown list items */
+[id^="listFilter"] > div,
+.custom-select-option {
+  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+  cursor: pointer !important;
+  border-radius: 8px !important;
+  color: #4b5675 !important;
+  font-weight: 500 !important;
+  background-color: transparent !important;
+  transition: all 0.15s ease !important;
+  font-family: 'Kanit', sans-serif !important;
+}
+
+/* Hover and active states for custom filter items - exactly matching the user's image, no bold */
+[id^="listFilter"] > div:hover,
+.custom-select-option:hover {
+  background-color: #f5f3ff !important; /* light purple background */
+  color: #24204d !important; /* dark blue text */
+  font-weight: 500 !important; /* NOT bold */
+}
+
+/* Ensure all custom select wrapper triggers are rounded by default */
+.custom-select-wrapper .select-input {
+  border-radius: 8px !important; /* ทรงมนแบบเดิม */
+}
+
+/* Ensure all filter select inputs and select elements are pill-shaped (only for toolbars/filters) */
+.toolbar .select-input,
+.toolbar select.form-input,
+.toolbar .custom-select-wrapper .select-input,
+[id^="custom_wrap_filter"] .select-input,
+#scopeFilterProject,
+#scopeFilterNode,
+#ws2Acc {
+  border-radius: 9999px !important; /* ทรงเม็ดยา */
+}
+
+/* Reduce padding for birthday dropdown triggers so the text is fully visible */
+#custom_wrap_empBirthDay .select-input,
+#custom_wrap_empBirthMonth .select-input,
+#custom_wrap_empBirthYear .select-input {
+  padding-left: 8px !important;
+  padding-right: 22px !important;
+  background-position: right 6px center !important;
+  background-size: 10px !important;
+  font-size: 11.5px !important;
+}
+
+/* Make the dropdown menu pop-ups for birthday selects match the inputs' narrow widths */
+#custom_wrap_empBirthDay .custom-select-dropdown,
+#custom_wrap_empBirthMonth .custom-select-dropdown,
+#custom_wrap_empBirthYear .custom-select-dropdown {
+  min-width: 100% !important;
+}
+
+
+
+
+
+
+

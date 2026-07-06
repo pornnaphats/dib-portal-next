@@ -317,17 +317,17 @@ export default function LeaveManagementReact() {
                     {/* Charts and Calendar Row */}
                     <div className="grid grid-cols-[320px_1fr_320px_240px] gap-4 mb-6">
                         {/* Leave Type Chart */}
-                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0">
+                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col">
                             <div className="text-sm font-bold text-gray-800 mb-4">สถิติประเภทการลา</div>
-                            <div className="h-[220px] w-full relative">
+                            <div className="h-[190px] w-full relative">
                                 <canvas id="leaveTypeChart"></canvas>
                             </div>
                         </div>
 
                         {/* Trend Chart */}
-                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0">
+                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col">
                             <div className="text-sm font-bold text-gray-800 mb-4">แนวโน้มการลาในแต่ละเดือน</div>
-                            <div className="h-[220px] w-full relative">
+                            <div className="h-[190px] w-full relative">
                                 <canvas id="leaveTrendChart"></canvas>
                             </div>
                         </div>
@@ -427,7 +427,7 @@ export default function LeaveManagementReact() {
                         </div>
 
                         {/* Calendar */}
-                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col">
+                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col h-[280px]">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="text-[0.8rem] font-extrabold text-gray-800 tracking-tight">ปฏิทินการลา</div>
                                 <div className="flex gap-1.5 items-center">

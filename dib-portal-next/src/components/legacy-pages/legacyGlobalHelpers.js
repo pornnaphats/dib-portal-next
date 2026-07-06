@@ -376,13 +376,13 @@ if (typeof window !== 'undefined') {
     if (event) event.stopPropagation();
     const menu = document.getElementById('actionMenu_' + id);
     if (!menu) return;
-    const isOpen = menu.style.display === 'block';
+    const isOpen = menu.style.display === 'flex';
 
     // Close all other menus
     document.querySelectorAll('[id^="actionMenu_"]').forEach(m => m.style.display = 'none');
 
     if (!isOpen) {
-      menu.style.display = 'block';
+      menu.style.display = 'flex';
     }
   };
 
@@ -393,5 +393,271 @@ if (typeof window !== 'undefined') {
     });
     window._actionMenuListenerAdded = true;
   }
+
+  // --- AUTOMATIC CUSTOM DROPDOWN CONVERTER FOR ALL FILTERS ---
+  function convertNativeSelectsToCustomDropdowns() {
+    if (typeof document === 'undefined') return;
+    const selects = document.querySelectorAll('select.select-input:not([data-custom-select]), select.form-input:not([data-custom-select])');
+    selects.forEach(select => {
+      // Skip if it's already marked as done or hidden
+      select.setAttribute('data-custom-select', 'true');
+      
+      // Keep width and styling from original select
+      const originalWidth = select.style.width || select.getAttribute('width') || '';
+      const originalHeight = select.style.height || select.getAttribute('height') || '';
+      const originalFlex = select.style.flex || '';
+      
+      // Hide original select
+      select.style.display = 'none';
+
+      // Create wrapper
+      const wrapper = document.createElement('div');
+      wrapper.className = 'custom-select-wrapper';
+      wrapper.style.cssText = `position: relative; z-index: 90;`;
+      if (originalWidth) {
+        wrapper.style.width = originalWidth;
+      } else if (originalFlex) {
+        wrapper.style.flex = originalFlex;
+        wrapper.style.width = '0';
+        wrapper.style.minWidth = '0';
+      } else {
+        wrapper.style.width = '100%';
+      }
+      if (originalHeight) wrapper.style.height = originalHeight;
+      if (select.id) wrapper.id = 'custom_wrap_' + select.id;
+
+      // Insert wrapper and place original select inside it
+      select.parentNode.insertBefore(wrapper, select);
+      wrapper.appendChild(select);
+
+      // Create trigger button replicating select-input class
+      const trigger = document.createElement('button');
+      trigger.className = 'select-input';
+      trigger.style.cssText = `width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: Kanit, sans-serif; font-size: 13px; cursor: pointer;`;
+      if (originalHeight) {
+        trigger.style.height = originalHeight;
+        trigger.style.setProperty('height', originalHeight, 'important');
+      }
+
+      
+      const triggerText = document.createElement('span');
+      triggerText.style.cssText = `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
+      triggerText.textContent = select.options[select.selectedIndex]?.text || '';
+      trigger.appendChild(triggerText);
+      
+      wrapper.appendChild(trigger);
+
+      // Create custom dropdown container
+      const dropdown = document.createElement('div');
+      dropdown.className = 'custom-select-dropdown';
+      dropdown.style.cssText = `display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; width: 100%; min-width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 9999; padding: 4px; max-height: 250px; overflow-y: auto;`;
+
+      // Helper function to update dropdown items based on select options
+      const populateOptions = () => {
+        dropdown.innerHTML = '';
+        Array.from(select.options).forEach((opt, idx) => {
+          const optionDiv = document.createElement('div');
+          optionDiv.className = 'custom-select-option';
+          
+          // Check if this option is selected
+          const isSelected = select.selectedIndex === idx;
+          optionDiv.style.cssText = isSelected 
+            ? `padding: 8px 12px !important; font-size: 12.5px !important; cursor: pointer !important; border-radius: 8px !important; color: #635bff !important; background-color: #f5f3ff !important; font-weight: 500 !important; font-family: 'Kanit', sans-serif !important;`
+            : `padding: 8px 12px !important; font-size: 12.5px !important; cursor: pointer !important; border-radius: 8px !important; color: #4b5675 !important; background-color: transparent !important; font-weight: 500 !important; font-family: 'Kanit', sans-serif !important; transition: all 0.15s ease !important;`;
+          
+          optionDiv.textContent = opt.text;
+
+          optionDiv.onclick = (e) => {
+            e.stopPropagation();
+            select.selectedIndex = idx;
+            triggerText.textContent = opt.text;
+            dropdown.style.display = 'none';
+            wrapper.style.zIndex = '90'; // Reset z-index
+
+            // Dispatch events to trigger any page-level changes
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Re-populate to update checked states
+            populateOptions();
+          };
+          dropdown.appendChild(optionDiv);
+        });
+      };
+
+      populateOptions();
+      wrapper.appendChild(dropdown);
+
+      // Toggle logic
+      trigger.onclick = (e) => {
+        e.stopPropagation();
+        const isOpen = dropdown.style.display === 'block';
+        
+        // Close all other dropdowns and reset their z-indexes
+        document.querySelectorAll('.custom-select-dropdown').forEach(d => {
+          d.style.display = 'none';
+          const p = d.closest('.custom-select-wrapper');
+          if (p) p.style.zIndex = '90';
+        });
+        document.querySelectorAll('[id^="listFilter"]').forEach(l => l.style.display = 'none');
+
+        if (!isOpen) {
+          // Re-populate options in case options changed dynamically
+          populateOptions();
+          dropdown.style.display = 'block';
+          wrapper.style.zIndex = '10000'; // Bring active wrapper to front
+        } else {
+          dropdown.style.display = 'none';
+          wrapper.style.zIndex = '90';
+        }
+      };
+
+      // Watch for changes in native select options (e.g. dynamic years or filter loading)
+      const selectObserver = new MutationObserver(() => {
+        triggerText.textContent = select.options[select.selectedIndex]?.text || '';
+        populateOptions();
+      });
+      selectObserver.observe(select, { childList: true, attributes: true, characterData: true, subtree: true });
+    });
+  }
+
+  // Hook global click listener to close dropdowns and reset z-indexes
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-select-dropdown').forEach(d => {
+      d.style.display = 'none';
+      const p = d.closest('.custom-select-wrapper');
+      if (p) p.style.zIndex = '90';
+    });
+  });
+
+  // Watch entire DOM to automatically convert any newly added select filters
+  setTimeout(convertNativeSelectsToCustomDropdowns, 100);
+  const globalObserver = new MutationObserver(() => {
+    convertNativeSelectsToCustomDropdowns();
+  });
+  globalObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  // --- GLOBAL CUSTOM CONFIRM MODAL DIALOG ---
+  window.showConfirmModal = function({ title, message, confirmText, onConfirm, type = 'danger' }) {
+    const modalId = 'confirmModal';
+    if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+    const color = type === 'danger' ? '#ef4444' : '#6366f1';
+    const bgLight = type === 'danger' ? '#fef2f2' : '#f5f3ff';
+    const icon = type === 'danger' ? 'trash-2' : 'help-circle';
+
+    const html = `
+    <div id="${modalId}" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999; animation: fadeIn 0.3s ease">
+      <div class="modal-card" style="background:#fff; width:420px; border-radius:24px; padding:40px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
+        <div style="width:72px; height:72px; border-radius:22px; background:${bgLight}; color:${color}; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; transform: rotate(-5deg)">
+          <i data-lucide="${icon}" style="width:36px; height:36px"></i>
+        </div>
+        <h3 style="margin:0 0 12px; font-size:1.3rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
+        <p style="margin:0 0 32px; font-size:.9rem; color:#64748b; line-height:1.6; font-family:Kanit; padding:0 10px">${message}</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; padding:14px; border-radius:9999px !important; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.9rem; transition:all 0.2s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">Cancel</button>
+          <button id="confirmModalBtn" class="btn btn-primary" style="background:${color}; color:#fff; border:none; padding:14px; border-radius:9999px !important; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 8px 20px ${color}30; transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 25px ${color}40'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px ${color}30'">${confirmText}</button>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes modalBounce {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+
+    document.getElementById('confirmModalBtn').onclick = () => {
+      const card = document.querySelector(`#${modalId} .modal-card`);
+      if (card) card.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        document.getElementById(modalId).remove();
+        if (onConfirm) onConfirm();
+      }, 100);
+    };
+  };
+  // --- GLOBAL CUSTOM ALERT MODAL DIALOG ---
+  window.showAlert = function(title, message, type = 'warning') {
+    const modalId = 'alertModal';
+    if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+    const color = type === 'danger' ? '#ef4444' : (type === 'success' ? '#10b981' : '#f59e0b');
+    const bgLight = color + '10';
+    const icon = type === 'danger' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'alert-triangle');
+
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999; animation: fadeIn 0.3s ease">
+      <div class="modal-card" style="background:#fff; width:380px; border-radius:24px; padding:32px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
+        <div style="width:64px; height:64px; border-radius:20px; background:${bgLight}; color:${color}; display:flex; align-items:center; justify-content:center; margin:0 auto 20px">
+          <i data-lucide="${icon}" style="width:32px; height:32px"></i>
+        </div>
+        <h3 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
+        <p style="margin:0 0 24px; font-size:.85rem; color:#64748b; line-height:1.5; font-family:Kanit">${message}</p>
+        <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-primary" style="width:100%; background:${color}; color:#fff; border:none; padding:12px; border-radius:9999px !important; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 4px 12px ${color}30; transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">ตกลง</button>
+      </div>
+    </div>
+    <style>
+      @keyframes modalBounce {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+  };
+
+  window.toggleEmployeeFilterDropdown = function(type, event) {
+    if (event) event.stopPropagation();
+    const dropdown = document.getElementById('listFilter' + type);
+    if (!dropdown) return;
+    const isOpen = dropdown.style.display === 'block';
+
+    // Close all other dropdowns
+    document.querySelectorAll('[id^="listFilter"]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.custom-select-dropdown').forEach(d => {
+      d.style.display = 'none';
+      const p = d.closest('.custom-select-wrapper');
+      if (p) p.style.zIndex = '90';
+    });
+
+    if (!isOpen) {
+      dropdown.style.display = 'block';
+    }
+  };
+
+  window.selectEmployeeFilter = function(type, value, text) {
+    const input = document.getElementById('filter' + type);
+    const label = document.getElementById('labelFilter' + type);
+    if (input) input.value = value;
+    if (label) label.textContent = text;
+    
+    const dropdown = document.getElementById('listFilter' + type);
+    if (dropdown) dropdown.style.display = 'none';
+    
+    // Trigger the filter logic
+    if (typeof window.applyEmployeeFilters === 'function') {
+      window.applyEmployeeFilters();
+    }
+  };
+
+  // Close filter dropdowns when clicking outside
+  document.addEventListener('click', function() {
+    document.querySelectorAll('[id^="listFilter"]').forEach(el => el.style.display = 'none');
+  });
+
+
+
+
 
 

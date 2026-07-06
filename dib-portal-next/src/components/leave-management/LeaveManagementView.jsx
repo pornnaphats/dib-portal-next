@@ -43,37 +43,35 @@ export default function LeaveManagementView() {
           'Content-Type': 'application/json'
         };
 
-        const { action, ...data } = req;
-        const payload = {
-            id: data.id,
-            name: data.name,
-            type: data.type,
-            start_date: data.startRaw,
-            end_date: data.endRaw,
-            days: data.days,
-            ref_date: data.refDateRaw || data.refDate || null,
-            status: data.status,
-            approved_by: data.approvedBy,
-            note: data.note || data.reason || null
+        const { action } = req;
+        const dbPayload = {
+            id: req.id,
+            name: req.name,
+            type: req.type,
+            start_date: req.startRaw,
+            end_date: req.endRaw,
+            days: req.days,
+            ref_date: req.refDateRaw || req.refDate || null,
+            note: req.note || req.reason || '-'
         };
 
         let url = `${supabaseUrl}/rest/v1/leave_requests`;
         let method = 'POST';
 
         if (action === 'delete') {
-            url += `?id=eq.${data.id}`;
+            url += `?id=eq.${req.id}`;
             method = 'DELETE';
             const res = await fetch(url, { method, headers });
             return res.ok;
         } else if (action === 'edit') {
-            url += `?id=eq.${data.id}`;
+            url += `?id=eq.${req.id}`;
             method = 'PATCH';
         }
 
         const res = await fetch(url, {
             method,
             headers: { ...headers, 'Prefer': 'return=minimal' },
-            body: JSON.stringify(action === 'add' ? payload : payload)
+            body: JSON.stringify(dbPayload)
         });
 
         return res.ok;

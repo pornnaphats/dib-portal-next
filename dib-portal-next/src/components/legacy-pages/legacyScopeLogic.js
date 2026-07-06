@@ -1,3 +1,15 @@
+const getWorkloadColor = (hours) => {
+  if (typeof window !== 'undefined' && typeof window.getWorkloadColor === 'function') {
+    return window.getWorkloadColor(hours);
+  }
+  if (hours === 0) return 'var(--text-3)';
+  if (hours < 50) return '#ef4444';
+  if (hours <= 80) return '#facc15';
+  if (hours <= 100) return '#22c55e';
+  if (hours <= 120) return '#166534';
+  return '#991b1b';
+};
+
   window.PREMIUM_SCOPE_DATA = window.PREMIUM_SCOPE_DATA || [];
 
   window.applyScopeDashboardFilters = function() {
@@ -149,6 +161,7 @@
       ${window.isScopeBulkMode ? `
       <th style="width: 46px; min-width: 46px; padding: 18px 12px; text-align: center; position: sticky; left: 0; top: 0; z-index: 22; background: var(--surface); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); box-shadow: 0 4px 6px -4px rgba(0,0,0,0.12), inset 0 -1px 0 var(--border)">
         <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+          <input type="checkbox" id="selectAllScopes" onclick="toggleAllWorkshipScope(this)" style="width: 16px; height: 16px; cursor: pointer;">
         </div>
       </th>
       ` : ''}
@@ -244,6 +257,7 @@
 
         if (index >= data.length) {
             if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody });
+            if (typeof window.checkScopeSelection === 'function') window.checkScopeSelection();
             return;
         }
 
@@ -559,32 +573,133 @@
 
     return `
     <div class="fade-in">
+      <style>
+        /* Custom and Native select input override */
+        #scopeFilterProject,
+        #scopeFilterNode,
+        #custom_wrap_scopeFilterProject .select-input,
+        #custom_wrap_scopeFilterNode .select-input {
+          height: 38px !important;
+          border-radius: 99px !important;
+          border: 1.5px solid var(--border) !important;
+          background: var(--surface) !important;
+          padding: 0 16px !important;
+          font-weight: 500;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+        }
+        #scopeFilterProject:hover,
+        #scopeFilterNode:hover,
+        #custom_wrap_scopeFilterProject .select-input:hover,
+        #custom_wrap_scopeFilterNode .select-input:hover {
+          border-color: var(--primary) !important;
+        }
+        
+        /* Date range input override */
+        div[id$="_from"], 
+        div[id$="_to"] { 
+          height: 38px !important; 
+          border-radius: 99px !important;
+          border: 1.5px solid var(--border) !important;
+          background: var(--surface) !important;
+          padding: 0 16px !important;
+          font-size: 0.8rem !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+          transition: all 0.2s ease !important;
+        }
+        div[id$="_from"]:hover, 
+        div[id$="_to"]:hover { 
+          border-color: var(--primary) !important;
+        }
+
+        /* Search box override */
+        .scope-search-box {
+          border-radius: 99px !important;
+          height: 38px !important;
+          border: 1.5px solid var(--border) !important;
+          background: var(--surface) !important;
+          padding: 0 16px !important;
+          transition: all 0.2s ease !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+          width: 220px !important;
+          min-width: 220px !important;
+          flex-shrink: 0 !important;
+        }
+        .scope-search-box:focus-within {
+          border-color: var(--primary) !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+        }
+        
+        /* Stats Cards custom design */
+        .scope-stat-card {
+          border-radius: 20px !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          background: var(--surface) !important;
+        }
+        .scope-stat-card:hover {
+          transform: translateY(-4px) !important;
+          box-shadow: 0 12px 30px rgba(99, 102, 241, 0.08) !important;
+          border-color: rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* Buttons styling */
+        .scope-btn-pill {
+          border-radius: 99px !important;
+          height: 38px !important;
+          padding: 0 20px !important;
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          display: inline-flex;
+          align-items: center !important;
+          gap: 8px !important;
+          transition: all 0.2s ease !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          flex-shrink: 0 !important;
+        }
+
+        #scopeFilterProject,
+        #custom_wrap_scopeFilterProject {
+          min-width: 180px !important;
+        }
+        #scopeFilterNode,
+        #custom_wrap_scopeFilterNode {
+          min-width: 160px !important;
+        }
+
+        /* Table styling */
+        .scope-table-container {
+          border-radius: 24px !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+          border: 1px solid var(--border) !important;
+          overflow: hidden !important;
+        }
+      </style>
+
       <!-- DASHBOARD HEADER AREA -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px">
         <div></div>
         
         <!-- Filter Toolbar -->
         <div style="display: flex; align-items: center; gap: 8px; z-index: 100">
-          <style>
-            .date-range-wrapper div[id$="_from"], 
-            .date-range-wrapper div[id$="_to"] { 
-              height: 34px !important; 
-              font-size: 0.8rem !important;
-            }
-          </style>
           ${renderDateFilter('applyScopeDashboardFilters()', 'auto', null, false)}
 
           <!-- Search Box -->
-          <div class="search-box" style="width: 200px; background: var(--surface2); padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; gap: 8px; height: 34px">
+          <div class="search-box scope-search-box" style="width: 220px; display: flex; align-items: center; gap: 8px;">
             <i data-lucide="search" style="width: 14px; height: 14px; color: var(--text-3)"></i>
             <input type="text" id="scopeSearch" oninput="applyScopeDashboardFilters()" placeholder="Search Project or Scope..." style="background: none; border: none; outline: none; font-size: 0.75rem; width: 100%; color: var(--text); font-family: 'Kanit', sans-serif">
           </div>
 
-          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 140px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
+          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 38px; min-width: 180px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
             <option value="all">All Projects</option>
             ${(() => {
         // Use dynamically fetched accounts
-        const projects = window.PROJECT_ACCOUNTS || [];
+        if (!window.PROJECT_ACCOUNTS || window.PROJECT_ACCOUNTS.length === 0) {
+          window.PROJECT_ACCOUNTS = [...new Set((window.PREMIUM_SCOPE_DATA || []).map(g => g.account))].filter(Boolean).sort();
+        }
+        const projects = window.PROJECT_ACCOUNTS.length > 0 ? window.PROJECT_ACCOUNTS : ['AFNC', 'ETDA', 'CALL CENTER', 'Media I Graphic', 'Media I Content', 'TCP', 'GC', 'AI', 'MOC', 'ตรวจจับ'];
         // Get order from Cost Sheet (Column B/C) if available
         const costOrder = (window.COST_DATA?.projects || []).map(p => p.name);
 
@@ -601,7 +716,7 @@
         return sortedProjects.map(p => `<option value="${p}">${p}</option>`).join('');
       })()}
           </select>
-          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 130px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
+          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 38px; min-width: 160px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
             <option value="all">All Nodes</option>
             ${(() => {
         const nodes = window.PROJECT_NODES || ['Adhoc', 'AE', 'AI', 'Content', 'Coordinator', 'Graphic', 'Internal', 'Meeting', 'Monitor', 'Other', 'Production', 'Report', 'Seminar'];
@@ -609,7 +724,7 @@
       })()}
           </select>
 
-          <button class="text-[12px] font-semibold px-4 py-1.5 btn" style="   white-space: nowrap; border-radius: 50%; background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); display: flex; align-items: center; gap: 6px;  cursor: pointer" onclick="clearScopeDashboardFilters()">
+          <button class="scope-btn-pill btn btn-danger" style="background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);" onclick="clearScopeDashboardFilters()">
             <i data-lucide="rotate-ccw" style="width: 13px; height: 13px"></i> Clear All Filter
           </button>
         </div>
@@ -618,7 +733,7 @@
       <!-- STATS CARDS GRID -->
       <div class="stats-grid" style="margin-bottom: 24px">
         <!-- Card: Total Projects -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--primary)"></i>
           </div>
@@ -630,7 +745,7 @@
         </div>
         
         <!-- Card: Total Scopes -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="pie-chart" style="width: 20px; height: 20px; color: var(--primary)"></i>
           </div>
@@ -642,7 +757,7 @@
         </div>
 
         <!-- Card: Allocation Circle -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--warn-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
              <div style="width: 32px; height: 32px; position: relative">
               <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
@@ -659,7 +774,7 @@
         </div>
 
         <!-- Card: High Workload -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--danger-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="trending-up" style="width: 20px; height: 20px; color: var(--danger)"></i>
           </div>
@@ -671,7 +786,7 @@
         </div>
 
         <!-- Card: Normal Workload -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="bar-chart-2" style="width: 20px; height: 20px; color: var(--accent)"></i>
           </div>
@@ -683,7 +798,7 @@
         </div>
 
         <!-- Card: Low Workload -->
-        <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
+        <div class="stat-card scope-stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
           <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="minus" style="width: 20px; height: 20px; color: var(--primary)"></i>
           </div>
@@ -699,24 +814,24 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px">
         <div style="display: flex; align-items: center; gap: 12px">
           <h3 class="section-title" style="margin: 0">Scope Workload Details</h3>
-          <button id="bulkDeleteScopeBtn" onclick="bulkDeleteWorkshipScope()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-sm btn-danger" style="display: none;  align-items: center; gap: 6px;  border-radius: var(--radius-sm);">
+          <button id="bulkDeleteScopeBtn" onclick="bulkDeleteWorkshipScope()" class="scope-btn-pill btn btn-sm btn-danger" style="display: none; align-items: center;">
             <i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected
           </button>
-          <button id="bulkDeselectScopeBtn" onclick="toggleAllWorkshipScope({checked: false})" class="text-[12px] font-semibold px-4 py-1.5 btn btn-sm btn-outline" style="display: none;  align-items: center; gap: 6px;  border-radius: var(--radius-sm);">
+          <button id="bulkDeselectScopeBtn" onclick="toggleAllWorkshipScope({checked: false})" class="scope-btn-pill btn btn-sm btn-outline" style="display: none; align-items: center; background: #fff; border-color: var(--border);">
             <i data-lucide="x-square" style="width: 14px; height: 14px"></i> Clear Selection
           </button>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button onclick="toggleScopeBulkMode()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-outline" style="  background: ${window.isScopeBulkMode ? '#fef2f2' : '#fff'}; color: ${window.isScopeBulkMode ? '#ef4444' : 'var(--text-2)'}; border-color: ${window.isScopeBulkMode ? '#fecaca' : 'var(--border)'}">
+          <button onclick="toggleScopeBulkMode()" class="scope-btn-pill btn btn-outline" style="background: ${window.isScopeBulkMode ? '#fef2f2' : '#fff'}; color: ${window.isScopeBulkMode ? '#ef4444' : 'var(--text-2)'}; border-color: ${window.isScopeBulkMode ? '#fecaca' : 'var(--border)'}">
             <i data-lucide="check-square" style="width: 16px; height: 16px"></i> ${window.isScopeBulkMode ? 'Cancel Selection' : 'Select Multiple'}
           </button>
-          <button onclick="showAddWorkshipScopeModal()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-primary" >
+          <button onclick="showAddWorkshipScopeModal()" class="scope-btn-pill btn btn-primary">
             <i data-lucide="plus-circle" style="width: 16px; height: 16px"></i> Add Scope
           </button>
         </div>
       </div>
 
-      <div id="scopeTableWrap" class="table-wrap" style="border: none; box-shadow: 0 8px 30px rgba(0,0,0,0.03); border-radius: 20px; overflow: auto; max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px)">
+      <div id="scopeTableWrap" class="table-wrap scope-table-container" style="max-height: calc(100vh - 380px); background: var(--surface); width: 100%; max-width: calc(100vw - 320px)">
         <table class="data-table" style="border: none; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0">
           <thead id="scopeTableHead">
             ${renderScopeTableHeader(getDashboardDays())}
@@ -845,11 +960,11 @@
     const nodes = window.PROJECT_NODES || ['Adhoc', 'AE', 'AI', 'Call Center', 'Content', 'Coordinator', 'Graphic', 'Internal', 'Meeting', 'Monitor', 'Other', 'Production', 'Report', 'Seminar'];
 
     const modalHtml = `
-    <div id="addScopeModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: 'Kanit', sans-serif;">
+    <div id="addScopeModal" style="position: fixed; inset: 0; background: rgba(15,23,42,0.3); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: 'Kanit', sans-serif;">
       <div style="background: white; width: 480px; border-radius: 24px; padding: 32px; box-shadow: var(--shadow); transform: translateY(0); transition: all 0.3s">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px">
           <h2 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #1e293b">Add New Scope</h2>
-          <button onclick="document.getElementById('addScopeModal').remove()" style="background: #f1f5f9; border: none; width: 40px;  border-radius: 50%; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center" class="text-[12px] font-semibold px-4 py-1.5">
+          <button onclick="document.getElementById('addScopeModal').remove()" style="background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center">
             <i data-lucide="x" style="width: 18px; height: 18px"></i>
           </button>
         </div>
@@ -859,19 +974,19 @@
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
             <div style="display: flex; gap: 8px">
-              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value)" style="flex: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; background: #f8fafc">
+              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value)" style="flex: 1; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
                 <option value="" selected disabled>---Select Project---</option>
                 ${accounts.map(a => `<option value="${a}">${a}</option>`).join('')}
                 <option value="NEW">+ Add New Project</option>
               </select>
-              <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 16px; border: 1.5px solid #6366f1; border-radius: var(--radius); font-family: inherit; outline: none;">
+              <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 20px; border: 1.5px solid #6366f1; border-radius: 99px; font-family: inherit; outline: none; font-size: 13px;">
             </div>
           </div>
 
           <!-- Node Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Node</label>
-            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; background: #f8fafc">
+            <select id="scopeNode" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
               <option value="" selected disabled>--- Select Node ---</option>
               ${nodes.map(n => `<option value="${n}">${n}</option>`).join('')}
             </select>
@@ -880,19 +995,19 @@
           <!-- Work Detail -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Scope / Details</label>
-            <input id="scopeDetail" type="text" placeholder="e.g., Social Monitoring Plan" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none;">
+            <input id="scopeDetail" type="text" placeholder="e.g., Social Monitoring Plan" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; font-size: 13px;">
           </div>
 
           <!-- Proportion % -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Workload (%)</label>
             <div style="display: flex; align-items: center; gap: 12px">
-              <input id="scopePercent" type="number" value="0" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; text-align: center">
+              <input id="scopePercent" type="number" value="0" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; text-align: center; font-size: 13px;">
               <input type="range" min="0" max="200" value="0" oninput="document.getElementById('scopePercent').value = this.value" style="flex: 1; accent-color: #6366f1">
             </div>
           </div>
 
-          <button onclick="saveNewWorkshipScope()" style="margin-top: 12px;  background: #6366f1; color: white; border: none; border-radius: var(--radius);   cursor: pointer; box-shadow: var(--shadow)" class="text-[12px] font-semibold px-4 py-1.5">
+          <button onclick="saveNewWorkshipScope()" class="scope-btn-pill btn btn-primary" style="margin-top: 12px; width: 100%; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">
             Save Scope
           </button>
         </div>
@@ -1014,7 +1129,7 @@
     const nodes = window.PROJECT_NODES || ['Adhoc', 'AE', 'AI', 'Content', 'Coordinator', 'Graphic', 'Internal', 'Meeting', 'Monitor', 'Other', 'Production', 'Report', 'Seminar'];
 
     const modalHtml = `
-    <div id="addScopeModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: 'Kanit', sans-serif;">
+    <div id="addScopeModal" style="position: fixed; inset: 0; background: rgba(15,23,42,0.3); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center; font-family: 'Kanit', sans-serif;">
       <div class="fade-in" style="background: white; width: 100%; max-width: 500px; border-radius: 24px; box-shadow: var(--shadow); overflow: hidden; position: relative;">
         <!-- Header -->
         <div style="padding: 24px 32px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; display: flex; justify-content: space-between; align-items: center">
@@ -1022,7 +1137,7 @@
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700">Edit Scope Details</h2>
             <p style="margin: 4px 0 0; font-size: 0.8rem; opacity: 0.9">Update workload and details</p>
           </div>
-          <button onclick="document.getElementById('addScopeModal').remove()" style="background: rgba(255,255,255,0.2); border: none; width: 40px;  border-radius: 50%; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center" class="text-[12px] font-semibold px-4 py-1.5">
+          <button onclick="document.getElementById('addScopeModal').remove()" style="background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center">
             <i data-lucide="x" style="width: 18px; height: 18px"></i>
           </button>
         </div>
@@ -1035,7 +1150,7 @@
           <!-- Account Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
-            <select id="scopeAccount" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; background: #f8fafc">
+            <select id="scopeAccount" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
               ${accounts.map(a => `<option value="${a}" ${a === acc ? 'selected' : ''}>${a}</option>`).join('')}
               ${!accounts.includes(acc) ? `<option value="${acc}" selected>${acc}</option>` : ''}
             </select>
@@ -1044,7 +1159,7 @@
           <!-- Node Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Node</label>
-            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; background: #f8fafc">
+            <select id="scopeNode" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-size: 13px;">
               ${nodes.map(n => `<option value="${n}" ${n === node ? 'selected' : ''}>${n}</option>`).join('')}
             </select>
           </div>
@@ -1052,23 +1167,23 @@
           <!-- Work Detail -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Scope / Details</label>
-            <input id="scopeDetail" type="text" value="${name}" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none;">
+            <input id="scopeDetail" type="text" value="${name}" style="width: 100%; padding: 12px 20px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; font-size: 13px;">
           </div>
 
           <!-- Proportion % -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Workload (%)</label>
             <div style="display: flex; align-items: center; gap: 12px">
-              <input id="scopePercent" type="number" value="${progress}" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: var(--radius); font-family: inherit; outline: none; text-align: center">
+              <input id="scopePercent" type="number" value="${progress}" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; text-align: center; font-size: 13px;">
               <input type="range" min="0" max="200" value="${progress}" oninput="document.getElementById('scopePercent').value = this.value" style="flex: 1; accent-color: #6366f1">
             </div>
           </div>
 
           <!-- Actions -->
           <div style="display: flex; gap: 12px; margin-top: 8px">
-            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" style="flex: 1;  border: 1.5px solid #fee2e2; border-radius: 50%; background: #fef2f2; color: #ef4444;  cursor: pointer; transition: all 0.2s" class="text-[12px] font-semibold px-4 py-1.5">Delete</button>
-            <button onclick="document.getElementById('addScopeModal').remove()" style="flex: 1;  border: 1.5px solid #e2e8f0; border-radius: 50%; background: white; color: #64748b;  cursor: pointer; transition: all 0.2s" class="text-[12px] font-semibold px-4 py-1.5">Cancel</button>
-            <button onclick="saveNewWorkshipScope(true)" style="flex: 2;  border: none; border-radius: 50%; background: #6366f1; color: white;  cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow)" class="text-[12px] font-semibold px-4 py-1.5">Update Scope</button>
+            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" class="scope-btn-pill btn btn-danger" style="flex: 1; justify-content: center; background: #fef2f2; color: #ef4444; border: 1.5px solid #fee2e2;">Delete</button>
+            <button onclick="document.getElementById('addScopeModal').remove()" class="scope-btn-pill btn btn-outline" style="flex: 1; justify-content: center; background: white; color: #64748b; border: 1.5px solid #e2e8f0;">Cancel</button>
+            <button onclick="saveNewWorkshipScope(true)" class="scope-btn-pill btn btn-primary" style="flex: 2; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">Update Scope</button>
           </div>
         </div>
       </div>
@@ -1093,7 +1208,7 @@
     const btn = document.getElementById('bulkDeleteScopeBtn');
     const deselectBtn = document.getElementById('bulkDeselectScopeBtn');
     if (btn) {
-      if (checked.length > 0) {
+      if (window.isScopeBulkMode) {
         btn.style.display = 'inline-flex';
         btn.innerHTML = `<i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected (${checked.length})`;
         if (deselectBtn) deselectBtn.style.display = 'inline-flex';
