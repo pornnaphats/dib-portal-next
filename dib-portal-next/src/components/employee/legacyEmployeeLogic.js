@@ -5010,9 +5010,9 @@ window.pageEmployee = function() {
     };
 
     const searchHtml = `
-      <div class="search-box" style="width: 200px; background: #fff; height: 34px; display: flex; align-items: center; position: relative; border: 1px solid var(--border); border-radius: 8px; overflow: hidden">
-        <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 12px; color: var(--text-3)"></i>
-        <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 12px 0 32px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
+      <div class="search-box" style="width: 200px; background: #fff; height: 34px; display: flex; align-items: center; position: relative; border: 1px solid #e4e8ef; border-radius: 99px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
+        <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 14px; color: var(--text-3)"></i>
+        <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 14px 0 32px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
       </div>
     `;
 
@@ -5022,7 +5022,7 @@ window.pageEmployee = function() {
       tableBodyHtml = `
         <tr>
           <td colspan="7" style="padding: 32px; text-align: center; color: #94a3b8; font-size: .85rem; font-style: italic">
-            ไม่มีข้อมูลวันหยุดนักขัตฤกษ์ (กรุณาเชื่อมต่อข้อมูลผ่าน Google Sheets)
+            ไม่มีข้อมูลวันหยุดนักขัตฤกษ์
           </td>
         </tr>
       `;
@@ -6083,7 +6083,9 @@ window.pageEmployee = function() {
 
     if (!selectedProj) {
       // Re-initialize empty
-      new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+      if (typeof TomSelect !== 'undefined') {
+        new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+      }
       return;
     }
 
@@ -6099,7 +6101,9 @@ window.pageEmployee = function() {
     });
     
     // Initialize TomSelect with new options
-    new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+    if (typeof TomSelect !== 'undefined') {
+      new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+    }
   };
 
   window.submitHolidayTaskForm = function () {

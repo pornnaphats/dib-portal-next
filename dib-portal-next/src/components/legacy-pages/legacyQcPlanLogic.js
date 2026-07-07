@@ -843,7 +843,7 @@ window.renderQCWorkPlanDashboard = function() {
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:#64748b"></i>
             <input id="qcSearchInput" type="text" placeholder="ค้นหาพนักงาน..." value="${window._qcSearch || ''}" onkeyup="qcFilterUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:0.8rem; font-family:'Kanit', sans-serif;">
           </div>
-          <select id="qcTeamFilter" onchange="qcFilterUI()" style="height:34px; padding:0 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:.8rem; font-family:Kanit; outline:none; background:#fff; cursor:pointer">
+          <select id="qcTeamFilter" class="select-input" onchange="qcFilterUI()" style="height:34px; width:150px; padding:0 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:.8rem; font-family:Kanit; outline:none; background:#fff; cursor:pointer">
             <option value="">ทุกทีม (All Teams)</option>
             ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._qcTeamFilter === t ? 'selected' : ''}>ทีม ${t}</option>`).join('')}
           </select>

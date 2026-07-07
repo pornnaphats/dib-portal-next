@@ -1,3 +1,24 @@
+  if (typeof window.getTasksFromScope !== 'function') {
+    window.getTasksFromScope = function () {
+      const scopeData = window.PREMIUM_SCOPE_DATA || [];
+      const tasks = [];
+      scopeData.forEach(acc => {
+        if (!acc.items) return;
+        acc.items.forEach((item, idx) => {
+          tasks.push({
+            id: `scope-${acc.account.replace(/\s+/g, '-')}-${idx}`,
+            title: item.name,
+            acc: acc.account,
+            node: item.node || 'Other',
+            hours: item.progress || 0,
+            color: typeof window.colorForProject === 'function' ? window.colorForProject(acc.account) : '#6366f1'
+          });
+        });
+      });
+      return tasks;
+    };
+  }
+
   window.pagePublicHoliday = function() {
     window.currentPage = 'public-holiday';
 
@@ -143,9 +164,9 @@
     };
 
     const searchHtml = `
-      <div class="search-box" style="width: 200px; background: #f1f5f9; height: 38px; display: flex; align-items: center; position: relative; border: none; border-radius: 99px; overflow: hidden">
-        <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 16px; color: var(--text-3)"></i>
-        <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 16px 0 36px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
+      <div class="search-box" style="width: 200px; background: #fff; height: 34px; display: flex; align-items: center; position: relative; border: 1px solid #e4e8ef; border-radius: 99px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
+        <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 14px; color: var(--text-3)"></i>
+        <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 14px 0 32px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
       </div>
     `;
 
@@ -155,7 +176,7 @@
       tableBodyHtml = `
         <tr>
           <td colspan="7" style="padding: 32px; text-align: center; color: #94a3b8; font-size: .85rem; font-style: italic">
-            ไม่มีข้อมูลวันหยุดนักขัตฤกษ์ (กรุณาเชื่อมต่อข้อมูลผ่าน Google Sheets)
+            ไม่มีข้อมูลวันหยุดนักขัตฤกษ์
           </td>
         </tr>
       `;
@@ -921,7 +942,7 @@
       <option value="${emp.name}">${emp.name} (${emp.nickname || emp.pos})</option>
     `).join('');
 
-    const scopeTasks = typeof getTasksFromScope === 'function' ? getTasksFromScope() : [];
+    const scopeTasks = window.getTasksFromScope();
     const uniqueProjects = [...new Set(scopeTasks.map(t => t.acc))].sort();
     const projectOptions = uniqueProjects.map(proj => `
       <option value="${proj}">${proj}</option>
@@ -1183,7 +1204,7 @@
       return;
     }
 
-    const scopeTasks = typeof getTasksFromScope === 'function' ? getTasksFromScope() : [];
+    const scopeTasks = window.getTasksFromScope();
     const matchedTask = scopeTasks.find(t => t.acc === selectedProj && t.title === selectedJob);
     if (matchedTask) {
       pctInput.value = matchedTask.hours || 0; 
@@ -1212,11 +1233,13 @@
 
     if (!selectedProj) {
       // Re-initialize empty
-      new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+      if (typeof TomSelect !== 'undefined') {
+        new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+      }
       return;
     }
 
-    const scopeTasks = typeof getTasksFromScope === 'function' ? getTasksFromScope() : [];
+    const scopeTasks = window.getTasksFromScope();
     const jobs = scopeTasks.filter(t => t.acc === selectedProj).map(t => t.title);
     const uniqueJobs = [...new Set(jobs)].sort();
 
@@ -1228,7 +1251,9 @@
     });
     
     // Initialize TomSelect with new options
-    new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+    if (typeof TomSelect !== 'undefined') {
+      new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+    }
   };
 
   window.submitHolidayTaskForm = function () {
@@ -2301,4 +2326,470 @@
     } catch (err) {
       console.error("Holiday Shifts Sync Error:", err);
     }
-  };
+  };
+
+  // --- TEMPLATE MANAGEMENT FUNCTIONALITY ---
+
+  window.openManageTemplatesModal = function () {
+    const modalId = 'manageTemplatesModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const templates = window.HOLIDAY_TEMPLATES || [];
+    
+    let listHtml = '';
+    if (templates.length === 0) {
+      listHtml = `
+      <div style="text-align:center; padding:40px 20px; color:#64748b;">
+        <i data-lucide="folder-open" style="width:48px; height:48px; margin:0 auto 12px; color:#cbd5e1; display:block"></i>
+        <p style="margin:0; font-size:.9rem; font-weight:600">ยังไม่มีชุดงานมาตรฐาน (Templates)</p>
+        <p style="margin:4px 0 0; font-size:.8rem">กดปุ่ม "เพิ่มชุดงานมาตรฐาน" ด้านบนเพื่อเริ่มต้นสร้าง</p>
+      </div>
+      `;
+    } else {
+      templates.forEach((tpl, tplIdx) => {
+        const assignments = tpl.assignments || [];
+        const totalPct = assignments.reduce((sum, a) => sum + (parseInt(a.percent) || 0), 0);
+        
+        let assignmentsHtml = assignments.map((a, idx) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:.8rem; color:#475569">
+            <div style="display:flex; align-items:center; gap:8px">
+              <span style="background:#e0f2fe; color:#0369a1; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:700">${idx + 1}</span>
+              <span style="font-weight:600; color:#1e293b">${a.project}</span>
+              <span style="color:#64748b; font-size:.75rem">(${a.job})</span>
+            </div>
+            <span style="background:#f1f5f9; padding:2px 8px; border-radius:6px; font-weight:700; color:#475569">${a.percent}%</span>
+          </div>
+        `).join('');
+
+        listHtml += `
+        <div class="card" style="padding:20px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:16px; background:var(--surface); transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+            <h4 style="margin:0; font-size:1rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px">
+              <span style="background: rgba(79, 70, 229, 0.1); color: var(--primary); padding: 4px 10px; border-radius: var(--radius-sm); font-size: .75rem; font-weight: 700">ชุดงานที่ ${tplIdx + 1}</span>
+              <span style="background:linear-gradient(135deg, var(--primary) 0%, #818cf8 100%); color:#fff; padding:4px 10px; border-radius:var(--radius-sm); font-size:.7rem; font-weight:700">Section</span>
+              ${tpl.section}
+            </h4>
+            <div style="display:flex; gap:8px">
+              <button onclick="window.openEditTemplateModal('${tpl.id}')" style="background:#e0f2fe; border:none; color:#0369a1; padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; display:flex; align-items:center; gap:4px" class="text-[12px] font-semibold"><i data-lucide="edit-3" style="width:12px; height:12px"></i> แก้ไข</button>
+              <button onclick="window.deleteHolidayTemplate('${tpl.id}')" style="background:#fee2e2; border:none; color:#b91c1c; padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; display:flex; align-items:center; gap:4px" class="text-[12px] font-semibold"><i data-lucide="trash-2" style="width:12px; height:12px"></i> ลบ</button>
+            </div>
+          </div>
+          
+          <div style="margin-bottom:12px">
+            ${assignmentsHtml}
+          </div>
+          
+          <div style="display:flex; align-items:center; justify-content:space-between">
+            <div style="width:80%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden">
+              <div style="width:${totalPct}%; height:100%; background:linear-gradient(90deg, var(--primary) 0%, #818cf8 100%)"></div>
+            </div>
+            <span style="font-size:.8rem; font-weight:700; color:var(--primary)">รวม: ${totalPct}%</span>
+          </div>
+        </div>
+        `;
+      });
+    }
+
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:11000; backdrop-filter:blur(6px); animation: fadeIn 0.2s ease-out">
+      <div class="modal-card" style="background:var(--surface); width:550px; max-height:85vh; display:flex; flex-direction:column; border-radius:24px; text-shadow:none; box-shadow:var(--shadow); font-family:Prompt, sans-serif">
+        <div style="padding:24px 32px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+          <div>
+            <h3 style="margin:0 0 4px; font-size:1.2rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px">
+              <i data-lucide="settings" style="width:22px; height:22px; color:var(--primary)"></i> จัดการชุดงานมาตรฐาน (Templates)
+            </h3>
+            <p style="margin:0; font-size:.8rem; color:#64748b;">ชุดงานเหล่านี้จะแสดงตามการจับคู่ Section ในหน้าวันหยุดทั้งหมดทันที</p>
+          </div>
+          <button onclick="window.openEditTemplateModal()" class="btn btn-primary" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-sm); font-size:.7rem; font-weight:700; background:var(--primary); color:#fff; border:none; cursor:pointer">
+            <i data-lucide="plus" style="width:14px; height:14px"></i> เพิ่มชุดงานมาตรฐาน
+          </button>
+        </div>
+        
+        <div style="padding:24px 32px; overflow-y:auto; flex:1; background:#f8fafc">
+          ${listHtml}
+        </div>
+
+        <div style="padding:20px 32px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; flex-shrink:0;">
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#e2e8f0; color:#475569; border:none; padding:10px 24px; border-radius:var(--radius); font-weight:700; cursor:pointer">ปิด</button>
+        </div>
+      </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+  };
+
+  window.openEditTemplateModal = function (tplId = null) {
+    const modalId = 'editTemplateModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const tpl = tplId ? (window.HOLIDAY_TEMPLATES || []).find(t => t.id === tplId) : null;
+    const isEdit = !!tpl;
+
+    const scopeTasks = window.getTasksFromScope();
+    const uniqueProjects = [...new Set(scopeTasks.map(t => t.acc))].sort();
+    const projectOptions = uniqueProjects.map(proj => {
+      const c = typeof window.colorForProject === 'function' ? window.colorForProject(proj) : '#6366f1';
+      return `<option value="${proj}" style="color: ${c}; font-weight: 600;">● ${proj}</option>`;
+    }).join('');
+
+    let projectRowsHtml = '';
+    if (isEdit && tpl.assignments && tpl.assignments.length > 0) {
+      projectRowsHtml = tpl.assignments.map((a, aIdx) => {
+        const jobs = scopeTasks.filter(t => t.acc === a.project).map(t => t.title);
+        const uniqueJobs = [...new Set(jobs)].sort();
+        const jobOptions = uniqueJobs.map(job => `
+          <option value="${job}" ${job === a.job ? 'selected' : ''}>${job}</option>
+        `).join('');
+
+        return `
+        <div class="tpl-project-row" style="display:grid; grid-template-columns:1fr 1fr 80px auto; gap:12px; margin-bottom:12px; align-items:center;">
+          <select class="htProject" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; font-weight:600; color:${a.project ? (typeof window.colorForProject === 'function' ? window.colorForProject(a.project) : '') : ''}; transition: color 0.2s; background: var(--surface);" onchange="window.onTplProjectChange(this); this.style.color = this.value ? window.colorForProject(this.value) : '';">
+            <option value="" style="color: #64748b;">-- เลือกโครงการ --</option>
+            ${uniqueProjects.map(proj => {
+              const c = typeof window.colorForProject === 'function' ? window.colorForProject(proj) : '#6366f1';
+              return `<option value="${proj}" style="color: ${c}; font-weight: 600;" ${proj === a.project ? 'selected' : ''}>● ${proj}</option>`;
+            }).join('')}
+          </select>
+          <select class="htJob" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; background: var(--surface);" onchange="window.onTplJobChange(this)">
+            <option value="">-- เลือกงาน --</option>
+            ${jobOptions}
+          </select>
+          <div style="position:relative;">
+            <input type="number" class="htPercent" value="${a.percent || 100}" min="0" max="100" readonly style="width:100%; padding:10px 24px 10px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; text-align:center; background:#f1f5f9; color:#475569; font-weight:600;">
+            <span style="position:absolute; right:10px; top:12px; font-size:.8rem; color:#64748b; pointer-events:none;">%</span>
+          </div>
+          <button type="button" class="btn-remove-project" onclick="if(document.querySelectorAll('.tpl-project-row').length > 1) { this.parentElement.remove(); window.calcTplTotalPercent(); }" style="display:${tpl.assignments.length > 1 ? 'block' : 'none'}; background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; padding:8px;">
+            <i data-lucide="x" style="width:16px; height:16px; pointer-events:none"></i>
+          </button>
+        </div>
+        `;
+      }).join('');
+    } else {
+      projectRowsHtml = `
+      <div class="tpl-project-row" style="display:grid; grid-template-columns:1fr 1fr 80px auto; gap:12px; margin-bottom:12px; align-items:center;">
+        <select class="htProject" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; font-weight:600; transition: color 0.2s; background: var(--surface);" onchange="window.onTplProjectChange(this); this.style.color = this.value ? window.colorForProject(this.value) : '';">
+          <option value="" style="color: #64748b;">-- เลือกโครงการ --</option>
+          ${projectOptions}
+        </select>
+        <select class="htJob" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; background: var(--surface);" onchange="window.onTplJobChange(this)">
+          <option value="">-- เลือกงาน --</option>
+        </select>
+        <div style="position:relative;">
+          <input type="number" class="htPercent" value="0" min="0" max="100" readonly style="width:100%; padding:10px 24px 10px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; text-align:center; background:#f1f5f9; color:#475569; font-weight:600;">
+          <span style="position:absolute; right:10px; top:12px; font-size:.8rem; color:#64748b; pointer-events:none;">%</span>
+        </div>
+        <button type="button" class="btn-remove-project" onclick="if(document.querySelectorAll('.tpl-project-row').length > 1) { this.parentElement.remove(); window.calcTplTotalPercent(); }" style="display:none; background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; padding:8px;">
+          <i data-lucide="x" style="width:16px; height:16px; pointer-events:none"></i>
+        </button>
+      </div>
+      `;
+    }
+
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:11500; backdrop-filter:blur(6px); animation: fadeIn 0.2s ease-out">
+      <div class="modal-card" style="background:var(--surface); width:480px; max-height:90vh; overflow-y:auto; border-radius:24px; padding:32px; text-shadow:none; box-shadow:var(--shadow); font-family:Prompt, sans-serif">
+        <h3 style="margin:0 0 20px; font-size:1.25rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px">
+          <i data-lucide="${isEdit ? 'edit' : 'plus-circle'}" style="width:24px; height:24px; color:var(--primary)"></i> ${isEdit ? 'แก้ไขชุดงานมาตรฐาน' : 'เพิ่มชุดงานมาตรฐาน'}
+        </h3>
+        
+        <form id="editTemplateForm" onsubmit="event.preventDefault(); window.saveHolidayTemplate('${tplId || ''}');">
+          <style>
+            .ts-control {
+              border-radius: var(--radius-sm) !important;
+              padding: 10px 14px !important;
+              border: 1px solid var(--border) !important;
+              box-shadow: none !important;
+              background: var(--surface) !important;
+              color: var(--text) !important;
+            }
+            .ts-wrapper.focus .ts-control {
+              border-color: var(--primary) !important;
+              box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1) !important;
+            }
+          </style>
+
+          <div style="margin-bottom:20px">
+            <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">เลือกชุดงาน (Section)</label>
+            <select id="tplName" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; background: var(--surface);" required>
+              <option value="" disabled ${!isEdit ? 'selected' : ''}>-- เลือก Section --</option>
+              <option value="Operation" ${isEdit && tpl.section === 'Operation' ? 'selected' : ''}>Operation</option>
+              <option value="Content & Graphics" ${isEdit && tpl.section === 'Content & Graphics' ? 'selected' : ''}>Content & Graphics</option>
+              <option value="Call Center" ${isEdit && tpl.section === 'Call Center' ? 'selected' : ''}>Call Center</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">กะเวลาปฏิบัติงาน (Time Shift)</label>
+            <select id="tplTime" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:.8rem; outline:none; background: var(--surface);" required>
+              <option value="" disabled ${!isEdit ? 'selected' : ''}>-- เลือกกะเวลา --</option>
+              <option value="เช้าตรู่ 06.00-15.00 น." ${isEdit && tpl.time === 'เช้าตรู่ 06.00-15.00 น.' ? 'selected' : ''}>เช้าตรู่ 06.00-15.00 น.</option>
+              <option value="เช้า 09.00-18.00 น." ${isEdit && tpl.time === 'เช้า 09.00-18.00 น.' ? 'selected' : ''}>เช้า 09.00-18.00 น.</option>
+              <option value="สาย 12.00-21.00 น." ${isEdit && tpl.time === 'สาย 12.00-21.00 น.' ? 'selected' : ''}>สาย 12.00-21.00 น.</option>
+              <option value="บ่าย 15.00-00.00 น." ${isEdit && tpl.time === 'บ่าย 15.00-00.00 น.' ? 'selected' : ''}>บ่าย 15.00-00.00 น.</option>
+              <option value="ดึก 00.00-09.00 น." ${isEdit && tpl.time === 'ดึก 00.00-09.00 น.' ? 'selected' : ''}>ดึก 00.00-09.00 น.</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">โครงการและงาน (Project & Job)</label>
+            <div id="tplProjectContainer">
+              ${projectRowsHtml}
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+              <button type="button" onclick="window.addTplProjectRow()" style="background:none; border:none; color:var(--primary); font-size:.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px">
+                <i data-lucide="plus-circle" style="width:16px; height:16px"></i> เพิ่มงานอื่นในเซ็ตนี้
+              </button>
+              <span id="tplTotalPercent" style="font-size:.8rem; font-weight:700; color:#64748b">รวม: 0%</span>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px">
+            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:var(--radius); font-weight:600; cursor:pointer">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" style="background:var(--primary); color:#fff; border:none; padding:10px 20px; border-radius:var(--radius); font-weight:700; cursor:pointer">บันทึก</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+
+    // Initialize Tom Select
+    if (typeof TomSelect !== 'undefined') {
+      document.querySelectorAll('#' + modalId + ' select.htJob').forEach(el => {
+        new TomSelect(el, { create: false, sortField: {field: "text", direction: "asc"} });
+      });
+    }
+
+    window.calcTplTotalPercent();
+  };
+
+  window.addTplProjectRow = function() {
+    const container = document.getElementById('tplProjectContainer');
+    if (!container) return;
+    const firstRow = container.querySelector('.tpl-project-row');
+    if (!firstRow) return;
+    const clone = firstRow.cloneNode(true);
+    
+    // Cleanup TomSelect artifacts from the clone
+    const tsWrappers = clone.querySelectorAll('.ts-wrapper');
+    tsWrappers.forEach(ts => ts.remove());
+    
+    const selects = clone.querySelectorAll('select.htProject');
+    selects.forEach(s => {
+      s.value = '';
+    });
+    
+    const jobSelect = clone.querySelector('select.htJob');
+    if (jobSelect) {
+      jobSelect.style.display = '';
+      jobSelect.classList.remove('tomselected', 'ts-hidden-accessible');
+      jobSelect.innerHTML = '<option value="">-- เลือกงาน --</option>';
+      if (jobSelect.tomselect) {
+        jobSelect.tomselect.destroy();
+      }
+    }
+
+    const pctInput = clone.querySelector('.htPercent');
+    if (pctInput) pctInput.value = '0';
+    
+    const delBtn = clone.querySelector('.btn-remove-project');
+    if (delBtn) delBtn.style.display = 'block';
+    
+    container.appendChild(clone);
+    if (window.lucide) lucide.createIcons({ root: clone });
+    window.calcTplTotalPercent();
+  };
+
+  window.calcTplTotalPercent = function() {
+    let total = 0;
+    const modal = document.getElementById('editTemplateModal');
+    if (!modal) return;
+    modal.querySelectorAll('.htPercent').forEach(input => {
+      total += (parseInt(input.value) || 0);
+    });
+    const label = document.getElementById('tplTotalPercent');
+    if (label) {
+      label.textContent = `รวม: ${total}%`;
+      label.style.color = 'var(--primary)';
+    }
+  };
+
+  window.onTplProjectChange = function(el) {
+    const row = el.closest('.tpl-project-row');
+    const jobSelect = row ? row.querySelector('.htJob') : null;
+    if (!jobSelect) return;
+
+    const selectedProj = el.value;
+    
+    if (jobSelect.tomselect) {
+      jobSelect.tomselect.destroy();
+    }
+    
+    jobSelect.innerHTML = '<option value="">-- เลือกงาน --</option>';
+
+    if (!selectedProj) {
+      if (typeof TomSelect !== 'undefined') {
+        new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+      }
+      return;
+    }
+
+    const scopeTasks = window.getTasksFromScope();
+    const jobs = scopeTasks.filter(t => t.acc === selectedProj).map(t => t.title);
+    const uniqueJobs = [...new Set(jobs)].sort();
+
+    uniqueJobs.forEach(job => {
+      const opt = document.createElement('option');
+      opt.value = job;
+      opt.textContent = job;
+      jobSelect.appendChild(opt);
+    });
+    
+    if (typeof TomSelect !== 'undefined') {
+      new TomSelect(jobSelect, { create: false, sortField: {field: "text", direction: "asc"} });
+    }
+  };
+
+  window.onTplJobChange = function (el) {
+    const row = el.closest('.tpl-project-row');
+    if (!row) return;
+    const projSelect = row.querySelector('.htProject');
+    const pctInput = row.querySelector('.htPercent');
+    if (!projSelect || !pctInput) return;
+
+    const selectedProj = projSelect.value;
+    const selectedJob = el.value;
+
+    if (!selectedProj || !selectedJob) {
+      pctInput.value = '0';
+      window.calcTplTotalPercent();
+      return;
+    }
+
+    const scopeTasks = window.getTasksFromScope();
+    const matchedTask = scopeTasks.find(t => t.acc === selectedProj && t.title === selectedJob);
+    if (matchedTask) {
+      pctInput.value = matchedTask.hours || 0; 
+    } else {
+      pctInput.value = '0';
+    }
+
+    window.calcTplTotalPercent();
+  };
+
+  window.saveHolidayTemplate = function(id) {
+    const nameInput = document.getElementById('tplName');
+    if (!nameInput || !nameInput.value.trim()) {
+      alert("กรุณากรอกชื่อชุดงาน (Section)");
+      return;
+    }
+    const sectionName = nameInput.value.trim();
+    
+    const assignments = [];
+    const rows = document.querySelectorAll('.tpl-project-row');
+    let hasEmpty = false;
+    rows.forEach(row => {
+      const proj = row.querySelector('.htProject').value;
+      const job = row.querySelector('.htJob').value;
+      const pct = parseInt(row.querySelector('.htPercent').value) || 0;
+      if (!proj || !job) {
+        hasEmpty = true;
+      }
+      assignments.push({ project: proj, job: job, percent: pct });
+    });
+    
+    if (hasEmpty) {
+      alert("กรุณาเลือกโครงการและงานให้ครบทุกแถว");
+      return;
+    }
+    
+    const totalPct = assignments.reduce((sum, a) => sum + a.percent, 0);
+    if (totalPct > 100) {
+      if (!confirm(`เปอร์เซ็นต์รวมของงานอยู่ที่ ${totalPct}% (เกิน 100%) ต้องการดำเนินการต่อใช่หรือไม่?`)) {
+        return;
+      }
+    }
+    
+    const tplId = id || ('HS-TPL-' + Date.now() + '-' + Math.floor(Math.random() * 1000));
+    
+    const timeInput = document.getElementById('tplTime');
+    const timeValue = timeInput ? timeInput.value : '-';
+
+    const tplData = {
+      action: id ? 'edit' : 'add',
+      id: tplId,
+      date: 'TEMPLATE',
+      holidayName: 'TEMPLATE',
+      status: 'active',
+      section: sectionName,
+      person: '-',
+      time: timeValue,
+      assignments: JSON.stringify(assignments)
+    };
+    
+    if (typeof apiSaveHolidayShift === 'function') {
+      apiSaveHolidayShift(tplData);
+    }
+    
+    // Update local list
+    const newTpl = { id: tplId, section: sectionName, time: timeValue, assignments: assignments };
+    window.HOLIDAY_TEMPLATES = window.HOLIDAY_TEMPLATES || [];
+    if (id) {
+      const idx = window.HOLIDAY_TEMPLATES.findIndex(t => t.id === id);
+      if (idx !== -1) window.HOLIDAY_TEMPLATES[idx] = newTpl;
+    } else {
+      window.HOLIDAY_TEMPLATES.push(newTpl);
+    }
+    localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
+    
+    // Clear from deleted tracking if present
+    let deletedIds = [];
+    try {
+      deletedIds = JSON.parse(localStorage.getItem('deleted_template_ids') || '[]');
+    } catch(e){}
+    deletedIds = deletedIds.filter(x => x !== tplId);
+    localStorage.setItem('deleted_template_ids', JSON.stringify(deletedIds));
+    
+    // Close template editor
+    const editModal = document.getElementById('editTemplateModal');
+    if (editModal) editModal.remove();
+    
+    // Re-open Manage Templates modal
+    window.openManageTemplatesModal();
+    
+    // Refresh page
+    if (window.currentPage === 'public-holiday') {
+      navigate('public-holiday');
+    }
+  };
+
+  window.deleteHolidayTemplate = function(id) {
+    if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบชุดงานมาตรฐานนี้? การลบจะทำให้ตารางวันหยุดทุกวันหยุดเปลี่ยนไปใช้ค่าดั้งเดิมที่เคยเซฟไว้")) return;
+    if (typeof apiSaveHolidayShift === 'function') {
+      apiSaveHolidayShift({ action: 'delete', id: id });
+    }
+    
+    // Also update local list and re-render
+    window.HOLIDAY_TEMPLATES = (window.HOLIDAY_TEMPLATES || []).filter(t => t.id !== id);
+    localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
+    
+    // Add to deleted tracking to prevent reappearances from stale CSV
+    let deletedIds = [];
+    try {
+      deletedIds = JSON.parse(localStorage.getItem('deleted_template_ids') || '[]');
+    } catch(e){}
+    if (!deletedIds.includes(id)) {
+      deletedIds.push(id);
+    }
+    localStorage.setItem('deleted_template_ids', JSON.stringify(deletedIds));
+    
+    // Re-render templates list if modal is open
+    window.openManageTemplatesModal();
+  };

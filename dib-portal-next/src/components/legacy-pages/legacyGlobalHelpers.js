@@ -8,6 +8,61 @@ if (typeof window !== 'undefined') {
 
   window.fmt = function(n) { return Number(n).toLocaleString('en-US'); }
 
+  window.colorForProject = function (project) {
+    const proj = (project || 'General').trim();
+    const presetColors = {
+      'DIB-Solar Farm': '#0284c7',      // Sky
+      'DIB-Warehouse': '#7c3aed',       // Violet
+      'Project Efficiency': '#ea580c',  // Orange
+      'Sale Pipeline': '#2563eb',       // Blue
+      'DIB-Data Center': '#d97706',     // Amber
+      'Internal': '#059669',            // Emerald
+      'Admin': '#475569',               // Slate
+      'Management': '#db2777',          // Pink
+      'DIB-Solar Rooftop': '#16a34a',   // Green
+      'DIB-Other': '#4f46e5',           // Indigo
+      'Finance': '#e11d48',             // Rose
+      'บ.ในเครือ': '#0891b2',            // Cyan
+      'AFNC': '#8b5cf6',                // Purple
+      'ETDA': '#06b6d4',                // Light Cyan
+      'CALL CENTER': '#f43f5e',         // Rose-Red
+      'Media I Graphic': '#84cc16',     // Lime
+      'Media I Content': '#c026d3',     // Fuchsia
+      'TCP': '#3b82f6',                 // Light Blue
+      'GC': '#0f766e',                  // Teal
+      'AI': '#eab308',                  // Yellow
+      'MOC': '#b45309',                 // Brown/Amber
+      'ตรวจจับ': '#be123c'               // Crimson
+    };
+    if (presetColors[proj]) return presetColors[proj];
+    
+    const clean = proj.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.includes('call') && (clean.includes('center') || clean.includes('cetnter') || clean.includes('cntr') || clean.includes('cen'))) {
+      return presetColors['CALL CENTER'];
+    }
+    if (clean === 'aoc') {
+      return '#8b5cf6'; // AOC / AFNC color
+    }
+
+    const lowerProj = proj.toLowerCase();
+    for (const key in presetColors) {
+      if (key.toLowerCase() === lowerProj) {
+        return presetColors[key];
+      }
+    }
+
+    const palette = [
+      '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#3b82f6', '#06b6d4', '#14b8a6', '#10b981',
+      '#22c55e', '#eab308', '#f97316', '#ef4444', '#64748b', '#a855f7', '#0284c7', '#b45309'
+    ];
+    let hash = 0;
+    for (let i = 0; i < proj.length; i++) {
+      hash = proj.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % palette.length;
+    return palette[index];
+  };
+
   // Global Helpers for Schedule/Dashboard
   window.getWorkloadColor = (percent) => {
     if (percent === 0) return 'var(--text-3)';
@@ -713,6 +768,44 @@ if (typeof window !== 'undefined') {
   document.addEventListener('click', function() {
     document.querySelectorAll('[id^="listFilter"]').forEach(el => el.style.display = 'none');
   });
+  
+  window.filterTable = function(tableId, inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const filter = input.value.toLowerCase().trim();
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    if (tableId === 'holidayTable') {
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const groups = {};
+      rows.forEach(row => {
+        const match = row.className.match(/holiday-group-(\d+)/);
+        if (match) {
+          const groupIdx = match[1];
+          if (!groups[groupIdx]) groups[groupIdx] = [];
+          groups[groupIdx].push(row);
+        }
+      });
+
+      Object.values(groups).forEach(groupRows => {
+        const matches = groupRows.some(row => row.textContent.toLowerCase().includes(filter));
+        groupRows.forEach(row => {
+          row.style.display = matches ? '' : 'none';
+        });
+      });
+      return;
+    }
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      if (row.textContent.toLowerCase().includes(filter)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  };
 
 
 
