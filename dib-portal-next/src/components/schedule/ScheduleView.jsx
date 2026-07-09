@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, RotateCcw, Users } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, RotateCcw, Users, Download } from "lucide-react";
 import { useData } from "../providers/DataProvider";
 import LegacyScheduleGrid from "./LegacyScheduleGrid";
 import flatpickr from "flatpickr";
@@ -105,6 +105,7 @@ export default function ScheduleView() {
     // Initialize window.DATA if not exists to avoid undefined error
     if (typeof window !== "undefined") {
       window.DATA = window.DATA || {};
+      window.flatpickr = flatpickr;
       // Ensure window.lucide is bound so legacy HTML templates/modals can render icons
       import("lucide").then(lucide => {
         window.lucide = {
@@ -402,6 +403,26 @@ export default function ScheduleView() {
           >
             <span style={{ fontSize: "1rem", lineHeight: 1, fontWeight: 400 }}>+</span>
             <span>Add Task</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              if (typeof window.openExportScheduleModal === "function") {
+                window.openExportScheduleModal();
+              }
+            }}
+            style={{
+              height: "34px", padding: "0 16px", fontSize: "0.72rem", borderRadius: "9999px",
+              background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", border: "none",
+              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 700,
+              boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)",
+              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap"
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, #059669, #047857)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(16, 185, 129, 0.5), 0 4px 8px rgba(16, 185, 129, 0.3)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, #10b981, #059669)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)"; }}
+          >
+            <Download size={13} color="#ffffff" />
+            Export แพลนงาน
           </button>
 
           <button 

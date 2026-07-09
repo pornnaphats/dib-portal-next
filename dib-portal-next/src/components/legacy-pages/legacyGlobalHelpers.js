@@ -189,8 +189,9 @@ if (typeof window !== 'undefined') {
     const defaultRangeStr = `${formatDateISO(defaultStart)} to ${formatDateISO(defaultEnd)}`;
 
     // Persistence: Check if we have a saved range for this page, otherwise default to current week
-    const savedRange = window[dateRangeVarName] || defaultRangeStr;
-    if (!window[dateRangeVarName]) {
+    const isScope = dateRangeVarName === '_scopeDateRange';
+    const savedRange = window[dateRangeVarName] || (isScope ? '' : defaultRangeStr);
+    if (!window[dateRangeVarName] && !isScope) {
       window[dateRangeVarName] = defaultRangeStr;
     }
 

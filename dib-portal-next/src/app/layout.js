@@ -20,10 +20,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="th" className={`${kanit.className} antialiased`}>
       <head>
-        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
-        <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
       </head>
       <body className="h-screen max-h-screen bg-[#f4f7fe] text-[#1a2035] flex overflow-hidden">
+        <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
+        <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
         <AuthProvider>
           <DataProvider>
             <Sidebar />

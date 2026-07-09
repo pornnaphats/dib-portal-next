@@ -14,33 +14,57 @@ export default function ScopePage() {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) { setLoading(false); return; }
 
-    fetch(`${supabaseUrl}/rest/v1/project_scopes?select=*&limit=2000`, {
-      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
-    })
-      .then(r => r.json())
-      .then(data => {
-        // Group by project
-        const grouped = {};
-        (data || []).forEach(row => {
-          const acc = row.project || "Uncategorized";
-          if (!grouped[acc]) grouped[acc] = { account: acc, items: [] };
-          grouped[acc].items.push({
-            id: row.id,
-            name: row.work_detail || "Unnamed",
-            node: row.node || "Other",
-            progress: parseInt(row.percentage) || 0,
-            status: row.status || "",
-            assignee: row.assignee || "",
+    const fetchAllScopes = async () => {
+      let allData = [];
+      let offset = 0;
+      let limit = 1000;
+      let hasMore = true;
+      while (hasMore) {
+        try {
+          const res = await fetch(`${supabaseUrl}/rest/v1/project_scopes?select=*&limit=${limit}&offset=${offset}`, {
+            headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }
           });
-        });
-        setScopes(Object.values(grouped));
-        // Expand first by default
-        if (Object.keys(grouped).length > 0) {
-          setExpanded({ [Object.keys(grouped)[0]]: true });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) {
+              allData = allData.concat(data);
+              offset += limit;
+              if (data.length < limit) {
+                hasMore = false;
+              }
+            } else {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        } catch (e) {
+          hasMore = false;
         }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+
+      // Group by project
+      const grouped = {};
+      allData.forEach(row => {
+        const acc = row.project || "Uncategorized";
+        if (!grouped[acc]) grouped[acc] = { account: acc, items: [] };
+        grouped[acc].items.push({
+          id: row.id,
+          name: row.work_detail || "Unnamed",
+          node: row.node || "Other",
+          progress: parseInt(row.percentage) || 0,
+          status: row.status || "",
+          assignee: row.assignee || "",
+        });
+      });
+      setScopes(Object.values(grouped));
+      if (Object.keys(grouped).length > 0) {
+        setExpanded({ [Object.keys(grouped)[0]]: true });
+      }
+      setLoading(false);
+    };
+
+    fetchAllScopes();
   }, []);
 
   const filtered = scopes.filter(g =>

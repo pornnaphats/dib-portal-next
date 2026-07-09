@@ -559,7 +559,7 @@ export default function LeaveManagementReact() {
                         </div>
 
                         {/* Calendar */}
-                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col h-[280px]">
+                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="text-[0.8rem] font-extrabold text-gray-800 tracking-tight">ปฏิทินการลา</div>
                                 <div className="flex gap-1.5 items-center">
@@ -606,7 +606,7 @@ export default function LeaveManagementReact() {
                                     );
                                 })}
                             </div>
-                            <div className="mt-auto pt-3 border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center">
+                            <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center shrink-0">
                                 {[
                                     { label: 'ลาพักร้อน', color: 'bg-[#635BFF]' },
                                     { label: 'ลากิจ', color: 'bg-[#f97316]' },

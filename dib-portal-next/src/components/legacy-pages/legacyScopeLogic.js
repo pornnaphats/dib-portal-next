@@ -89,8 +89,8 @@ const getWorkloadColor = (hours) => {
     const monthNamesShort = window.monthNamesShort || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const dayNamesFull = window.dayNamesFull || ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    if (window._currentDateRange && window._currentDateRange.includes(' to ')) {
-      const [s, e] = window._currentDateRange.split(' to ');
+    if (window._scopeDateRange && window._scopeDateRange.includes(' to ')) {
+      const [s, e] = window._scopeDateRange.split(' to ');
       startDate = new Date(s);
       endDate = new Date(e);
     } else {
@@ -675,7 +675,7 @@ const getWorkloadColor = (hours) => {
         
         <!-- Filter Toolbar -->
         <div style="display: flex; align-items: center; gap: 8px; z-index: 100">
-          ${renderDateFilter('applyScopeDashboardFilters()', 'auto', null, false)}
+          ${renderDateFilter('applyScopeDashboardFilters()', 'auto', null, false, '', '_scopeDateRange')}
 
           <!-- Search Box -->
           <div class="search-box scope-search-box" style="width: 220px; display: flex; align-items: center; gap: 8px;">

@@ -9534,4 +9534,1010 @@ window.pageSchedule = function() {
     }
   };
 
+  // ==========================================
+  // --- SCHEDULE EXPORT SYSTEM ---
+  // ==========================================
+  
+  window.toggleAllExportEmps = function (checked) {
+    const labels = document.querySelectorAll('.export-emp-label');
+    labels.forEach(label => {
+      if (label.style.display !== 'none') {
+        const cb = label.querySelector('.export-emp-checkbox');
+        if (cb) cb.checked = checked;
+      }
+    });
+  };
+
+  window.copyExportedText = function () {
+    const textarea = document.getElementById('exportTextResultTextarea');
+    if (!textarea) return;
+    textarea.select();
+    document.execCommand('copy');
+    if (typeof showToast === 'function') showToast('คัดลอกข้อความสำเร็จ!', 'success');
+  };
+
+  window.downloadExportedTextFile = function () {
+    const textarea = document.getElementById('exportTextResultTextarea');
+    if (!textarea || !textarea.value) return;
+    const blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `DIB_Work_Schedule_${new Date().toISOString().slice(0, 10)}.txt`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  window.openExportScheduleModal = function () {
+    const modalId = 'exportScheduleModal';
+    const existing = document.getElementById(modalId);
+    if (existing) existing.remove();
+
+    const employees = (window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || [];
+    let hiddenEmps = [];
+    try { hiddenEmps = JSON.parse(localStorage.getItem('schedule_hidden_employees') || '[]'); } catch(e) { hiddenEmps = []; }
+    
+    let visibleEmps = [];
+    employees.forEach(e => {
+      const dept = e.dept ? e.dept.trim() : '';
+      if (!dept || dept === '-' || dept === 'Other') return;
+      if (hiddenEmps.includes(String(e.id)) || hiddenEmps.includes(String(e.name))) return;
+      if (window._scheduleTeamFilter && dept !== window._scheduleTeamFilter) return;
+
+      const searchStr = window._scheduleSearch;
+      if (searchStr) {
+        const matchName = e.name && e.name.toLowerCase().includes(searchStr);
+        const matchNameEn = e.nameEn && e.nameEn.toLowerCase().includes(searchStr);
+        const matchNickname = e.nickname && e.nickname.toLowerCase().includes(searchStr);
+        if (!(matchName || matchNameEn || matchNickname)) return;
+      }
+      visibleEmps.push(e);
+    });
+
+    const defaultRange = window._currentDateRange || '';
+
+    const empChecklistHtml = visibleEmps.map(e => {
+      const displayName = e.nickname && e.nickname !== '-' ? `${e.name} (${e.nickname})` : e.name;
+      const searchName = `${e.name.toLowerCase()} ${e.nameEn ? e.nameEn.toLowerCase() : ''} ${e.nickname ? e.nickname.toLowerCase() : ''}`;
+      return `
+        <label style="display:flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border); border-radius:10px; cursor:pointer; background:#f8fafc; transition:all 0.2s" class="export-emp-label" data-search-name="${searchName}">
+          <input type="checkbox" class="export-emp-checkbox" value="${e.id}" checked style="width:16px; height:16px; accent-color:var(--primary)">
+          <div style="font-size:0.8rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px">${displayName}</div>
+          <div style="font-size:0.65rem; color:var(--text-3); margin-left:auto; background:#fff; padding:2px 8px; border-radius:99px; border:1.5px solid #f1f5f9; flex-shrink:0">${e.pos}</div>
+        </label>
+      `;
+    }).join('');
+
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); font-family:'Kanit', sans-serif">
+      <div style="background:#fff; width:100%; max-width:650px; border-radius:20px; box-shadow:0 15px 40px rgba(0,0,0,0.15); display:flex; flex-direction:column; overflow:hidden; animation: modalIn 0.3s ease-out">
+        
+        <!-- Modal Header -->
+        <div style="padding:20px 24px; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+          <div style="display:flex; align-items:center; gap:10px">
+            <div style="width:36px; height:36px; border-radius:10px; background:rgba(16,185,129,0.1); color:#10b981; display:flex; align-items:center; justify-content:center">
+              <i data-lucide="download" style="width:20px; height:20px"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem; font-weight:800; color:#1e293b; margin:0; letter-spacing:-0.5px">Export ตารางการทำงาน</h3>
+              <p style="margin:2px 0 0; font-size:0.75rem; color:#64748b; font-weight:500">ส่งออกข้อมูลตารางเวรของพนักงานที่เลือกเป็นไฟล์ Text หรือ รูปภาพ (PNG) เพื่อนำไปใช้งานต่อได้ทันที</p>
+            </div>
+          </div>
+          <button onclick="document.getElementById('${modalId}').remove()" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center; transition:all 0.2s">
+            <i data-lucide="x" style="width:18px; height:18px"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding:24px; overflow-y:auto; max-height:calc(100vh - 200px); display:flex; flex-direction:column; gap:20px">
+          
+          <!-- Section 1: Choose Date Range -->
+          <div>
+            <label style="display:block; font-size:0.8rem; font-weight:700; color:#334155; margin-bottom:8px">1. เลือกช่วงเวลา (วันที่เริ่มต้น - วันที่สิ้นสุด)</label>
+            <div style="position:relative; width:100%">
+              <i data-lucide="calendar" style="width:16px; height:16px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
+              <input type="text" id="exportDateRangeInput" placeholder="เลือกช่วงเวลาเริ่มต้น - สิ้นสุด..." value="${defaultRange}" 
+                     style="width:100%; height:42px; padding:0 12px 0 42px; border-radius:12px; border:1.5px solid #cbd5e1; font-size:0.85rem; outline:none; background:#fff; font-family:inherit; cursor:pointer">
+            </div>
+          </div>
+
+          <!-- Section 2: Choose Employees -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+              <label style="font-size:0.8rem; font-weight:700; color:#334155; margin:0">2. เลือกรายชื่อพนักงานที่ต้องการส่งออก (<span id="exportEmpCount">${visibleEmps.length}</span> คน)</label>
+              <div style="display:flex; gap:8px">
+                <button onclick="window.toggleAllExportEmps(true)" style="background:none; border:none; color:var(--primary); font-size:0.7rem; font-weight:700; cursor:pointer">เลือกทั้งหมด</button>
+                <span style="color:#cbd5e1; font-size:0.7rem">|</span>
+                <button onclick="window.toggleAllExportEmps(false)" style="background:none; border:none; color:#ef4444; font-size:0.7rem; font-weight:700; cursor:pointer">ยกเลิกทั้งหมด</button>
+              </div>
+            </div>
+            
+            <!-- Search input bar -->
+            <div style="position:relative; width:100%; margin-bottom:8px">
+              <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
+              <input type="text" id="exportEmpSearchInput" placeholder="ค้นหาชื่อพนักงาน..." 
+                     style="width:100%; height:36px; padding:0 12px 0 36px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:0.8rem; outline:none; background:#fff; font-family:inherit; box-sizing:border-box">
+            </div>
+            
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; max-height:220px; overflow-y:auto; padding:4px; border:1.5px solid #cbd5e1; border-radius:12px" class="scheduler-scrollbar">
+              ${empChecklistHtml || `<div style="grid-column: span 2; text-align:center; padding:20px; color:#64748b; font-size:0.8rem">ไม่พบรายชื่อพนักงาน</div>`}
+            </div>
+          </div>
+
+          <!-- Section 3: Text Output Area -->
+          <div id="exportTextResultArea" style="display:none; flex-direction:column; gap:8px; animation: fadeIn 0.2s ease">
+            <label style="font-size:0.8rem; font-weight:700; color:#334155; margin:0">ดูตัวอย่างข้อมูลก่อนส่งออก</label>
+            <textarea id="exportTextResultTextarea" readonly style="width:100%; height:150px; padding:12px; border-radius:12px; border:1.5px solid #cbd5e1; background:#f8fafc; font-family:monospace; font-size:0.8rem; outline:none; resize:none" class="scheduler-scrollbar"></textarea>
+            <div style="display:flex; gap:10px">
+              <button onclick="window.copyExportedText()" class="btn" style="flex:1; background:var(--primary); color:#fff; border:none; height:38px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem">
+                <i data-lucide="copy" style="width:16px; height:16px"></i> คัดลอกข้อความ
+              </button>
+              <button onclick="window.downloadExportedTextFile()" class="btn" style="flex:1; background:#fff; color:#475569; border:1.5px solid var(--border); height:38px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem">
+                <i data-lucide="file-text" style="width:16px; height:16px"></i> ดาวน์โหลดไฟล์ .txt
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid var(--border); display:flex; gap:12px">
+          <button onclick="window.generateScheduleImageExport()" class="btn" style="flex:1; background:#10b981; color:#fff; border:none; height:44px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+            <i data-lucide="image" style="width:18px; height:18px"></i> Export เป็นรูปภาพ (PNG)
+          </button>
+          <button onclick="window.generateScheduleTextExport()" class="btn" style="flex:1; background:#6366f1; color:#fff; border:none; height:44px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+            <i data-lucide="file-text" style="width:18px; height:18px"></i> Export เป็นข้อความ (Text)
+          </button>
+        </div>
+
+      </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+
+    setTimeout(() => {
+      const input = document.getElementById('exportDateRangeInput');
+      if (input && window.flatpickr) {
+        window.flatpickr(input, {
+          mode: 'range',
+          dateFormat: 'Y-m-d',
+          locale: {
+            firstDayOfWeek: 0,
+            rangeSeparator: ' to ',
+            weekdays: {
+              shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
+              longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+            },
+            months: {
+              shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
+              longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+            }
+          },
+          defaultDate: defaultRange ? defaultRange.split(' to ') : []
+        });
+      }
+
+      const searchInput = document.getElementById('exportEmpSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+          const query = e.target.value.toLowerCase().trim();
+          const labels = document.querySelectorAll('.export-emp-label');
+          let visibleCount = 0;
+          labels.forEach(label => {
+            const searchName = label.getAttribute('data-search-name') || '';
+            if (searchName.includes(query)) {
+              label.style.display = 'flex';
+              visibleCount++;
+            } else {
+              label.style.display = 'none';
+            }
+          });
+          const countSpan = document.getElementById('exportEmpCount');
+          if (countSpan) countSpan.textContent = visibleCount;
+        });
+      }
+    }, 50);
+  };
+
+  window.generateScheduleTextExport = function () {
+    const checkedBoxes = document.querySelectorAll('.export-emp-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+      if (typeof showAlert === 'function') showAlert('กรุณาเลือกพนักงาน', 'กรุณาเลือกพนักงานอย่างน้อย 1 คน', 'warning');
+      return;
+    }
+    const checkedIds = Array.from(checkedBoxes).map(cb => cb.value);
+    const range = document.getElementById('exportDateRangeInput')?.value || '';
+
+    let startDate, endDate;
+    if (range && range.includes(' to ')) {
+      const parts = range.split(' to ');
+      const s = parts[0].trim();
+      const e = parts[1] ? parts[1].trim() : '';
+      
+      startDate = new Date(s);
+      endDate = e ? new Date(e) : new Date(s);
+      
+      if (isNaN(startDate.getTime())) startDate = new Date();
+      if (isNaN(endDate.getTime())) endDate = new Date(startDate);
+    } else if (range && range.trim()) {
+      startDate = new Date(range.trim());
+      if (isNaN(startDate.getTime())) startDate = new Date();
+      endDate = new Date(startDate);
+    } else {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() + diffToMon);
+      startDate.setHours(0,0,0,0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+    }
+
+    if (startDate && startDate.getFullYear() > 2500) {
+      startDate.setFullYear(startDate.getFullYear() - 543);
+    }
+    if (endDate && endDate.getFullYear() > 2500) {
+      endDate.setFullYear(endDate.getFullYear() - 543);
+    }
+
+    startDate.setHours(0,0,0,0);
+    endDate.setHours(23,59,59,999);
+
+    const days = [];
+    const dayNamesTH = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+    const monthNamesTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const thaiMonthsFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+    let curr = new Date(startDate);
+    let count = 0;
+    while (curr <= endDate && count < 100) {
+      days.push({
+        dayTH: dayNamesTH[curr.getDay()],
+        dateStr: `${curr.getDate()} ${monthNamesTH[curr.getMonth()]}`,
+        dateIso: `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`,
+        dateObj: new Date(curr)
+      });
+      curr.setDate(curr.getDate() + 1);
+      count++;
+    }
+
+    const formatScheduleName = (fullNameEn) => {
+      if (!fullNameEn || fullNameEn === '-') return '';
+      const parts = fullNameEn.trim().split(/\s+/);
+      if (parts.length < 2) return parts[0];
+      return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+    };
+
+    const tasksByPersonDay = {};
+    if (Array.isArray(window.SCHEDULE_TASKS)) {
+      window.SCHEDULE_TASKS.forEach(t => {
+        if (!t.person || !t.date) return;
+        const tPerson = String(t.person).trim().toLowerCase();
+        
+        // Find which employee this matches
+        const emp = ((window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === tPerson;
+          const matchName = String(e.name).trim().toLowerCase() === tPerson;
+          const matchNameEn = String(e.nameEn).trim().toLowerCase() === tPerson;
+          const matchNickname = String(e.nickname).trim().toLowerCase() === tPerson;
+          
+          const shortEn = formatScheduleName(e.nameEn).trim().toLowerCase();
+          const matchShortEn = shortEn && shortEn === tPerson;
+          
+          return matchId || matchName || matchNameEn || matchNickname || matchShortEn;
+        });
+        
+        const targetId = emp ? emp.id : t.person;
+        const key = `${targetId}_${t.date}`;
+        if (!tasksByPersonDay[key]) tasksByPersonDay[key] = [];
+        if (!t.id || !t.id.startsWith('SCH-') || !tasksByPersonDay[key].some(existing => existing.id === t.id)) {
+          tasksByPersonDay[key].push(t);
+        }
+      });
+    }
+
+    if (Array.isArray(window.QC_PLANS)) {
+      window.QC_PLANS.forEach(plan => {
+        if (!plan.name || !plan.date) return;
+        const tPerson = String(plan.name).trim().toLowerCase();
+        const emp = ((window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === tPerson;
+          const matchName = String(e.name).trim().toLowerCase() === tPerson;
+          const matchNameEn = String(e.nameEn).trim().toLowerCase() === tPerson;
+          const matchNickname = String(e.nickname).trim().toLowerCase() === tPerson;
+          const shortEn = formatScheduleName(e.nameEn).trim().toLowerCase();
+          const matchShortEn = shortEn && shortEn === tPerson;
+          return matchId || matchName || matchNameEn || matchNickname || matchShortEn;
+        });
+        const targetId = emp ? emp.id : plan.name;
+        const key = `${targetId}_${plan.date}`;
+        const taskId = 'SCH-' + plan.id;
+        if (!tasksByPersonDay[key]) tasksByPersonDay[key] = [];
+        const exists = tasksByPersonDay[key].some(t => t.id === taskId);
+        if (!exists) {
+          const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
+          const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
+          const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
+          const workDetail = `${dpType}${channelText}`;
+
+          let ratesV2 = {};
+          try {
+            const raw = localStorage.getItem('qc_workload_rates_v2');
+            ratesV2 = (raw && raw !== '{}') ? JSON.parse(raw) : window.DEFAULT_QC_RATES_V2;
+          } catch(e) {
+            ratesV2 = window.DEFAULT_QC_RATES_V2;
+          }
+          const rate = typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, plan.category, plan.channel, dpType) : 0;
+          const pct = Math.round((plan.cases || 0) * rate);
+
+          tasksByPersonDay[key].push({
+            id: taskId,
+            date: plan.date,
+            person: targetId,
+            acc: 'บ.ในเครือ',
+            node: 'Monitor',
+            title: workDetail,
+            hours: pct
+          });
+        }
+      });
+    }
+
+    const leavesByPersonDay = {};
+    const currentData = (window.DATA) || (typeof DATA !== "undefined" ? DATA : {});
+    if (Array.isArray(currentData.leaveRequests)) {
+      currentData.leaveRequests.forEach(r => {
+        if (r.status !== 'approved' && r.status !== 'อนุมัติแล้ว') return;
+        const parseThaiDate = (str) => {
+          if (!str) return '';
+          const parts = str.split(' ');
+          if (parts.length < 3) return str;
+          const d = parts[0].padStart(2, '0');
+          const monthMap = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06', 'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12' };
+          const m = monthMap[parts[1]] || '01';
+          const y = parseInt(parts[2]) - 543;
+          return `${y}-${m}-${d}`;
+        };
+        let start = new Date(r.startRaw || parseThaiDate(r.start));
+        let end = new Date(r.endRaw || parseThaiDate(r.end));
+        let dCurr = new Date(start);
+        while (dCurr <= end) {
+          const dIso = `${dCurr.getFullYear()}-${String(dCurr.getMonth() + 1).padStart(2, '0')}-${String(dCurr.getDate()).padStart(2, '0')}`;
+          const key = `${(r.name || '').trim().toLowerCase()}_${dIso}`;
+          leavesByPersonDay[key] = r;
+          dCurr.setDate(dCurr.getDate() + 1);
+        }
+      });
+    }
+
+    const holidayByPersonDay = {};
+    try {
+      const localShifts = JSON.parse(localStorage.getItem('holiday_shifts') || '[]');
+      const parseHolidayDateToISO = (dateStr) => {
+        if (!dateStr) return null;
+        const s = dateStr.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const mFull = s.match(/(\d+)\s+(\S+)\s+(\d{4})/);
+        if (mFull) {
+          const day = mFull[1].padStart(2, '0');
+          const thaiMonthsFullMap = { 'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06', 'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12' };
+          const thaiMonthsShortMap = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06', 'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12' };
+          const mon = thaiMonthsFullMap[mFull[2]] || thaiMonthsShortMap[mFull[2]] || null;
+          const year = parseInt(mFull[3]) > 2500 ? parseInt(mFull[3]) - 543 : parseInt(mFull[3]);
+          if (mon) return `${year}-${mon}-${day}`;
+        }
+        const enMonths = { 'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06','jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12' };
+        const mEn = s.match(/(\d+)\s+([A-Za-z]+)\s+(\d{4})/);
+        if (mEn) {
+          const day = mEn[1].padStart(2, '0');
+          const mon = enMonths[mEn[2].toLowerCase().substring(0,3)] || null;
+          const year = parseInt(mEn[3]) > 2500 ? parseInt(mEn[3]) - 543 : parseInt(mEn[3]);
+          if (mon) return `${year}-${mon}-${day}`;
+        }
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+          const parts = s.split('/');
+          const year = parseInt(parts[2]) > 2500 ? parseInt(parts[2]) - 543 : parseInt(parts[2]);
+          return `${year}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+        const d = new Date(s);
+        if (!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return null;
+      };
+      localShifts.forEach(shift => {
+        const isoDate = parseHolidayDateToISO(shift.date);
+        if (!isoDate) return;
+        (shift.tasks || []).forEach(task => {
+          if (!task.person || task.person === '-') return;
+          const key = `${task.person.trim().toLowerCase()}_${isoDate}`;
+          if (!holidayByPersonDay[key]) holidayByPersonDay[key] = [];
+          holidayByPersonDay[key].push({ holidayName: shift.name, section: task.section, time: task.time, assignments: task.assignments || [] });
+        });
+      });
+    } catch(e) { console.error('[Schedule Export] holiday index error:', e); }
+
+    let txt = `ตารางการทำงาน ทีม RealSmart DIB\n`;
+    txt += `วันที่: ${startDate.getDate()} ${thaiMonthsFull[startDate.getMonth()]} ${startDate.getFullYear() + 543} - ${endDate.getDate()} ${thaiMonthsFull[endDate.getMonth()]} ${endDate.getFullYear() + 543}\n`;
+    txt += `--------------------------------------------------\n\n`;
+
+    const employees = (window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || [];
+    checkedIds.forEach(empId => {
+      const e = employees.find(emp => String(emp.id) === String(empId));
+      if (!e) return;
+
+      const displayName = e.nickname && e.nickname !== '-' ? `${e.name} (${e.nickname})` : e.name;
+      txt += `พนักงาน: ${displayName} - ${e.pos}\n`;
+      txt += `กะการทำงาน: ${e.shift || '-'} | วันหยุด: ${e.offdays || '-'}\n`;
+
+      const realDayMap = { 'อาทิตย์': 0, 'จันทร์': 1, 'อังคาร': 2, 'พุธ': 3, 'พฤหัสบดี': 4, 'ศุกร์': 5, 'เสาร์': 6 };
+      const offDays = (e.offdays || '').split(/[,|\-]/).map(d => realDayMap[d.trim().replace('วัน', '')]).filter(v => v !== undefined);
+
+      days.forEach(d => {
+        const isOff = offDays.includes(d.dateObj.getDay());
+        const leave = leavesByPersonDay[`${e.name.trim().toLowerCase()}_${d.dateIso}`] || 
+                      leavesByPersonDay[`${(e.nameEn || '').trim().toLowerCase()}_${d.dateIso}`];
+        
+        const shortEn = formatScheduleName(e.nameEn) || e.name;
+        const holidayTasks = holidayByPersonDay[`${e.name.trim().toLowerCase()}_${d.dateIso}`] || 
+                             holidayByPersonDay[`${shortEn.trim().toLowerCase()}_${d.dateIso}`] ||
+                             holidayByPersonDay[`${(e.nameEn || '').trim().toLowerCase()}_${d.dateIso}`] ||
+                             holidayByPersonDay[`${(e.nickname || '').trim().toLowerCase()}_${d.dateIso}`] || [];
+
+        let statusText = '';
+        if (isOff) {
+          statusText = 'วันหยุด (DAY OFF)';
+        } else if (leave) {
+          statusText = `ลาหยุด (${leave.type.toUpperCase()})`;
+        } else {
+          const dayTasks = tasksByPersonDay[`${e.id}_${d.dateIso}`] || [];
+          if (dayTasks.length > 0) {
+            statusText = dayTasks.map(t => `${t.title} [${t.acc}]`).join(', ');
+          } else if (holidayTasks.length > 0) {
+            statusText = holidayTasks.map(ht => {
+              if (ht.assignments && ht.assignments.length > 0) {
+                return ht.assignments.map(a => `${a.project || ht.holidayName} [${ht.section}]`).join(', ');
+              }
+              return `${ht.holidayName} [${ht.section || 'Operation'}]`;
+            }).join(', ');
+          } else {
+            statusText = 'ไม่มีการมอบหมายงาน (No task)';
+          }
+        }
+
+        txt += `  - ${d.dayTH} ${d.dateStr}: ${statusText}\n`;
+      });
+      txt += `\n`;
+    });
+
+    txt += `--------------------------------------------------\n`;
+    txt += `ดาวน์โหลดจากระบบ DIB Portal ณ วันที่ ${new Date().toLocaleDateString('th-TH')}`;
+
+    const textarea = document.getElementById('exportTextResultTextarea');
+    const area = document.getElementById('exportTextResultArea');
+    if (textarea && area) {
+      textarea.value = txt;
+      area.style.display = 'flex';
+      if (window.lucide) lucide.createIcons({ root: area });
+    }
+  };
+
+  window.generateScheduleImageExport = function () {
+    const checkedBoxes = document.querySelectorAll('.export-emp-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+      if (typeof showAlert === 'function') showAlert('กรุณาเลือกพนักงาน', 'กรุณาเลือกพนักงานอย่างน้อย 1 คน', 'warning');
+      return;
+    }
+    const checkedIds = Array.from(checkedBoxes).map(cb => cb.value);
+    const range = document.getElementById('exportDateRangeInput')?.value || '';
+
+    let startDate, endDate;
+    if (range && range.includes(' to ')) {
+      const parts = range.split(' to ');
+      const s = parts[0].trim();
+      const e = parts[1] ? parts[1].trim() : '';
+      
+      startDate = new Date(s);
+      endDate = e ? new Date(e) : new Date(s);
+      
+      if (isNaN(startDate.getTime())) startDate = new Date();
+      if (isNaN(endDate.getTime())) endDate = new Date(startDate);
+    } else if (range && range.trim()) {
+      startDate = new Date(range.trim());
+      if (isNaN(startDate.getTime())) startDate = new Date();
+      endDate = new Date(startDate);
+    } else {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() + diffToMon);
+      startDate.setHours(0,0,0,0);
+      endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+    }
+
+    if (startDate && startDate.getFullYear() > 2500) {
+      startDate.setFullYear(startDate.getFullYear() - 543);
+    }
+    if (endDate && endDate.getFullYear() > 2500) {
+      endDate.setFullYear(endDate.getFullYear() - 543);
+    }
+
+    startDate.setHours(0,0,0,0);
+    endDate.setHours(23,59,59,999);
+
+    const days = [];
+    const dayNamesTH = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+    const monthNamesTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const thaiMonthsFull = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+    let curr = new Date(startDate);
+    let count = 0;
+    while (curr <= endDate && count < 100) {
+      days.push({
+        dayTH: dayNamesTH[curr.getDay()],
+        dateStr: `${curr.getDate()} ${monthNamesTH[curr.getMonth()]}`,
+        dateIso: `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`,
+        dateObj: new Date(curr)
+      });
+      curr.setDate(curr.getDate() + 1);
+      count++;
+    }
+
+    const formatScheduleName = (fullNameEn) => {
+      if (!fullNameEn || fullNameEn === '-') return '';
+      const parts = fullNameEn.trim().split(/\s+/);
+      if (parts.length < 2) return parts[0];
+      return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+    };
+
+    const tasksByPersonDay = {};
+    if (Array.isArray(window.SCHEDULE_TASKS)) {
+      window.SCHEDULE_TASKS.forEach(t => {
+        if (!t.person || !t.date) return;
+        const tPerson = String(t.person).trim().toLowerCase();
+        
+        // Find which employee this matches
+        const emp = ((window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === tPerson;
+          const matchName = String(e.name).trim().toLowerCase() === tPerson;
+          const matchNameEn = String(e.nameEn).trim().toLowerCase() === tPerson;
+          const matchNickname = String(e.nickname).trim().toLowerCase() === tPerson;
+          
+          const shortEn = formatScheduleName(e.nameEn).trim().toLowerCase();
+          const matchShortEn = shortEn && shortEn === tPerson;
+          
+          return matchId || matchName || matchNameEn || matchNickname || matchShortEn;
+        });
+        
+        const targetId = emp ? emp.id : t.person;
+        const key = `${targetId}_${t.date}`;
+        if (!tasksByPersonDay[key]) tasksByPersonDay[key] = [];
+        if (!t.id || !t.id.startsWith('SCH-') || !tasksByPersonDay[key].some(existing => existing.id === t.id)) {
+          tasksByPersonDay[key].push(t);
+        }
+      });
+    }
+
+    if (Array.isArray(window.QC_PLANS)) {
+      window.QC_PLANS.forEach(plan => {
+        if (!plan.name || !plan.date) return;
+        const tPerson = String(plan.name).trim().toLowerCase();
+        const emp = ((window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === tPerson;
+          const matchName = String(e.name).trim().toLowerCase() === tPerson;
+          const matchNameEn = String(e.nameEn).trim().toLowerCase() === tPerson;
+          const matchNickname = String(e.nickname).trim().toLowerCase() === tPerson;
+          const shortEn = formatScheduleName(e.nameEn).trim().toLowerCase();
+          const matchShortEn = shortEn && shortEn === tPerson;
+          return matchId || matchName || matchNameEn || matchNickname || matchShortEn;
+        });
+        const targetId = emp ? emp.id : plan.name;
+        const key = `${targetId}_${plan.date}`;
+        const taskId = 'SCH-' + plan.id;
+        if (!tasksByPersonDay[key]) tasksByPersonDay[key] = [];
+        const exists = tasksByPersonDay[key].some(t => t.id === taskId);
+        if (!exists) {
+          const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
+          const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
+          const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
+          const workDetail = `${dpType}${channelText}`;
+
+          let ratesV2 = {};
+          try {
+            const raw = localStorage.getItem('qc_workload_rates_v2');
+            ratesV2 = (raw && raw !== '{}') ? JSON.parse(raw) : window.DEFAULT_QC_RATES_V2;
+          } catch(e) {
+            ratesV2 = window.DEFAULT_QC_RATES_V2;
+          }
+          const rate = typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, plan.category, plan.channel, dpType) : 0;
+          const pct = Math.round((plan.cases || 0) * rate);
+
+          tasksByPersonDay[key].push({
+            id: taskId,
+            date: plan.date,
+            person: targetId,
+            acc: 'บ.ในเครือ',
+            node: 'Monitor',
+            title: workDetail,
+            hours: pct
+          });
+        }
+      });
+    }
+
+    const leavesByPersonDay = {};
+    const currentData = (window.DATA) || (typeof DATA !== "undefined" ? DATA : {});
+    if (Array.isArray(currentData.leaveRequests)) {
+      currentData.leaveRequests.forEach(r => {
+        if (r.status !== 'approved' && r.status !== 'อนุมัติแล้ว') return;
+        const parseThaiDate = (str) => {
+          if (!str) return '';
+          const parts = str.split(' ');
+          if (parts.length < 3) return str;
+          const d = parts[0].padStart(2, '0');
+          const monthMap = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06', 'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12' };
+          const m = monthMap[parts[1]] || '01';
+          const y = parseInt(parts[2]) - 543;
+          return `${y}-${m}-${d}`;
+        };
+        let start = new Date(r.startRaw || parseThaiDate(r.start));
+        let end = new Date(r.endRaw || parseThaiDate(r.end));
+        let dCurr = new Date(start);
+        while (dCurr <= end) {
+          const dIso = `${dCurr.getFullYear()}-${String(dCurr.getMonth() + 1).padStart(2, '0')}-${String(dCurr.getDate()).padStart(2, '0')}`;
+          const key = `${(r.name || '').trim().toLowerCase()}_${dIso}`;
+          leavesByPersonDay[key] = r;
+          dCurr.setDate(dCurr.getDate() + 1);
+        }
+      });
+    }
+
+    const holidayByPersonDay = {};
+    try {
+      const localShifts = JSON.parse(localStorage.getItem('holiday_shifts') || '[]');
+      const parseHolidayDateToISO = (dateStr) => {
+        if (!dateStr) return null;
+        const s = dateStr.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const mFull = s.match(/(\d+)\s+(\S+)\s+(\d{4})/);
+        if (mFull) {
+          const day = mFull[1].padStart(2, '0');
+          const thaiMonthsFullMap = { 'มกราคม': '01', 'กุมภาพันธ์': '02', 'มีนาคม': '03', 'เมษายน': '04', 'พฤษภาคม': '05', 'มิถุนายน': '06', 'กรกฎาคม': '07', 'สิงหาคม': '08', 'กันยายน': '09', 'ตุลาคม': '10', 'พฤศจิกายน': '11', 'ธันวาคม': '12' };
+          const thaiMonthsShortMap = { 'ม.ค.': '01', 'ก.พ.': '02', 'มี.ค.': '03', 'เม.ย.': '04', 'พ.ค.': '05', 'มิ.ย.': '06', 'ก.ค.': '07', 'ส.ค.': '08', 'ก.ย.': '09', 'ต.ค.': '10', 'พ.ย.': '11', 'ธ.ค.': '12' };
+          const mon = thaiMonthsFullMap[mFull[2]] || thaiMonthsShortMap[mFull[2]] || null;
+          const year = parseInt(mFull[3]) > 2500 ? parseInt(mFull[3]) - 543 : parseInt(mFull[3]);
+          if (mon) return `${year}-${mon}-${day}`;
+        }
+        const enMonths = { 'jan':'01','feb':'02','mar':'03','apr':'04','may':'05','jun':'06','jul':'07','aug':'08','sep':'09','oct':'10','nov':'11','dec':'12' };
+        const mEn = s.match(/(\d+)\s+([A-Za-z]+)\s+(\d{4})/);
+        if (mEn) {
+          const day = mEn[1].padStart(2, '0');
+          const mon = enMonths[mEn[2].toLowerCase().substring(0,3)] || null;
+          const year = parseInt(mEn[3]) > 2500 ? parseInt(mEn[3]) - 543 : parseInt(mEn[3]);
+          if (mon) return `${year}-${mon}-${day}`;
+        }
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+          const parts = s.split('/');
+          const year = parseInt(parts[2]) > 2500 ? parseInt(parts[2]) - 543 : parseInt(parts[2]);
+          return `${year}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+        const d = new Date(s);
+        if (!isNaN(d)) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        return null;
+      };
+      localShifts.forEach(shift => {
+        const isoDate = parseHolidayDateToISO(shift.date);
+        if (!isoDate) return;
+        (shift.tasks || []).forEach(task => {
+          if (!task.person || task.person === '-') return;
+          const key = `${task.person.trim().toLowerCase()}_${isoDate}`;
+          if (!holidayByPersonDay[key]) holidayByPersonDay[key] = [];
+          holidayByPersonDay[key].push({ holidayName: shift.name, section: task.section, time: task.time, assignments: task.assignments || [] });
+        });
+      });
+    } catch(e) { console.error('[Schedule Export] holiday index error:', e); }
+
+    const mixWithWhite = (hex, weight) => {
+      const cleanHex = (hex || '#64748b').replace('#', '');
+      const r = parseInt(cleanHex.substring(0, 2), 16);
+      const g = parseInt(cleanHex.substring(2, 4), 16);
+      const b = parseInt(cleanHex.substring(4, 6), 16);
+      const rMix = Math.round(r * weight + 255 * (1 - weight));
+      const gMix = Math.round(g * weight + 255 * (1 - weight));
+      const bMix = Math.round(b * weight + 255 * (1 - weight));
+      const rHex = rMix.toString(16).padStart(2, '0');
+      const gHex = gMix.toString(16).padStart(2, '0');
+      const bHex = bMix.toString(16).padStart(2, '0');
+      return `#${rHex}${gHex}${bHex}`;
+    };
+
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '-9999px';
+    tempDiv.style.width = '1420px';
+    tempDiv.style.padding = '40px';
+    tempDiv.style.background = '#f8fafc';
+    tempDiv.style.borderRadius = '24px';
+    tempDiv.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.1)';
+    tempDiv.style.fontFamily = "'Kanit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+    const chunkArray = (array, size) => {
+      const result = [];
+      for (let i = 0; i < array.length; i += size) {
+        result.push(array.slice(i, i + size));
+      }
+      return result;
+    };
+    const dayChunks = chunkArray(days, 7);
+
+    let tablesHtml = '';
+    const employees = (window.DATA && window.DATA.employees) || (typeof DATA !== "undefined" && DATA.employees) || [];
+
+    dayChunks.forEach((chunk, chunkIdx) => {
+      let rowsHtml = '';
+      checkedIds.forEach(empId => {
+        const e = employees.find(emp => String(emp.id) === String(empId));
+        if (!e) return;
+
+        const displayName = e.nickname && e.nickname !== '-' ? `${e.name} (${e.nickname})` : e.name;
+        const realDayMap = { 'อาทิตย์': 0, 'จันทร์': 1, 'อังคาร': 2, 'พุธ': 3, 'พฤหัสบดี': 4, 'ศุกร์': 5, 'เสาร์': 6 };
+        const offDays = (e.offdays || '').split(/[,|\-]/).map(d => realDayMap[d.trim().replace('วัน', '')]).filter(v => v !== undefined);
+
+        let cellsHtml = '';
+        chunk.forEach(d => {
+          const isOff = offDays.includes(d.dateObj.getDay());
+          const leave = leavesByPersonDay[`${e.name.trim().toLowerCase()}_${d.dateIso}`] || 
+                        leavesByPersonDay[`${(e.nameEn || '').trim().toLowerCase()}_${d.dateIso}`];
+          const shortEn = formatScheduleName(e.nameEn) || e.name;
+          const holidayTasks = holidayByPersonDay[`${e.name.trim().toLowerCase()}_${d.dateIso}`] || 
+                               holidayByPersonDay[`${shortEn.trim().toLowerCase()}_${d.dateIso}`] ||
+                               holidayByPersonDay[`${(e.nameEn || '').trim().toLowerCase()}_${d.dateIso}`] ||
+                               holidayByPersonDay[`${(e.nickname || '').trim().toLowerCase()}_${d.dateIso}`] || [];
+
+          let cellContent = '';
+          let cellBg = isOff ? '#f1f5f9' : '#ffffff';
+
+          if (isOff) {
+            cellContent = `<div style="display:flex; align-items:center; justify-content:center; min-height:130px; width:100%; background:#f1f5f9; color:#94a3b8; font-size:13px; font-weight:700; letter-spacing:1.5px">DAY OFF</div>`;
+          } else if (leave) {
+            cellBg = '#fff1f2';
+            cellContent = `<div style="display:flex; align-items:center; justify-content:center; min-height:130px; width:100%; background:#fee2e2; color:#be123c; font-size:13px; font-weight:800; text-transform:uppercase">${leave.type}</div>`;
+          } else {
+            const dayTasks = tasksByPersonDay[`${e.id}_${d.dateIso}`] || [];
+
+            const colorForNodeLocal = (node) => {
+              const nodes = { 'ETDA': '#3b82f6', 'Monitor': '#f59e0b', 'Report': '#10b981', 'Other': '#6366f1' };
+              return nodes[node] || '#64748b';
+            };
+
+            if (dayTasks.length > 0) {
+              const tasksList = dayTasks.map(t => {
+                const nodeCol = colorForNodeLocal(t.node);
+                const borderColor = mixWithWhite(nodeCol, 0.25);
+                return `
+                  <div style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 10px; background: #ffffff; border: 1px solid ${borderColor}; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02)">
+                    <div style="width: 4px; min-height: 36px; background: ${nodeCol}; border-radius: 99px; flex-shrink: 0; margin-top: 2px;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="color: ${nodeCol}; font-weight: 700; font-size: 13px; white-space: normal; word-break: break-word; line-height: 1.4">${t.title}</div>
+                      <div style="font-size: 11px; color: #64748b; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                        <span style="white-space: normal; word-break: break-word; flex: 1;">${t.acc}</span>
+                        <span style="color: #94a3b8; font-size: 10px; flex-shrink: 0;">${t.node}</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              cellContent = `
+                <div style="display:flex; flex-direction:column; height:100%; gap:4px">
+                  <div style="flex:1">${tasksList}</div>
+                </div>
+              `;
+            } else if (holidayTasks.length > 0) {
+              let holidayTotalPct = 0;
+              const hTasksList = holidayTasks.map(ht => {
+                if (ht.assignments && ht.assignments.length > 0) {
+                  return ht.assignments.map(a => {
+                    holidayTotalPct += (Number(a.percent) || 0);
+                    const hBorderColor = mixWithWhite('#f59e0b', 0.25);
+                    return `
+                      <div style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 10px; background: #ffffff; border: 1px solid ${hBorderColor}; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02)">
+                        <div style="width: 4px; min-height: 36px; background: #f59e0b; border-radius: 99px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div style="flex: 1; min-width: 0;">
+                          <div style="color: #f59e0b; font-weight: 700; font-size: 13px; white-space: normal; word-break: break-word; line-height: 1.4">${a.project || ht.holidayName}</div>
+                          <div style="font-size: 11px; color: #64748b; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                            <span style="white-space: normal; word-break: break-word; flex: 1;">${ht.section}</span>
+                            <span style="color: #94a3b8; font-size: 10px; flex-shrink: 0;">Holiday</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('');
+                } else {
+                  const hBorderColor = mixWithWhite('#f59e0b', 0.25);
+                  return `
+                    <div style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 10px; background: #ffffff; border: 1px solid ${hBorderColor}; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02)">
+                      <div style="width: 4px; min-height: 36px; background: #f59e0b; border-radius: 99px; flex-shrink: 0; margin-top: 2px;"></div>
+                      <div style="flex: 1; min-width: 0;">
+                        <div style="color: #f59e0b; font-weight: 700; font-size: 13px; white-space: normal; word-break: break-word; line-height: 1.4">${ht.holidayName}</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                          <span style="white-space: normal; word-break: break-word; flex: 1;">${ht.section || 'Operation'}</span>
+                          <span style="color: #94a3b8; font-size: 10px; flex-shrink: 0;">${ht.time || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+              }).join('');
+
+              cellContent = `
+                <div style="display:flex; flex-direction:column; height:100%; gap:4px">
+                  <div style="flex:1">${hTasksList}</div>
+                </div>
+              `;
+            } else {
+              cellContent = `<div style="padding:24px 15px; color:#cbd5e1; font-size:12px; font-weight:normal; text-align:center">-</div>`;
+            }
+          }
+
+          cellsHtml += `
+            <td style="padding:${isOff || leave ? '0' : '10px'}; border-bottom:1px solid #e2e8f0; border-right:1px solid #e2e8f0; background:${cellBg}; vertical-align:top; width:160px; min-width:160px;">
+              ${cellContent}
+            </td>
+          `;
+        });
+
+        // Add dummy columns if chunk length is less than 7
+        const dummyCount = 7 - chunk.length;
+        for (let i = 0; i < dummyCount; i++) {
+          cellsHtml += `
+            <td style="padding:10px; border-bottom:1px solid #e2e8f0; border-right:1px solid #e2e8f0; background:#f8fafc; vertical-align:top; width:160px; min-width:160px;"></td>
+          `;
+        }
+
+        const getPosBgColor = (pos) => {
+          const positions = {
+            'Manager': 'rgba(99,102,241,0.08)',
+            'Supervisor': 'rgba(236,72,153,0.08)',
+            'Operator': 'rgba(16,185,129,0.08)'
+          };
+          return positions[pos] || 'rgba(100,116,139,0.08)';
+        };
+
+        const getPosTextColor = (pos) => {
+          const positions = {
+            'Manager': '#6366f1',
+            'Supervisor': '#ec4899',
+            'Operator': '#10b981'
+          };
+          return positions[pos] || '#64748b';
+        };
+
+        rowsHtml += `
+          <tr style="background:#ffffff">
+            <td style="padding:16px; border-bottom:1px solid #e2e8f0; border-right:1px solid #e2e8f0; vertical-align:middle; width:220px; min-width:220px; background:#ffffff">
+              <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4">${displayName}</div>
+              <div style="display:inline-block; padding:3px 10px; border-radius:99px; background:${getPosBgColor(e.pos)}; color:${getPosTextColor(e.pos)}; font-size:9.5px; font-weight:700; margin-top:6px; text-transform:uppercase; letter-spacing:0.5px; border:1px solid rgba(0,0,0,0.03)">${e.pos}</div>
+              <div style="font-size:10.5px; color:#64748b; margin-top:8px; line-height:1.5; font-weight:500">
+                <span style="color:#94a3b8">กะ:</span> ${e.shift || '-'} <br/>
+                <span style="color:#94a3b8">วันหยุด:</span> ${e.offdays || '-'}
+              </div>
+            </td>
+            ${cellsHtml}
+          </tr>
+        `;
+      });
+
+      const thsHtml = chunk.map(d => {
+        const isWeekend = d.dateObj.getDay() === 0 || d.dateObj.getDay() === 6;
+        const holidayName = typeof isThaiHoliday === 'function' ? isThaiHoliday(d.dateObj) : null;
+        const isHoliday = !!holidayName;
+
+        let thBg = '#f8fafc';
+        let dayColor = '#64748b';
+        let dateColor = '#1e293b';
+
+        if (isHoliday) {
+          thBg = '#ffe4e6';
+          dayColor = '#e11d48';
+          dateColor = '#be123c';
+        } else if (isWeekend) {
+          thBg = '#f1f5f9';
+          dayColor = '#475569';
+          dateColor = '#334155';
+        }
+
+        return `
+          <th style="padding:14px 10px; border-bottom:1.5px solid #e2e8f0; border-right:1px solid #e2e8f0; text-align:center; background:${thBg}; font-size:12px; color:#475569; font-weight:700; width:160px" ${isHoliday ? `title="${holidayName}"` : ''}>
+            <div style="font-size:11px; color:${dayColor}; font-weight:600; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px">${d.dayTH}</div>
+            <div style="font-size:15px; color:${dateColor}; font-weight:700">${d.dateStr}</div>
+            ${isHoliday ? `<div style="font-size:10px; color:#be123c; font-weight:600; margin-top:3px; line-height:1.2">${holidayName}</div>` : ''}
+          </th>
+        `;
+      }).join('');
+
+      let dummyThsHtml = '';
+      const dummyCount = 7 - chunk.length;
+      for (let i = 0; i < dummyCount; i++) {
+        dummyThsHtml += `
+          <th style="padding:14px 10px; border-bottom:1.5px solid #e2e8f0; border-right:1px solid #e2e8f0; background:#f8fafc; width:160px"></th>
+        `;
+      }
+
+      tablesHtml += `
+        <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.02); margin-bottom: 24px;">
+          <table style="width:100%; border-collapse:collapse; table-layout:auto">
+            <thead>
+              <tr style="background:#f8fafc">
+                <th style="padding:16px; border-bottom:1.5px solid #e2e8f0; border-right:1px solid #e2e8f0; text-align:left; font-size:13px; color:#475569; font-weight:700; width:220px">ข้อมูลพนักงาน</th>
+                ${thsHtml}
+                ${dummyThsHtml}
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    });
+
+    const headerHtml = `
+      <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 18px 28px; border-radius: 16px; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.15)">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; border: 1px solid rgba(56, 189, 248, 0.2)">
+            RealSmart DIB
+          </div>
+          <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px; font-family: 'Kanit', sans-serif">ระบบจัดการตารางเวลาพนักงาน RealSmart DIB</h1>
+          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; font-weight: 500">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: rgba(255, 255, 255, 0.1); border-radius: 50%"><span style="width: 5px; height: 5px; border-radius: 50%; background: #38bdf8"></span></span>
+            วันที่: ${startDate.getDate()} ${thaiMonthsFull[startDate.getMonth()]} ${startDate.getFullYear() + 543} - ${endDate.getDate()} ${thaiMonthsFull[endDate.getMonth()]} ${endDate.getFullYear() + 543}
+          </div>
+        </div>
+        <div style="text-align: right; display: flex; flex-direction: column; gap: 4px">
+          <div style="font-size: 11px; color: #94a3b8; font-weight: 500">อัปเดตข้อมูล ณ วันที่ ${new Date().toLocaleDateString('th-TH')}</div>
+          <div style="font-size: 12.5px; font-weight: 700; color: #38bdf8; letter-spacing: 0.5px">RealSmart Department Portal</div>
+        </div>
+      </div>
+    `;
+
+    tempDiv.innerHTML = headerHtml + tablesHtml;
+    document.body.appendChild(tempDiv);
+
+    if (typeof showToast === 'function') showToast('กำลังประมวลผลข้อมูล...', 'info');
+
+    setTimeout(() => {
+      if (typeof html2canvas === 'undefined') {
+        if (typeof showAlert === 'function') showAlert('เกิดข้อผิดพลาด', 'ไม่พบไลบรารี html2canvas กรุณารีโหลดหน้าเว็บแล้วลองใหม่อีกครั้ง', 'error');
+        tempDiv.remove();
+        return;
+      }
+      html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      }).then(canvas => {
+        const link = document.createElement('a');
+        const toISODateString = (date) => {
+          if (!date || isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        };
+        link.download = `DIB_Schedule_${toISODateString(startDate)}_to_${toISODateString(endDate)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        tempDiv.remove();
+        if (typeof showToast === 'function') showToast('ดาวน์โหลดรูปภาพตารางเวรสำเร็จ!', 'success');
+      }).catch(err => {
+        console.error('Export image error:', err);
+        if (typeof showAlert === 'function') showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกรูปภาพได้: ' + err.message, 'error');
+        tempDiv.remove();
+      });
+    }, 100);
+  };
+
   

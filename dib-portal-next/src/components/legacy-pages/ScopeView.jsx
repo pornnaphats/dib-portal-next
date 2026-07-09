@@ -16,6 +16,10 @@ export default function ScopeView() {
     if (initRef.current) return;
     initRef.current = true;
 
+    if (typeof window !== 'undefined') {
+      window._scopeDateRange = null;
+    }
+
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
       window.DATA = {

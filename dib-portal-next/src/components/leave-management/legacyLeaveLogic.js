@@ -608,7 +608,7 @@
           if (success) {
             console.log('Leave deletion sent to sheets');
             if (typeof showToast === 'function') showToast('Data deleted successfully', 'success');
-            setTimeout(loadLeavesFromSheets, 2000);
+            setTimeout(() => { if (typeof window.refreshLeaveData === 'function') window.refreshLeaveData(); }, 2000);
           } else {
             if (typeof showToast === 'function') showToast('Error deleting data', 'error');
           }

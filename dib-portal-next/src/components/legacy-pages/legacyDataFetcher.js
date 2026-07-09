@@ -121,12 +121,31 @@ export async function fetchAndSetLegacyData() {
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (supabaseUrl && supabaseKey) {
-        const res = await fetch(`${supabaseUrl}/rest/v1/project_scopes?select=*&limit=2000`, {
-          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-        });
-        if (res.ok) {
-          const scopes = await res.json();
+        let scopes = [];
+        let offset = 0;
+        let limit = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const res = await fetch(`${supabaseUrl}/rest/v1/project_scopes?select=*&limit=${limit}&offset=${offset}`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          });
+          if (res.ok) {
+            const chunk = await res.json();
+            if (chunk && chunk.length > 0) {
+              scopes = scopes.concat(chunk);
+              offset += limit;
+              if (chunk.length < limit) {
+                hasMore = false;
+              }
+            } else {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+
+        if (scopes.length > 0) {
           const grouped = {};
           scopes.forEach(row => {
             const acc = row.project || 'Uncategorized';
@@ -143,7 +162,6 @@ export async function fetchAndSetLegacyData() {
           });
           window.PREMIUM_SCOPE_DATA = Object.values(grouped);
         }
-      }
     } catch (err) {
       console.warn('Error fetching project scopes from Supabase:', err.message || err);
     }
@@ -339,11 +357,31 @@ export async function fetchAndSetLegacyData() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (supabaseUrl && supabaseKey) {
-      const res = await fetch(`${supabaseUrl}/rest/v1/schedule_tasks?select=*&limit=5000`, {
-        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-      });
-      if (res.ok) {
-        const rawTasks = await res.json();
+      let rawTasks = [];
+      let offset = 0;
+      let limit = 1000;
+      let hasMore = true;
+      while (hasMore) {
+        const res = await fetch(`${supabaseUrl}/rest/v1/schedule_tasks?select=*&limit=${limit}&offset=${offset}`, {
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        if (res.ok) {
+          const chunk = await res.json();
+          if (chunk && chunk.length > 0) {
+            rawTasks = rawTasks.concat(chunk);
+            offset += limit;
+            if (chunk.length < limit) {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+
+      if (rawTasks.length > 0) {
         const colorForNode = (node) => {
           const nodeColors = {
             'Monitor': '#2563eb',
