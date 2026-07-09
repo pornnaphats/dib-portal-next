@@ -1,5 +1,137 @@
 import React, { useState, useEffect } from 'react';
 
+// ── Empeo Report Panel ──────────────────────────────────────────────────────
+function EmpeoReportPanel() {
+    const reportRef = React.useRef(null);
+    const [empeoSearch, setEmpeoSearch] = useState('');
+    const [empeoMonth, setEmpeoMonth] = useState(() => {
+        const n = new Date();
+        return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`;
+    });
+    const [empeoMonthOpen, setEmpeoMonthOpen] = useState(false);
+    const [reportHtml, setReportHtml] = useState('');
+
+    // Stable render function — useCallback ensures same reference across renders
+    const renderReport = React.useCallback(() => {
+        const html = typeof window.renderEmpeoReport === 'function'
+            ? window.renderEmpeoReport()
+            : '<div class="p-8 text-center text-gray-400">Loading Empeo Report...</div>';
+        setReportHtml(html);
+    }, []); // no deps → stable reference, always uses latest window globals
+
+    // Update global date range + re-render when month changes
+    useEffect(() => {
+        const [y, m] = empeoMonth.split('-').map(Number);
+        const start = new Date(y, m - 1, 1);
+        const end   = new Date(y, m, 0);
+        const fmt   = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        window._leaveDateRange = `${fmt(start)} to ${fmt(end)}`;
+        renderReport();
+    }, [empeoMonth, renderReport]);
+
+    // Listen for Empeo data load — registered ONCE (renderReport is stable)
+    useEffect(() => {
+        // Clear stuck loading states on component mount to force a clean load
+        window._empeoDataLoading = false;
+        
+        if (typeof window.loadEmpeoData === 'function' && (!window._empeoDataLoaded || !window.DATA?.empeoCalendar)) {
+            window._empeoDataLoaded = false;
+            window.loadEmpeoData();
+        }
+
+        if (window._empeoDataLoaded) renderReport();
+
+        window.addEventListener('empeoDataLoaded', renderReport);
+        return () => window.removeEventListener('empeoDataLoaded', renderReport);
+    }, [renderReport]);
+
+    // Re-init lucide icons AFTER React commits HTML to the DOM
+    useEffect(() => {
+        if (!reportHtml || !reportRef.current) return;
+        if (window.lucide) {
+            window.lucide.createIcons({ root: reportRef.current });
+        }
+    }, [reportHtml]);
+
+    // Force icon refresh when month filter state changes (e.g. closing dropdown or selecting month)
+    useEffect(() => {
+        if (window.lucide && reportRef.current) {
+            window.lucide.createIcons({ root: reportRef.current });
+        }
+    }, [empeoMonth, empeoMonthOpen]);
+
+    // Live name search
+    useEffect(() => {
+        if (typeof window.filterEmpeoTable === 'function') {
+            window.filterEmpeoTable(empeoSearch);
+        }
+    }, [empeoSearch, reportHtml]);
+
+    // Month dropdown options — last 12 months
+    const thaiMonthNames = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const monthOptions = Array.from({ length: 12 }, (_, i) => {
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - i);
+        return {
+            val:   `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,
+            label: `${thaiMonthNames[d.getMonth()]} ${d.getFullYear()+543}`
+        };
+    });
+    const selectedMonthLabel = monthOptions.find(o => o.val === empeoMonth)?.label || empeoMonth;
+
+    return (
+        <div>
+            {/* Empeo Toolbar */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                {/* Month Filter Dropdown */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={() => setEmpeoMonthOpen(!empeoMonthOpen)}
+                        style={{ borderRadius: '99px', border: '1px solid #e2e8f0', background: '#fff', color: '#24204D', fontWeight: '500', height: '34px', padding: '0 14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
+                    >
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        {selectedMonthLabel}
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    {empeoMonthOpen && (
+                        <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setEmpeoMonthOpen(false)} />
+                            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', width: '160px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.08)', zIndex: 9999, padding: '4px', maxHeight: '260px', overflowY: 'auto' }}>
+                                {monthOptions.map(o => (
+                                    <div
+                                        key={o.val}
+                                        onClick={() => { setEmpeoMonth(o.val); setEmpeoMonthOpen(false); }}
+                                        style={{ padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', fontWeight: o.val === empeoMonth ? '700' : '500', color: o.val === empeoMonth ? '#635BFF' : '#64748b', background: o.val === empeoMonth ? '#eff6ff' : 'transparent' }}
+                                        onMouseOver={e => { if (o.val !== empeoMonth) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#24204D'; }}}
+                                        onMouseOut={e =>  { if (o.val !== empeoMonth) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b'; }}}
+                                    >
+                                        {o.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+                {/* Search Box */}
+                <div style={{ width: '220px', background: '#fff', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '99px', display: 'flex', alignItems: 'center', gap: '8px', height: '34px', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#94a3b8', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input
+                        type="text"
+                        placeholder="ค้นหาชื่อพนักงาน..."
+                        value={empeoSearch}
+                        onChange={e => setEmpeoSearch(e.target.value)}
+                        style={{ fontSize: '13px', border: 'none', outline: 'none', background: 'transparent', width: '100%', color: '#24204D' }}
+                    />
+                </div>
+            </div>
+            {/* Empeo Report (injected from legacy renderEmpeoReport) */}
+            <div ref={reportRef} dangerouslySetInnerHTML={{ __html: reportHtml }} />
+        </div>
+    );
+}
+
+
 export default function LeaveManagementReact() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -289,7 +421,7 @@ export default function LeaveManagementReact() {
             </div>
 
             {activeTab === 'empeo' ? (
-                <div dangerouslySetInnerHTML={{ __html: typeof window.renderEmpeoReport === 'function' ? window.renderEmpeoReport() : '<div class="p-8 text-center text-gray-400">Loading Empeo Report...</div>' }} />
+                <EmpeoReportPanel />
             ) : (
                 <>
                     {/* KPI Row */}

@@ -2838,11 +2838,14 @@ window.renderEmpeoReport = function() {
   }
   
   const deptEmployees = window.DATA.employees || [];
-  const deptEmpIds = new Set(deptEmployees.map(e => String(e.id).trim()));
+  const deptEmpIds = new Set(deptEmployees.map(e => String(e.id || '').trim()).filter(Boolean));
   const allEmpeoEmployees = window.DATA.empeoEmployees || [];
   const employees = deptEmpIds.size > 0 
-      ? allEmpeoEmployees.filter(e => deptEmpIds.has(String(e.id).trim()))
+      ? allEmpeoEmployees.filter(e => deptEmpIds.has(String(e.id || '').trim()))
       : allEmpeoEmployees;
+      
+  // Fallback: If no employees match after filtering, use all Empeo employees so data is never blank
+  const finalEmployees = employees.length > 0 ? employees : allEmpeoEmployees;
   
   // Custom Thai Date formatting helper
   window.formatDateRangeTH = function(sDate, eDate) {
@@ -2879,7 +2882,7 @@ window.renderEmpeoReport = function() {
 
   const employeeSummaries = {};
   
-  employees.forEach(r => {
+  finalEmployees.forEach(r => {
       let sum = {
           absent: 0,
           lateTimes: 0,
@@ -2959,7 +2962,7 @@ window.renderEmpeoReport = function() {
     return `<th class="empeo-day-th" style="font-size:.6rem; text-align:center; position:sticky; top:36px; background:${headerBg(d)}; z-index:10; min-width:26px; padding:3px 2px 4px; border-bottom:2px solid var(--border); white-space:nowrap; line-height:1.4; cursor:${hName?'help':'default'}"${title}>${d.dayNum}${starMark}<br><span style='font-size:.55rem;color:${hName?'#f97316':'var(--text-3)'}'>${d.dayOfWeek}</span></th>`;
   }).join('');
   
-  let rowsHtml = employees.map(r => {
+  let rowsHtml = finalEmployees.map(r => {
       let sum = employeeSummaries[r.id] || {};
       let cal = (window.DATA.empeoCalendar && window.DATA.empeoCalendar[r.id]) || {};
       
@@ -3000,28 +3003,27 @@ window.renderEmpeoReport = function() {
     <!-- KPI Row for Empeo -->
     <div class="fade-in" style="display:grid; grid-template-columns:repeat(7,1fr); gap:16px; margin-bottom:24px">
       ${[
-          { label: 'ขาดงาน', val: fmt(totalAbsent) + ' วัน', sub: 'ไม่รวมวันหยุด', icon: 'user-x', color: '#EF4444' },
-          { label: 'มาสาย', val: fmt(totalLateMins) + ' นาที', sub: 'รวมทุกแผนก', icon: 'clock', color: '#F87171' },
-          { label: 'กลับก่อน', val: fmt(totalLeaveEarlyMins) + ' นาที', sub: 'รวมทุกแผนก', icon: 'log-out', color: '#FBBF24' },
-          { label: 'ลาป่วย', val: fmt(totalSick) + ' วัน', sub: 'รวมทุกแผนก', icon: 'thermometer', color: '#60A5FA' },
-          { label: 'ลากิจ', val: fmt(totalPersonal) + ' วัน', sub: 'รวมทุกแผนก', icon: 'briefcase', color: '#A78BFA' },
-          { label: 'ลาพักร้อน', val: fmt(totalVacation) + ' วัน', sub: 'รวมทุกแผนก', icon: 'sun', color: '#34D399' },
-          { label: 'ลาอื่นๆ', val: fmt(totalOther) + ' วัน', sub: 'รวมทุกแผนก', icon: 'more-horizontal', color: '#6B7280' }
+          { label: 'ขาดงาน', val: fmt(totalAbsent), unit: 'วัน', sub: 'ไม่รวมวันหยุด', icon: 'user-x', color: '#EF4444', shadow: 'rgba(239,68,68,0.3)' },
+          { label: 'มาสาย', val: fmt(totalLateMins), unit: 'นาที', sub: 'รวมทุกทีม', icon: 'clock', color: '#F59E0B', shadow: 'rgba(245,158,11,0.3)' },
+          { label: 'กลับก่อน', val: fmt(totalLeaveEarlyMins), unit: 'นาที', sub: 'รวมทุกทีม', icon: 'log-out', color: '#FB923C', shadow: 'rgba(251,146,60,0.3)' },
+          { label: 'ลาป่วย', val: fmt(totalSick), unit: 'วัน', sub: 'รวมทุกทีม', icon: 'thermometer', color: '#60A5FA', shadow: 'rgba(96,165,250,0.3)' },
+          { label: 'ลากิจ', val: fmt(totalPersonal), unit: 'วัน', sub: 'รวมทุกทีม', icon: 'briefcase', color: '#A78BFA', shadow: 'rgba(167,139,250,0.3)' },
+          { label: 'ลาพักร้อน', val: fmt(totalVacation), unit: 'วัน', sub: 'รวมทุกทีม', icon: 'sun', color: '#34D399', shadow: 'rgba(52,211,153,0.3)' },
+          { label: 'ลาอื่นๆ', val: fmt(totalOther), unit: 'วัน', sub: 'รวมทุกทีม', icon: 'more-horizontal', color: '#94A3B8', shadow: 'rgba(148,163,184,0.3)' }
       ].map(k => `
-      <div class="stat-card" style="padding:16px; display:flex; flex-direction:column; gap:8px">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <div style="width:32px; height:32px; border-radius: 50%; background:${k.color}15; color:${k.color}; display:flex; align-items:center; justify-content:center">
-            <i data-lucide="${k.icon}" style="width:18px; height:18px"></i>
-          </div>
+      <div class="stat-card" style="padding:18px 16px; display:flex; flex-direction:column; gap:12px">
+        <div style="width:40px; height:40px; border-radius:50%; background:${k.color}; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px ${k.shadow}; flex-shrink:0">
+          <i data-lucide="${k.icon}" style="width:18px; height:18px"></i>
         </div>
         <div>
-          <div style="font-size:1.5rem; font-weight:800; color:var(--text); margin-bottom:4px; font-family:'Prompt', sans-serif">${k.val}</div>
-          <div style="font-size:.7rem; font-weight:600; color:var(--text-2)">${k.label}</div>
-          <div style="font-size:.65rem; color:var(--text-3); margin-top:4px">${k.sub}</div>
+          <div style="font-size:.65rem; color:var(--text-3); font-weight:600; margin-bottom:4px; font-family:'Prompt', sans-serif">${k.label}</div>
+          <div style="font-size:1.4rem; font-weight:800; color:var(--text); font-family:'Prompt', sans-serif; line-height:1.1">${k.val} <span style="font-size:.7rem; font-weight:400; color:var(--text-3)">${k.unit}</span></div>
+          <div style="font-size:.62rem; color:${k.color}; font-weight:600; margin-top:4px">${k.sub}</div>
         </div>
       </div>
       `).join('')}
     </div>
+
     
     <!-- Data Table -->
     <div class="card fade-in" style="padding:0; overflow:hidden">
@@ -3083,4 +3085,4 @@ window.filterEmpeoTable = function(query) {
       r.style.display = 'none';
     }
   });
-};
+};

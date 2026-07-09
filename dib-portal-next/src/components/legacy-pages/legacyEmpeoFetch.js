@@ -19,7 +19,7 @@ window.loadEmpeoData = async function() {
             console.log("Empeo data loaded from cache.");
         } else {
             console.log("Fetching Empeo data from API...");
-            const res = await fetch('https://script.google.com/macros/s/AKfycby-XHUp4Qd3-TULEDQHbZmDU8hGQI_OX69fGcACVpeg_feJn4zquylze2qOM_OSZ70l/exec');
+            const res = await fetch('/api/empeo-attendance');
             json = await res.json();
             try {
                 localStorage.setItem(cacheKey, JSON.stringify(json));
@@ -137,10 +137,12 @@ window.loadEmpeoData = async function() {
         window.DATA.empeoEmployees = Object.values(employeesMap);
         
         window._empeoDataLoaded = true;
+        window.dispatchEvent(new Event('empeoDataLoaded'));
     } catch(e) {
         console.error("Failed to load Empeo data", e);
         // Force loaded to true to prevent infinite loop of loading if API fails
         window._empeoDataLoaded = true; 
+        window.dispatchEvent(new Event('empeoDataLoaded'));
         window.DATA.empeoReport = [];
         window.DATA.empeoDays = [];
     } finally {
