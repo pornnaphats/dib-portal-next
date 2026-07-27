@@ -16,6 +16,7 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
+    if (!pathname) return;
     if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
       setExpandedGroup("employee");
     } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/qc-realcyber") || pathname.includes("/project-scope") || pathname.includes("/public-holiday")) {

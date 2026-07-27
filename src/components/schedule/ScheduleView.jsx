@@ -181,7 +181,7 @@ export default function ScheduleView() {
     <div id="scheduleMainContent" style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "#f4f5fb", transition: "padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}>
       {/* Top Controls */}
       <div style={{
-        padding: "12px 16px 8px 16px",
+        padding: "12px 20px 8px 20px",
         background: "transparent",
         display: "flex",
         flexWrap: "nowrap",
@@ -448,7 +448,7 @@ export default function ScheduleView() {
       </div>
 
       {/* Schedule Grid & Legend */}
-      <div style={{ flex: 1, overflow: "hidden", padding: "8px 16px 16px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ flex: 1, overflow: "hidden", padding: "8px 20px 20px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
         {/* Workload Legend Indicators */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", alignItems: "center", padding: "0 4px" }}>
           <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#8f97b0" }}>Workload:</span>

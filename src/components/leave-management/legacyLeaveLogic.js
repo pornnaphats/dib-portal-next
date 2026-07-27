@@ -2588,14 +2588,14 @@
         options: {
           indexAxis: 'y',
           ...commonOptions,
-          layout: { padding: { right: 30 } }, // Add space on the right for numbers
+          layout: { padding: { right: 40 } }, // Add space on the right for numbers
           scales: {
             x: {
               display: false,
               grid: { display: false },
-              suggestedMax: Math.max(...typeData) + 2 // Ensure space on right
+              max: (Math.max(...typeData) * 1.4) || 5 // Ensure space on right
             },
-            y: { grid: { display: false }, ticks: { font: { family: 'Prompt', size: 9 } } }
+            y: { grid: { display: false }, ticks: { font: { family: 'Prompt', size: 9 }, padding: 8 } }
           }
         },
         plugins: [{
@@ -2652,6 +2652,7 @@
         },
         options: {
           ...commonOptions,
+          layout: { padding: { right: 15, left: 5, top: 5, bottom: 5 } },
           scales: {
             x: { grid: { display: false }, ticks: { font: { family: 'Prompt', size: 10 } } },
             y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Prompt', size: 10 } } }

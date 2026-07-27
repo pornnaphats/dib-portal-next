@@ -425,7 +425,7 @@ export default function LeaveManagementReact() {
             ) : (
                 <>
                     {/* KPI Row */}
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
                             { label: 'ยอดการลาทั้งหมด', val: stats.total, unit: 'รายการ', sub: 'รายการทั้งหมดในระบบ', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>, color: '#ffffff', bg: '#635BFF', shadow: 'rgba(99,91,255,0.3)', subColor: '#635BFF' },
                             { label: 'จำนวนผู้ลาวันนี้', val: onLeaveToday.length, unit: 'คน', sub: 'ที่ลางานวันนี้', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>, color: '#ffffff', bg: '#ef4444', shadow: 'rgba(239,68,68,0.3)', subColor: '#ef4444' },
@@ -447,25 +447,25 @@ export default function LeaveManagementReact() {
                         ))}
                     </div>
                     {/* Charts and Calendar Row */}
-                    <div className="grid grid-cols-[320px_1fr_320px_240px] gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-[300px_1fr_300px_240px] gap-4 mb-6">
                         {/* Leave Type Chart */}
-                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col">
+                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col" style={{ minWidth: 0, width: '100%' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">สถิติประเภทการลา</div>
-                            <div className="h-[190px] w-full relative">
-                                <canvas id="leaveTypeChart"></canvas>
+                            <div style={{ height: '160px', width: 'calc(100% - 45px)', marginLeft: '35px', position: 'relative', marginTop: '20px' }}>
+                                <canvas id="leaveTypeChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* Trend Chart */}
-                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col">
+                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col" style={{ minWidth: 0, width: '100%' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">แนวโน้มการลาในแต่ละเดือน</div>
-                            <div className="h-[190px] w-full relative">
-                                <canvas id="leaveTrendChart"></canvas>
+                            <div style={{ height: '170px', width: '100%', position: 'relative', marginTop: '10px' }}>
+                                <canvas id="leaveTrendChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* On Leave Today & Tomorrow Card */}
-                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col h-[280px]">
+                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col h-[280px]" style={{ minWidth: 0, width: '100%' }}>
                             <div className="flex items-center justify-between mb-3 shrink-0">
                                 <div className="flex items-center gap-3">
                                     <div style={{ width: '34px', height: '34px', minWidth: '34px', minHeight: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.25)', flexShrink: 0, aspectRatio: '1/1' }}>
@@ -481,7 +481,7 @@ export default function LeaveManagementReact() {
                                 </div>
                             </div>
                             
-                            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3">
+                            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {/* วันนี้ */}
                                 <div>
                                     <div className="text-[9px] font-extrabold text-rose-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
@@ -559,7 +559,7 @@ export default function LeaveManagementReact() {
                         </div>
 
                         {/* Calendar */}
-                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col">
+                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col" style={{ minWidth: 0, width: '100%' }}>
                             <div className="flex justify-between items-center mb-4">
                                 <div className="text-[0.8rem] font-extrabold text-gray-800 tracking-tight">ปฏิทินการลา</div>
                                 <div className="flex gap-1.5 items-center">
@@ -624,7 +624,7 @@ export default function LeaveManagementReact() {
                     </div>
 
                     {/* Table Area */}
-                    <div ref={tableCardRef} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                    <div ref={tableCardRef} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', overflow: 'hidden', width: '100%', minWidth: 0 }}>
                         <div className="p-5 flex justify-between items-center">
                             <div className="text-sm font-bold text-gray-800">รายการลาทั้งหมด</div>
                             <div className="flex items-center gap-3">
@@ -933,8 +933,18 @@ export default function LeaveManagementReact() {
                                 </button>
                             </div>
                         </div>
-                        <div className="overflow-x-auto" style={{ minHeight: '572px' }}>
-                            <table className="w-full text-left border-collapse">
+                        <div style={{ overflowX: 'auto', minHeight: '572px', width: '100%' }}>
+                            <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed', minWidth: '850px' }}>
+                                <colgroup>
+                                    <col style={{ width: '12%' }} />
+                                    <col style={{ width: '22%' }} />
+                                    <col style={{ width: '13%' }} />
+                                    <col style={{ width: '11%' }} />
+                                    <col style={{ width: '16%' }} />
+                                    <col style={{ width: '7%' }} />
+                                    <col style={{ width: '15%' }} />
+                                    <col style={{ width: '4%' }} />
+                                </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50/50 text-[11px] font-semibold text-slate-500 tracking-wider border-b border-slate-100">
                                         <th className="px-4 py-3 whitespace-nowrap">Request Date</th>

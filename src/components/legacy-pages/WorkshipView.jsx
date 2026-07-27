@@ -6,19 +6,15 @@ import "flatpickr/dist/flatpickr.min.css";
 
 // Static imports for core legacy logic
 import "./legacyGlobalHelpers.js";
-import "./legacyScopeLogic.js";
+import "./legacyWorkshipLogic.js";
 
-export default function ScopeView() {
+export default function WorkshipView() {
   const containerRef = useRef(null);
   const initRef = useRef(false);
 
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
-
-    if (typeof window !== 'undefined') {
-      window._scopeDateRange = null;
-    }
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -43,15 +39,15 @@ export default function ScopeView() {
     };
 
     window.navigate = (page) => {
-      if (page === 'project-scope-portal' && containerRef.current) {
-        containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
+      if (page === 'workship' && containerRef.current) {
+        containerRef.current.innerHTML = window.pageWorkship();
         window.lucide.createIcons();
       }
     };
 
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
-    if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
-      containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
+    if (containerRef.current && typeof window.pageWorkship === "function") {
+      containerRef.current.innerHTML = window.pageWorkship();
       window.lucide.createIcons();
     }
 
@@ -69,8 +65,8 @@ export default function ScopeView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
-              containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
+            if (containerRef.current && typeof window.pageWorkship === "function") {
+              containerRef.current.innerHTML = window.pageWorkship();
               window.lucide.createIcons();
             }
           }).catch(() => {});
@@ -81,7 +77,7 @@ export default function ScopeView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
       <div id="pageContent" ref={containerRef} className="w-full"></div>
     </div>
   );

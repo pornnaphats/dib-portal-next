@@ -79,7 +79,7 @@ export default function EmployeeView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
       <style dangerouslySetInnerHTML={{__html: `
         /* Premium Purple Theme Select Inputs */
         .select-input {

@@ -78,7 +78,7 @@ export default function HolidayView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
       <div id="pageContent" ref={containerRef} className="w-full" data-page="public-holiday"></div>
     </div>
   );

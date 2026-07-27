@@ -118,7 +118,7 @@ export default function LeaveManagementView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto" data-page="leave-management">
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }} data-page="leave-management">
       <LeaveManagementReact />
     </div>
   );

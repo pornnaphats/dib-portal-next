@@ -6,15 +6,16 @@ import "flatpickr/dist/flatpickr.min.css";
 
 // Static imports for core legacy logic
 import "./legacyGlobalHelpers.js";
-import "./legacyWorkshipLogic.js";
+import "./legacyQcPlanLogic.js";
 
-export default function WorkshipView() {
+export default function QcPlanView() {
   const containerRef = useRef(null);
   const initRef = useRef(false);
 
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
+    document.body.dataset.page = "qc-realcyber-plan";
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -39,15 +40,15 @@ export default function WorkshipView() {
     };
 
     window.navigate = (page) => {
-      if (page === 'workship' && containerRef.current) {
-        containerRef.current.innerHTML = window.pageWorkship();
+      if (page === 'qc-realcyber-plan' && containerRef.current) {
+        containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
         window.lucide.createIcons();
       }
     };
 
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
-    if (containerRef.current && typeof window.pageWorkship === "function") {
-      containerRef.current.innerHTML = window.pageWorkship();
+    if (containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
+      containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
       window.lucide.createIcons();
     }
 
@@ -65,8 +66,8 @@ export default function WorkshipView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.pageWorkship === "function") {
-              containerRef.current.innerHTML = window.pageWorkship();
+            if (containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
+              containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
               window.lucide.createIcons();
             }
           }).catch(() => {});
@@ -77,8 +78,8 @@ export default function WorkshipView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
-      <div id="pageContent" ref={containerRef} className="w-full"></div>
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
+      <div id="pageContent" ref={containerRef} className="w-full" data-page="qc-realcyber-plan"></div>
     </div>
   );
 }

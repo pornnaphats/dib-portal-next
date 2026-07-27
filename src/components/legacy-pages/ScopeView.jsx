@@ -6,16 +6,19 @@ import "flatpickr/dist/flatpickr.min.css";
 
 // Static imports for core legacy logic
 import "./legacyGlobalHelpers.js";
-import "./legacyQcPlanLogic.js";
+import "./legacyScopeLogic.js";
 
-export default function QcPlanView() {
+export default function ScopeView() {
   const containerRef = useRef(null);
   const initRef = useRef(false);
 
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
-    document.body.dataset.page = "qc-realcyber-plan";
+
+    if (typeof window !== 'undefined') {
+      window._scopeDateRange = null;
+    }
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -40,15 +43,15 @@ export default function QcPlanView() {
     };
 
     window.navigate = (page) => {
-      if (page === 'qc-realcyber-plan' && containerRef.current) {
-        containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
+      if (page === 'project-scope-portal' && containerRef.current) {
+        containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
         window.lucide.createIcons();
       }
     };
 
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
-    if (containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
-      containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
+    if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
+      containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
       window.lucide.createIcons();
     }
 
@@ -66,8 +69,8 @@ export default function QcPlanView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
-              containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
+            if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
+              containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
               window.lucide.createIcons();
             }
           }).catch(() => {});
@@ -78,8 +81,8 @@ export default function QcPlanView() {
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent p-6 overflow-y-auto">
-      <div id="pageContent" ref={containerRef} className="w-full" data-page="qc-realcyber-plan"></div>
+    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
+      <div id="pageContent" ref={containerRef} className="w-full"></div>
     </div>
   );
 }

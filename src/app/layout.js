@@ -24,7 +24,6 @@ export default function RootLayout({ children }) {
       </head>
       <body className="h-screen max-h-screen bg-[#f4f7fe] text-[#1a2035] flex overflow-hidden">
         <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
-        <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
         <AuthProvider>
           <DataProvider>
             <Sidebar />
