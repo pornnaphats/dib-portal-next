@@ -296,71 +296,65 @@ export default function ScheduleView() {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                 transition: "all 0.2s"
               }}
-              onFocus={e => { e.currentTarget.style.borderColor = "#635bff"; e.currentTarget.style.boxShadow = "0 2px 10px rgba(99,91,255,0.15)"; }}
-              onBlur={e => { e.currentTarget.style.borderColor = "#e4e8ef"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; }}
-            />
-          </div>
+            onFocus={e => { e.currentTarget.style.borderColor = "#cbd5e1"; }}
+            onBlur={e => { e.currentTarget.style.borderColor = "#e4e8ef"; }}
+          />
+        </div>
 
-          {/* Team pill filters */}
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center",
-            gap: "2px",
-            background: "#f0f0f8",
-            borderRadius: "9999px",
-            padding: "3px",
-            flexShrink: 1,
-            minWidth: 0,
-            overflow: "hidden"
-          }}>
+        {/* Team pill filters */}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center",
+          gap: "2px",
+          background: "#f0f0f8",
+          borderRadius: "9999px",
+          padding: "3px",
+          flexShrink: 1,
+          minWidth: 0,
+          overflow: "hidden"
+        }}>
+          <button
+            onClick={() => setTeamFilter("all")}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              border: "none",
+              fontSize: "0.73rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.2s",
+              background: teamFilter === "all" ? "#635bff" : "transparent",
+              color: teamFilter === "all" ? "#fff" : "#5a6282"
+            }}
+          >
+            All Teams
+          </button>
+          {teams.map(t => (
             <button
-              onClick={() => setTeamFilter("all")}
+              key={t}
+              onClick={() => setTeamFilter(t)}
               style={{
                 padding: "6px 14px",
                 borderRadius: "9999px",
                 border: "none",
                 fontSize: "0.73rem",
-                fontWeight: 700,
+                fontWeight: teamFilter === t ? 700 : 500,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 transition: "all 0.2s",
-                background: teamFilter === "all" ? "#635bff" : "transparent",
-                color: teamFilter === "all" ? "#fff" : "#5a6282",
-                boxShadow: teamFilter === "all" ? "0 4px 12px rgba(99,91,255,0.35)" : "none"
+                background: teamFilter === t ? "#635bff" : "transparent",
+                color: teamFilter === t ? "#fff" : "#5a6282"
               }}
-              onMouseEnter={e => { if (teamFilter !== "all") e.currentTarget.style.color = "#635bff"; }}
-              onMouseLeave={e => { if (teamFilter !== "all") e.currentTarget.style.color = "#5a6282"; }}
             >
-              All Teams
+              {t}
             </button>
-            {teams.map(t => (
-              <button
-                key={t}
-                onClick={() => setTeamFilter(t)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "9999px",
-                  border: "none",
-                  fontSize: "0.73rem",
-                  fontWeight: teamFilter === t ? 700 : 500,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.2s",
-                  background: teamFilter === t ? "#635bff" : "transparent",
-                  color: teamFilter === t ? "#fff" : "#5a6282",
-                  boxShadow: teamFilter === t ? "0 4px 12px rgba(99,91,255,0.35)" : "none"
-                }}
-                onMouseEnter={e => { if (teamFilter !== t) e.currentTarget.style.color = "#635bff"; }}
-                onMouseLeave={e => { if (teamFilter !== t) e.currentTarget.style.color = "#5a6282"; }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          <div style={{ width: "1px", height: "18px", background: "#e4e8ef", margin: "0 2px", flexShrink: 0 }}></div>
+        <div style={{ width: "1px", height: "18px", background: "#e4e8ef", margin: "0 2px", flexShrink: 0 }}></div>
 
-          {/* Action buttons */}
+        {(search !== "" || teamFilter !== "all" || weekStart.toDateString() !== getWeekStart(new Date()).toDateString()) && (
           <button 
             onClick={() => {
               setSearch("");
@@ -372,78 +366,70 @@ export default function ScheduleView() {
               setWeekEnd(e);
             }}
             style={{
-              height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
-              background: "#ffffff", color: "#64748b", border: "1px solid #e8eaf0",
-              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)",
-              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap"
+              height: "34px", padding: "0 12px", fontSize: "0.72rem", borderRadius: "9999px",
+              background: "transparent", color: "#ef4444", border: "none",
+              display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", fontWeight: 700,
+              flexShrink: 0, whiteSpace: "nowrap"
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#f8f9fc"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.10)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)"; }}
           >
-            <RotateCcw size={13} color="#94a3b8" />
-            Clear All Filter
+            <span style={{ fontSize: "13px", fontWeight: "bold" }}>✕</span>
+            Clear
           </button>
-          
-          <button 
-            onClick={() => {
-              if (typeof window.toggleTaskSidebar === "function") {
-                window.toggleTaskSidebar();
-              }
-            }}
-            style={{
-              height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
-              background: "#635bff", color: "#fff", border: "none",
-              display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontWeight: 700,
-              boxShadow: "0 4px 12px rgba(99,91,255,0.25)",
-              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#4f46e5"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(99,91,255,0.35)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#635bff"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(99,91,255,0.25)"; }}
-          >
-            <span style={{ fontSize: "1rem", lineHeight: 1, fontWeight: 400 }}>+</span>
-            <span>Add Task</span>
-          </button>
+        )}
+        
+        <button 
+          onClick={() => {
+            if (typeof window.toggleTaskSidebar === "function") {
+              window.toggleTaskSidebar();
+            }
+          }}
+          style={{
+            height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
+            background: "#635bff", color: "#fff", border: "none",
+            display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontWeight: 700,
+            boxShadow: "0 4px 12px rgba(99,91,255,0.25)",
+            flexShrink: 0, whiteSpace: "nowrap"
+          }}
+        >
+          <span style={{ fontSize: "1rem", lineHeight: 1, fontWeight: 400 }}>+</span>
+          <span>Add Task</span>
+        </button>
 
-          <button 
-            onClick={() => {
-              if (typeof window.openExportScheduleModal === "function") {
-                window.openExportScheduleModal();
-              }
-            }}
-            style={{
-              height: "34px", padding: "0 16px", fontSize: "0.72rem", borderRadius: "9999px",
-              background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", border: "none",
-              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 700,
-              boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)",
-              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, #059669, #047857)"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(16, 185, 129, 0.5), 0 4px 8px rgba(16, 185, 129, 0.3)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, #10b981, #059669)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)"; }}
-          >
-            <Download size={13} color="#ffffff" />
-            Export แพลนงาน
-          </button>
+        <button 
+          onClick={() => {
+            if (typeof window.openExportScheduleModal === "function") {
+              window.openExportScheduleModal();
+            }
+          }}
+          style={{
+            height: "34px", padding: "0 16px", fontSize: "0.72rem", borderRadius: "9999px",
+            background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", border: "none",
+            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 700,
+            boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)",
+            flexShrink: 0, whiteSpace: "nowrap"
+          }}
+        >
+          <Download size={13} color="#ffffff" />
+          Export แพลนงาน
+        </button>
 
-          <button 
-            onClick={() => {
-              if (typeof window.qcShowManageEmployeesModal === "function") {
-                window.qcShowManageEmployeesModal("schedule");
-              }
-            }}
-            style={{
-              height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
-              background: "#ffffff", color: "#64748b", border: "1px solid #e8eaf0",
-              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)",
-              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap"
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = "#f8f9fc"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.10)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)"; }}
-          >
-            <Users size={13} color="#94a3b8" />
-            จัดการพนักงาน
-          </button>
+        <button 
+          onClick={() => {
+            if (typeof window.qcShowManageEmployeesModal === "function") {
+              window.qcShowManageEmployeesModal("schedule");
+            }
+          }}
+          style={{
+            height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
+            background: "#ffffff", color: "#64748b", border: "1px solid #e8eaf0",
+            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)",
+            flexShrink: 0, whiteSpace: "nowrap"
+          }}
+        >
+          <Users size={13} color="#94a3b8" />
+          จัดการพนักงาน
+        </button>
         </div>
       </div>
 

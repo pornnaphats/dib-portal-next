@@ -17,6 +17,17 @@ const getWorkloadColor = (hours) => {
     const nVal = document.getElementById('scopeFilterNode')?.value || 'all';
     const qVal = document.getElementById('scopeSearch')?.value.toLowerCase() || '';
 
+    const clearBtn = document.getElementById('clearScopeDashboardFiltersBtn');
+    if (clearBtn) {
+      const dateInput = document.querySelector('.date-range-wrapper input[type="text"]');
+      const hasDate = dateInput && dateInput.value ? true : false;
+      if (pVal !== 'all' || nVal !== 'all' || qVal !== '' || hasDate) {
+        clearBtn.style.display = 'flex';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
+
     // Filter logic for Grouped Data
     let filtered = (window.PREMIUM_SCOPE_DATA || []).map(group => {
       if (!group) return null;
@@ -583,7 +594,7 @@ const getWorkloadColor = (hours) => {
         #scopeFilterNode:hover,
         #custom_wrap_scopeFilterProject .select-input:hover,
         #custom_wrap_scopeFilterNode .select-input:hover {
-          border-color: var(--primary) !important;
+          border-color: #cbd5e1 !important;
         }
         
         /* Date range input override */
@@ -600,7 +611,7 @@ const getWorkloadColor = (hours) => {
         }
         div[id$="_from"]:hover, 
         div[id$="_to"]:hover { 
-          border-color: var(--primary) !important;
+          border-color: #cbd5e1 !important;
         }
 
         /* Search box override */
@@ -617,8 +628,7 @@ const getWorkloadColor = (hours) => {
           flex-shrink: 0 !important;
         }
         .scope-search-box:focus-within {
-          border-color: var(--primary) !important;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+          border-color: #cbd5e1 !important;
         }
         
         /* Stats Cards custom design */
@@ -715,8 +725,8 @@ const getWorkloadColor = (hours) => {
       })()}
           </select>
 
-          <button class="scope-btn-pill btn btn-danger" style="background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);" onclick="clearScopeDashboardFilters()">
-            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px"></i> Clear All Filter
+          <button id="clearScopeDashboardFiltersBtn" style="display: none; background: none; border: none; color: #ef4444; font-family: Kanit; font-size: 0.75rem; font-weight: 700; cursor: pointer; align-items: center; gap: 4px; padding: 0 12px; height: 34px; white-space: nowrap;" onclick="clearScopeDashboardFilters()">
+            <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
         </div>
       </div>
@@ -1969,8 +1979,8 @@ const getWorkloadColor = (hours) => {
               <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             </div>
           </div>
-          <button onclick="clearSidebarFilters()" style="background:none; border:none; color:#ef4444;   cursor:pointer; display:flex; align-items:center; gap:4px; align-self:flex-end;  border-radius:6px; transition:all 0.2s" onmouseover="this.style.background='rgba(239,68,68,0.05)'" onmouseout="this.style.background='none'" class="text-[12px] font-semibold px-4 py-1.5">
-            <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filters
+          <button id="clearSidebarFiltersBtn" onclick="clearSidebarFilters()" style="display:none; background:none; border:none; color:#ef4444; cursor:pointer; align-items:center; gap:4px; align-self:flex-end; border-radius:6px; font-size:12px; font-weight:600; padding:4px 16px;">
+            <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
         </div>
       </div>
@@ -2010,6 +2020,15 @@ const getWorkloadColor = (hours) => {
     window._sidebarSearch = document.getElementById('sidebarSearch')?.value.toLowerCase() || '';
     window._sidebarProjectFilter = document.getElementById('sidebarProjectFilter')?.value || 'all';
     window._sidebarNodeFilter = document.getElementById('sidebarNodeFilter')?.value || 'all';
+
+    const clearBtn = document.getElementById('clearSidebarFiltersBtn');
+    if (clearBtn) {
+      if (window._sidebarSearch || window._sidebarProjectFilter !== 'all' || window._sidebarNodeFilter !== 'all') {
+        clearBtn.style.display = 'flex';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
 
     const allTasks = getTasksFromScope();
     const filtered = allTasks.filter(t => {

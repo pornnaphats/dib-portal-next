@@ -103,13 +103,13 @@ export default function EmployeeView() {
           padding-right: 36px !important;
         }
         .select-input:hover {
-          transform: translateY(-1px) !important;
-          box-shadow: 0 4px 12px rgba(99, 91, 255, 0.08) !important;
-          border-color: #635BFF !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+          border-color: #cbd5e1 !important;
         }
         .select-input:focus {
-          border-color: #635BFF !important;
-          box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15) !important;
+          border-color: #cbd5e1 !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
         button.select-input:focus {
           border-color: #e2e8f0 !important;
@@ -160,31 +160,9 @@ export default function EmployeeView() {
         }
         .btn-primary:hover {
           background: #5048E5 !important;
-          transform: translateY(-1px) !important;
           box-shadow: 0 6px 16px rgba(99, 91, 255, 0.3) !important;
         }
-        .btn-primary:active {
-          transform: translateY(0) scale(0.98) !important;
-        }
 
-        /* Clear Filter Button */
-        button[onclick="clearEmployeeFilters()"] {
-          height: 34px !important;
-          border-radius: 99px !important;
-          border: 1px solid #e2e8f0 !important;
-          background-color: #ffffff !important;
-          color: #64748b !important;
-          font-weight: 500 !important;
-          font-size: 13px !important;
-          padding: 0 20px !important;
-          transition: all 0.2s ease !important;
-        }
-        button[onclick="clearEmployeeFilters()"]:hover {
-          background-color: #ffffff !important;
-          border-color: #cbd5e1 !important;
-          color: #24204D !important;
-          transform: translateY(-1px) !important;
-        }
       `}} />
       <div id="pageContent" ref={containerRef} className="w-full"></div>
     </div>

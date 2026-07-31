@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarOff, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarOff, ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 
 const MONTHS_TH = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 const DAYS_SHORT = ["อา","จ","อ","พ","พฤ","ศ","ส"];
@@ -12,7 +12,13 @@ export default function PublicHolidayPage() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(null);
 
-  useEffect(() => {
+  // --- State สำหรับ Modal เพิ่มวันหยุด ---
+  const [showModal, setShowModal] = useState(false);
+  const [newDate, setNewDate] = useState("");
+  const [newName, setNewName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchHolidays = () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) { setLoading(false); return; }
@@ -23,7 +29,83 @@ export default function PublicHolidayPage() {
       .then(r => r.json())
       .then(data => { setHolidays(data || []); setLoading(false); })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchHolidays();
   }, []);
+
+// --- ฟังก์ชันบันทึกวันหยุดลง Supabase (แก้ไขโดยการสร้าง id ส่งไปด้วย) ---
+  const handleAddHoliday = async (e) => {
+    e.preventDefault();
+    if (!newDate || !newName.trim()) return alert("กรุณากรอกวันที่และชื่อวันหยุด");
+
+    setSubmitting(true);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    // 🔑 สร้าง id สุ่มขึ้นมาสำหรับ varchar Primary Key
+    const generatedId = `hol_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/public_holidays`, {
+        method: "POST",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          id: generatedId, // ➕ ส่ง id ตัวใหม่ไปด้วย
+          date: newDate,
+          name: newName.trim()
+        })
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("บันทึกสำเร็จ!");
+        setShowModal(false);
+        setNewDate("");
+        setNewName("");
+        fetchHolidays();
+      } else {
+        alert(`บันทึกไม่สำเร็จ: ${result.message || JSON.stringify(result)}`);
+      }
+    } catch (err) {
+      alert(`ไม่สามารถเชื่อมต่อได้: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // --- ฟังก์ชันลบวันหยุด ---
+  const handleDeleteHoliday = async (id) => {
+    if (!confirm("คุณต้องการลบวันหยุดนี้ใช่หรือไม่?")) return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/public_holidays?id=eq.${id}`, {
+        method: "DELETE",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`
+        }
+      });
+
+      if (res.ok) {
+        fetchHolidays();
+      } else {
+        alert("เกิดข้อผิดพลาดในการลบวันหยุด");
+      }
+    } catch (err) {
+      alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
+    }
+  };
 
   const yearHolidays = holidays.filter(h => h.date?.startsWith(String(year)));
   const filtered = selectedMonth !== null
@@ -33,7 +115,7 @@ export default function PublicHolidayPage() {
   const holidaySet = new Set(yearHolidays.map(h => h.date));
 
   return (
-    <div style={{ padding: "24px 28px", minHeight: "100%" }}>
+    <div style={{ padding: "24px 28px", minHeight: "100%", position: "relative" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -45,15 +127,39 @@ export default function PublicHolidayPage() {
             <p style={{ fontSize: "0.78rem", color: "#8f97b0", margin: 0 }}>Public Holiday {year}</p>
           </div>
         </div>
-        {/* Year selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f4f4fb", borderRadius: "9999px", padding: "6px 14px" }}>
-          <button onClick={() => setYear(y => y - 1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#635bff", display: "flex", alignItems: "center" }}>
-            <ChevronLeft size={16} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* ➕ ปุ่มเพิ่มวันหยุด */}
+          <button
+            onClick={() => setShowModal(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#635bff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "9999px",
+              padding: "8px 16px",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(99, 91, 255, 0.3)"
+            }}
+          >
+            <Plus size={16} /> เพิ่มวันหยุด
           </button>
-          <span style={{ fontWeight: 700, color: "#24204D", fontSize: "0.9rem", minWidth: "50px", textAlign: "center" }}>{year}</span>
-          <button onClick={() => setYear(y => y + 1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#635bff", display: "flex", alignItems: "center" }}>
-            <ChevronRight size={16} />
-          </button>
+
+          {/* Year selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f4f4fb", borderRadius: "9999px", padding: "6px 14px" }}>
+            <button onClick={() => setYear(y => y - 1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#635bff", display: "flex", alignItems: "center" }}>
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontWeight: 700, color: "#24204D", fontSize: "0.9rem", minWidth: "50px", textAlign: "center" }}>{year}</span>
+            <button onClick={() => setYear(y => y + 1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#635bff", display: "flex", alignItems: "center" }}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -155,13 +261,154 @@ export default function PublicHolidayPage() {
                           <div style={{ fontWeight: 600, color: "#24204D", fontSize: "0.9rem" }}>{h.name}</div>
                           <div style={{ fontSize: "0.75rem", color: "#8f97b0" }}>วัน{dayName} · {MONTHS_TH[d.getMonth()]} {year}</div>
                         </div>
-                        <span style={{ background: "#f0eeff", color: "#635bff", fontSize: "0.7rem", fontWeight: 700, borderRadius: "99px", padding: "3px 12px" }}>หยุด</span>
+                        
+                        {/* 🗑️ ปุ่มลบวันหยุด */}
+                        {h.id && (
+                          <button
+                            onClick={() => handleDeleteHoliday(h.id)}
+                            title="ลบวันหยุด"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              color: "#ef4444",
+                              padding: "6px",
+                              borderRadius: "8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              opacity: 0.6,
+                              transition: "opacity 0.2s"
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                            onMouseLeave={e => e.currentTarget.style.opacity = "0.6"}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🟢 Modal Pop-up สำหรับกรอกวันหยุดใหม่ */}
+      {showModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(36, 32, 77, 0.4)",
+          backdropFilter: "blur(4px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "20px",
+            padding: "24px",
+            width: "100%",
+            maxWidth: "400px",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#24204D" }}>เพิ่มวันหยุดนักขัตฤกษ์</h3>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#8f97b0" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddHoliday} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#4b5675", marginBottom: "6px" }}>
+                  วันที่วันหยุด
+                </label>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={e => setNewDate(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
+                    border: "1px solid #eef0f6",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#4b5675", marginBottom: "6px" }}>
+                  ชื่อวันหยุด
+                </label>
+                <input
+                  type="text"
+                  placeholder="เช่น วันหยุดพิเศษประจำบริษัท"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "10px",
+                    border: "1px solid #eef0f6",
+                    fontSize: "0.9rem",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "1px solid #eef0f6",
+                    background: "#f4f4fb",
+                    color: "#4b5675",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  }}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    background: "#635bff",
+                    color: "#fff",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    opacity: submitting ? 0.7 : 1
+                  }}
+                >
+                  {submitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

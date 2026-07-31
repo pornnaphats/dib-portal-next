@@ -847,9 +847,11 @@ window.renderQCWorkPlanDashboard = function() {
             <option value="">ทุกทีม (All Teams)</option>
             ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._qcTeamFilter === t ? 'selected' : ''}>ทีม ${t}</option>`).join('')}
           </select>
-          <button class="btn" onclick="qcClearFilters()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit';">
-             <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filter
+          ${(window._qcSearch || window._qcTeamFilter || window._qcDateRange) ? `
+          <button onclick="qcClearFilters()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none; font-family:'Kanit';">
+             <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
+          ` : ''}
           <div style="width:1px; height:20px; background:#e2e8f0; margin:0 2px"></div>
 
           <button class="btn" onclick="qcShowManageEmployeesModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">

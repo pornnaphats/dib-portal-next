@@ -925,7 +925,7 @@
             <i data-lucide="search" style="width:14px; height:14px; color:var(--text-3)"></i>
             <input type="text" id="leaveSearch" oninput="window._leaveSearchQuery=this.value; searchLeaveTable()" value="${window._leaveSearchQuery || ''}" placeholder="Search..." style="background:none; border:none; outline:none; font-size:.7rem; width:100%; font-family:'Prompt', sans-serif; color:var(--text)">
           </div>
-
+          <div style="width:1px; height:20px; background:var(--border); margin:0 4px"></div>
           <button class="text-[12px] font-semibold px-4 py-1.5 btn btn-primary" onclick="showLeaveModal()" style="display:flex; align-items:center; gap:6px;   ">
             <i data-lucide="plus" style="width:14px; height:14px"></i> เพิ่มการลา
           </button>
@@ -1246,671 +1246,21 @@
   
   window.orgGetDefaultStructure = function() {
      return {
-  "id": "ceo",
-  "title": "Director",
-  "jobTitle": "Director",
-  "empId": "RS004",
-  "children": [
-    {
-      "id": "node_1780283866689363",
-      "empId": "RS021",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780283973040117",
-          "empId": "RS638",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780283921601470",
-          "empId": "RS254",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178028398470412",
-              "empId": "RS092,RS455",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780284639682348",
-          "empId": "RS147",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_17802849230784",
-              "empId": "RS474",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780284934606314",
-              "empId": "RS542",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_yuro8jw3q",
-          "empId": "RS257",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285550297360",
-              "empId": "RS544",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285563021123",
-              "empId": "RS545",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_7k68bono5",
-          "empId": "RS310",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285581703437",
-              "empId": "RS518",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285598172874",
-              "empId": "RS642",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_panqil76i",
-          "empId": "RS423",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285611382138",
-              "empId": "RS612",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285624658549",
-              "empId": "RS676",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780162791689251",
-      "empId": "RS028",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780233458214259",
-          "empId": "RS122",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780233552027645",
-              "empId": "RS200",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236194305768",
-                  "empId": "RS191",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_1780236231492891",
-                  "empId": "RS458",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_1780236242142935",
-                  "empId": "RS507",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_178023625722558",
-                  "empId": "RS613",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780238405899404",
-              "empId": "RS203",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236211966665",
-                  "empId": "RS447",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236286067427",
-                  "empId": "RS664",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236269715402",
-                  "empId": "RS658",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780233622128745",
-              "empId": "RS359",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780234539314600",
-                  "empId": "RS461",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_17802345536617",
-                  "empId": "RS467",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234568555492",
-                  "empId": "RS475",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234628467916",
-                  "empId": "RS515",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234646267692",
-                  "empId": "RS519",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234672139294",
-                  "empId": "RS547",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234682838813",
-                  "empId": "RS565",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234714854739",
-                  "empId": "RS648",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234808885101",
-                  "empId": "RS684",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780233502706545",
-          "empId": "RS192",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780162800799748",
-      "empId": "RS000",
-      "title": "Assistant Manager",
-      "dept": "-",
-      "children": [],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780200720057164",
-      "empId": "RS019",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780233470627246",
-          "empId": "RS165",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780235465438755",
-              "empId": "RS426",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236471024448",
-                  "empId": "RS430",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236484107154",
-                  "empId": "RS434",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236497293823",
-                  "empId": "RS442",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236509707646",
-                  "empId": "RS452",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236519799664",
-                  "empId": "RS453",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236530658430",
-                  "empId": "RS454",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236539623338",
-                  "empId": "RS459",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236548989863",
-                  "empId": "RS488",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236560760394",
-                  "empId": "RS511",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_178023657364515",
-                  "empId": "RS530",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236585592751",
-                  "empId": "RS538",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236596015179",
-                  "empId": "RS539",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236607280679",
-                  "empId": "RS543",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236620561484",
-                  "empId": "RS549",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236631105670",
-                  "empId": "RS554",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236643621448",
-                  "empId": "RS555",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780235499255726",
-              "empId": "RS265",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780233480365993",
-          "empId": "RS385",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780235526445622",
-              "empId": "RS253",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236032270561",
-                  "empId": "RS485",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236041598700",
-                  "empId": "RS486",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780200735724957",
-      "empId": "RS362",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780200798211998",
-          "empId": "RS136",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178020127779052",
-              "empId": "RS522",
-              "title": "Junior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201287351689",
-              "empId": "RS655",
-              "title": "Junior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201173187894",
-          "empId": "RS451",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780200815744228",
-          "empId": "RS170",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780201131267686",
-              "empId": "RS094",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201141706178",
-              "empId": "RS105",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201228124995",
-              "empId": "RS532",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201020654383",
-          "empId": "RS229",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780201238328251",
-              "empId": "RS552",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201046732800",
-          "empId": "RS084",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201057484440",
-          "empId": "RS154",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178020107579933",
-              "empId": "RS324",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780201094883586",
-                  "empId": "RS476",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201066350884",
-          "empId": "RS559",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    }
-  ]
-}
-;
+        "id": "ceo",
+        "title": "Director",
+        "jobTitle": "Director",
+        "empId": "RS004",
+        "children": []
+     };
   };
 
   window.orgLoadStructure = function() {
-     let struct = null;
-     try {
-        struct = JSON.parse(localStorage.getItem('org_structure'));
-     } catch(e) {}
+     let struct = window.orgStructureData;
+     if (!struct) {
+        try {
+           struct = JSON.parse(localStorage.getItem('org_structure'));
+        } catch(e) {}
+     }
      if (!struct) {
         struct = window.orgGetDefaultStructure();
         window.orgSaveStructure(struct);
@@ -1926,7 +1276,27 @@
   };
 
   window.orgSaveStructure = function(struct) {
+     window.orgStructureData = struct;
      localStorage.setItem('org_structure', JSON.stringify(struct));
+     
+     const supabaseUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : null;
+     const supabaseKey = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : null;
+     if (supabaseUrl && supabaseKey) {
+        fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.default`, {
+           method: 'POST',
+           headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+           },
+           body: JSON.stringify({
+              id: 'default',
+              structure: struct,
+              updated_at: new Date().toISOString()
+           })
+        }).catch(err => console.error('Error saving org structure to Supabase:', err));
+     }
   };
 
   window.orgExportStructure = function() {
@@ -2312,10 +1682,10 @@
                   </button>` : ''}
                </div>
                ${level > 0 ? `
-               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', -1)" style="position:absolute; left:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10; transition:all 0.15s;" title="Move Left" onmouseover="this.style.background='#d97706';this.style.transform='translateY(-50%) scale(1.15)'" onmouseout="this.style.background='#f59e0b';this.style.transform='translateY(-50%) scale(1)'">
+               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', -1)" style="position:absolute; left:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10;" title="Move Left">
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                </button>
-               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', 1)" style="position:absolute; right:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10; transition:all 0.15s;" title="Move Right" onmouseover="this.style.background='#d97706';this.style.transform='translateY(-50%) scale(1.15)'" onmouseout="this.style.background='#f59e0b';this.style.transform='translateY(-50%) scale(1)'">
+               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', 1)" style="position:absolute; right:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10;" title="Move Right">
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>` : ''}
                <button onclick="event.stopPropagation(); window.orgAddNode('${node.id}')" style="position:absolute; bottom:-14px; left:50%; transform:translateX(-50%); background:#10b981; color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10;" title="Add Subordinate">
@@ -2350,7 +1720,7 @@
                  }
                  
                  cardsHtml += `
-                   <div class="card org-card" onclick="if(!window.orgIsEditMode) window.showOrgEmployeeDetails('${node.id}')" style="width:250px; padding:18px; border-radius:20px; border:1px solid rgba(0,0,0,0.04); position:relative; background:#ffffff; box-shadow:0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02); transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor:${window.orgIsEditMode ? 'default' : 'pointer'};" onmouseover="this.style.transform='${window.orgIsEditMode?'none':'translateY(-4px) scale(1.02)'}'; this.style.boxShadow='0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.03)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02)';">
+                   <div class="card org-card" onclick="if(!window.orgIsEditMode) window.showOrgEmployeeDetails('${node.id}')" style="width:250px; padding:18px; border-radius:20px; border:1px solid rgba(0,0,0,0.04); position:relative; background:#ffffff; box-shadow:0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02); transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor:${window.orgIsEditMode ? 'default' : 'pointer'};">
                       ${peopleToRender.length === 1 ? editControls : ''}
                       <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
                          ${avatarHtml}
@@ -2419,7 +1789,7 @@
              const w = isSubDept ? 200 : 220;
              const p = isSubDept ? '10px 12px' : '12px 16px';
              cardHtml = `
-               <div class="card org-card" onclick="if(!window.orgIsEditMode) window.showOrgEmployeeDetails('${node.id}')" style="width:${w}px; padding:${p}; border-radius:18px; border:1px solid rgba(0,0,0,0.04); position:relative; z-index:5; background:#ffffff; box-shadow:0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:flex-start; transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor:${window.orgIsEditMode ? 'default' : 'pointer'};" onmouseover="this.style.transform='${window.orgIsEditMode?'none':'translateY(-4px) scale(1.02)'}'; this.style.boxShadow='0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.03)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02)';">
+               <div class="card org-card" onclick="if(!window.orgIsEditMode) window.showOrgEmployeeDetails('${node.id}')" style="width:${w}px; padding:${p}; border-radius:18px; border:1px solid rgba(0,0,0,0.04); position:relative; z-index:5; background:#ffffff; box-shadow:0 8px 30px rgba(0,0,0,0.04), 0 2px 10px rgba(0,0,0,0.02); display:flex; flex-direction:column; align-items:flex-start; transition:all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor:${window.orgIsEditMode ? 'default' : 'pointer'};">
                   ${editControls}
                   <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px; width:100%;">
                       <div style="width:28px; height:28px; border-radius: 50%; background:${bgAlpha}; color:${bColor}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -2588,14 +1958,20 @@
         options: {
           indexAxis: 'y',
           ...commonOptions,
-          layout: { padding: { right: 40 } }, // Add space on the right for numbers
+          layout: { padding: { left: 10, right: 40 } }, // Add space on the left and right
           scales: {
             x: {
               display: false,
               grid: { display: false },
               max: (Math.max(...typeData) * 1.4) || 5 // Ensure space on right
             },
-            y: { grid: { display: false }, ticks: { font: { family: 'Prompt', size: 9 }, padding: 8 } }
+            y: { 
+              grid: { display: false }, 
+              ticks: { 
+                font: { family: 'Prompt', size: 9 }, 
+                padding: 6
+              } 
+            }
           }
         },
         plugins: [{

@@ -355,9 +355,11 @@ window.pageSchedule = function() {
             <option value="">All Team</option>
             ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._scheduleTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
-          <button class="btn btn-danger btn-sm" onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600">
-             <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filter
+          ${(window._currentDateRange || window._scheduleSearch || window._scheduleTeamFilter) ? `
+          <button onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none;">
+             <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
+          ` : ''}
           <div style="width:1px; height:20px; background:var(--border); margin:0 2px"></div>
           <button class="btn btn-sm" onclick="toggleTaskSidebar()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(45,110,247,0.08); color:var(--primary); border:1px solid rgba(45,110,247,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600">
             <i data-lucide="plus" style="width:12px; height:12px"></i> Add Task

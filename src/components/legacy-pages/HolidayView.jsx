@@ -41,8 +41,38 @@ export default function HolidayView() {
 
     window.navigate = (page) => {
       if (page === 'public-holiday' && containerRef.current) {
-        containerRef.current.innerHTML = window.pagePublicHoliday();
-        window.lucide.createIcons();
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        const doRender = () => {
+          if (containerRef.current && typeof window.pagePublicHoliday === "function") {
+            containerRef.current.innerHTML = window.pagePublicHoliday();
+            window.lucide.createIcons();
+          }
+        };
+
+        // Always fetch fresh data directly — bypass any cache guards
+        if (supabaseUrl && supabaseKey) {
+          fetch(`${supabaseUrl}/rest/v1/public_holidays?select=*&limit=500&order=date.asc`, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+          }).then(res => res.ok ? res.json() : []).then(holidays => {
+            const holidayList = [];
+            const holidayMap = {};
+            holidays.forEach(row => {
+              if (row.date && row.name) {
+                const [y, m, d] = row.date.split('-');
+                holidayList.push({ id: row.id, date: `${parseInt(d)}/${parseInt(m)}/${y}`, name: row.name });
+                holidayMap[`${parseInt(m)}-${parseInt(d)}`] = row.name;
+              }
+            });
+            window.HOLIDAY_LIST = holidayList;
+            window.HOLIDAYS = holidayMap;
+            if (window.DATA) window.DATA.public_holidays = holidayList;
+            doRender();
+          }).catch(() => doRender());
+        } else {
+          doRender();
+        }
       }
     };
 

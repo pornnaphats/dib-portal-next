@@ -402,19 +402,19 @@ export default function LeaveManagementReact() {
         <div className="flex flex-col gap-6 fade-in">
             {/* Top Action Bar with Tabs */}
             <div className="flex justify-between items-center mb-4">
-                <div className="flex gap-2 bg-[#f1f5f9] p-1.5 rounded-full">
+                <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '6px', borderRadius: '999px' }}>
                     <button 
                         onClick={() => setActiveTab('overview')}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-full text-[0.85rem] transition-all font-semibold ${activeTab === 'overview' ? 'bg-[#635BFF] text-white shadow-md' : 'text-gray-500 hover:text-[#635BFF]'}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s', background: activeTab === 'overview' ? '#635BFF' : 'transparent', color: activeTab === 'overview' ? '#ffffff' : '#64748b', boxShadow: activeTab === 'overview' ? '0 2px 8px rgba(99,91,255,0.3)' : 'none' }}
                     >
-                        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         Overview
                     </button>
                     <button 
                         onClick={() => setActiveTab('empeo')}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-full text-[0.85rem] transition-all font-semibold ${activeTab === 'empeo' ? 'bg-[#635BFF] text-white shadow-md' : 'text-gray-500 hover:text-[#635BFF]'}`}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 20px', borderRadius: '999px', fontSize: '0.85rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s', background: activeTab === 'empeo' ? '#635BFF' : 'transparent', color: activeTab === 'empeo' ? '#ffffff' : '#64748b', boxShadow: activeTab === 'empeo' ? '0 2px 8px rgba(99,91,255,0.3)' : 'none' }}
                     >
-                        <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                         Empeo Report
                     </button>
                 </div>
@@ -449,23 +449,23 @@ export default function LeaveManagementReact() {
                     {/* Charts and Calendar Row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-[300px_1fr_300px_240px] gap-4 mb-6">
                         {/* Leave Type Chart */}
-                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col" style={{ minWidth: 0, width: '100%' }}>
+                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">สถิติประเภทการลา</div>
-                            <div style={{ height: '160px', width: 'calc(100% - 45px)', marginLeft: '35px', position: 'relative', marginTop: '20px' }}>
+                            <div style={{ height: '240px', width: '100%', position: 'relative', marginTop: '10px' }}>
                                 <canvas id="leaveTypeChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* Trend Chart */}
-                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 h-[280px] flex flex-col" style={{ minWidth: 0, width: '100%' }}>
+                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">แนวโน้มการลาในแต่ละเดือน</div>
-                            <div style={{ height: '170px', width: '100%', position: 'relative', marginTop: '10px' }}>
+                            <div style={{ height: '240px', width: '100%', position: 'relative', marginTop: '10px' }}>
                                 <canvas id="leaveTrendChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* On Leave Today & Tomorrow Card */}
-                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col h-[280px]" style={{ minWidth: 0, width: '100%' }}>
+                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '100%', overflow: 'hidden' }}>
                             <div className="flex items-center justify-between mb-3 shrink-0">
                                 <div className="flex items-center gap-3">
                                     <div style={{ width: '34px', height: '34px', minWidth: '34px', minHeight: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.25)', flexShrink: 0, aspectRatio: '1/1' }}>
@@ -481,35 +481,35 @@ export default function LeaveManagementReact() {
                                 </div>
                             </div>
                             
-                            <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {/* วันนี้ */}
-                                <div>
-                                    <div className="text-[9px] font-extrabold text-rose-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <div style={{ marginTop: '8px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#e11d48', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                                         <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
                                         วันนี้ (Today)
                                     </div>
                                     {onLeaveToday.length === 0 ? (
-                                        <div className="text-center text-[10px] text-gray-400 italic py-2 bg-slate-50/50 rounded-lg">ไม่มีผู้ลาวันนี้</div>
+                                        <div className="text-center text-xs text-gray-400 py-3 bg-slate-50 rounded-lg" style={{ fontSize: '11px' }}>ไม่มีผู้ลาวันนี้</div>
                                     ) : (
-                                        <div className="flex flex-col gap-1.5">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {onLeaveToday.map(r => {
                                                 const leaveColor = r.type === 'ลาพักร้อน' ? 'text-[#0ea5e9] bg-[#0ea5e9]/15' : r.type === 'ลากิจ' ? 'text-[#f97316] bg-[#f97316]/15' : r.type === 'ลาป่วย' ? 'text-[#ef4444] bg-[#ef4444]/15' : r.type === 'วันหยุดชดเชย' ? 'text-[#10b981] bg-[#10b981]/15' : 'text-[#8b5cf6] bg-[#8b5cf6]/15';
                                                 const leaveLabel = r.type === 'ลาพักร้อน' ? 'Vacation Leave' : r.type === 'ลากิจ' ? 'Business Leave' : r.type === 'ลาป่วย' ? 'Sick Leave' : r.type === 'วันหยุดชดเชย' ? 'Compensatory Leave' : r.type === 'ลาคลอด / ลาเลี้ยงดูบุตร' ? 'Maternity Leave' : r.type === 'ลาเพื่อการฌาปนกิจศพ' ? 'Compassionate Leave' : r.type === 'อบรม / สัมมนา' ? 'Training Leave' : 'Other';
                                                 const avatarUrl = getEmployeeAvatar(r.name);
                                                 return (
-                                                    <div key={r.id} className="flex items-center gap-2 bg-[#f8fafc] border border-slate-100 rounded-xl px-2.5 py-1.5 min-w-0">
+                                                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '9px 12px', minWidth: 0 }}>
                                                         {avatarUrl ? (
-                                                            <img src={avatarUrl} style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, aspectRatio: '1/1' }} />
+                                                            <img src={avatarUrl} style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, aspectRatio: '1/1' }} />
                                                         ) : (
-                                                            <div style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '6px' : (getEmployeeNickname(r.name).length > 3 ? '7px' : '9px'), flexShrink: 0, aspectRatio: '1/1', padding: '0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <div style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '8px' : (getEmployeeNickname(r.name).length > 3 ? '10px' : '12px'), flexShrink: 0, aspectRatio: '1/1', padding: '0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {getEmployeeNickname(r.name)}
                                                             </div>
                                                         )}
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-[11px] font-bold text-gray-800 truncate">{r.name}</div>
-                                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                                <span className={`px-2 py-0.5 rounded-full text-[7px] font-bold ${leaveColor}`}>{leaveLabel}</span>
-                                                                <span className="text-[8px] text-gray-500">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</span>
+                                                            <div className="text-[12px] font-bold text-gray-800 truncate" style={{ fontSize: "12px" }}>{r.name}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                                                                <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '9px', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block', background: r.type === 'ลาพักร้อน' ? 'rgba(14,165,233,0.12)' : r.type === 'ลากิจ' ? 'rgba(249,115,22,0.12)' : r.type === 'ลาป่วย' ? 'rgba(239,68,68,0.12)' : r.type === 'วันหยุดชดเชย' ? 'rgba(16,185,129,0.12)' : 'rgba(139,92,246,0.12)', color: r.type === 'ลาพักร้อน' ? '#0ea5e9' : r.type === 'ลากิจ' ? '#f97316' : r.type === 'ลาป่วย' ? '#ef4444' : r.type === 'วันหยุดชดเชย' ? '#10b981' : '#8b5cf6' }}>{leaveLabel}</span>
+                                                                <span className="text-[10px] text-gray-500" style={{ fontSize: '10px' }}>{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -521,32 +521,32 @@ export default function LeaveManagementReact() {
 
                                 {/* พรุ่งนี้ */}
                                 <div>
-                                    <div className="text-[9px] font-extrabold text-amber-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
                                         พรุ่งนี้ (Tomorrow)
                                     </div>
                                     {onLeaveTomorrow.length === 0 ? (
-                                        <div className="text-center text-[10px] text-gray-400 italic py-2 bg-slate-50/50 rounded-lg">ไม่มีผู้ลาพรุ่งนี้</div>
+                                        <div className="text-center text-xs text-gray-400 py-3 bg-slate-50 rounded-lg" style={{ fontSize: '11px' }}>ไม่มีผู้ลาพรุ่งนี้</div>
                                     ) : (
-                                        <div className="flex flex-col gap-1.5">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {onLeaveTomorrow.map(r => {
                                                 const leaveColor = r.type === 'ลาพักร้อน' ? 'text-[#0ea5e9] bg-[#0ea5e9]/15' : r.type === 'ลากิจ' ? 'text-[#f97316] bg-[#f97316]/15' : r.type === 'ลาป่วย' ? 'text-[#ef4444] bg-[#ef4444]/15' : r.type === 'วันหยุดชดเชย' ? 'text-[#10b981] bg-[#10b981]/15' : 'text-[#8b5cf6] bg-[#8b5cf6]/15';
                                                 const leaveLabel = r.type === 'ลาพักร้อน' ? 'Vacation Leave' : r.type === 'ลากิจ' ? 'Business Leave' : r.type === 'ลาป่วย' ? 'Sick Leave' : r.type === 'วันหยุดชดเชย' ? 'Compensatory Leave' : r.type === 'ลาคลอด / ลาเลี้ยงดูบุตร' ? 'Maternity Leave' : r.type === 'ลาเพื่อการฌาปนกิจศพ' ? 'Compassionate Leave' : r.type === 'อบรม / สัมมนา' ? 'Training Leave' : 'Other';
                                                 const avatarUrl = getEmployeeAvatar(r.name);
                                                 return (
-                                                    <div key={r.id} className="flex items-center gap-2 bg-[#f8fafc] border border-slate-100 rounded-xl px-2.5 py-1.5 min-w-0">
+                                                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '12px', padding: '9px 12px', minWidth: 0 }}>
                                                         {avatarUrl ? (
-                                                            <img src={avatarUrl} style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, aspectRatio: '1/1' }} />
+                                                            <img src={avatarUrl} style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, aspectRatio: '1/1' }} />
                                                         ) : (
-                                                            <div style={{ width: '26px', height: '26px', minWidth: '26px', minHeight: '26px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '6px' : (getEmployeeNickname(r.name).length > 3 ? '7px' : '9px'), flexShrink: 0, aspectRatio: '1/1', padding: '0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            <div style={{ width: '32px', height: '32px', minWidth: '32px', minHeight: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '8px' : (getEmployeeNickname(r.name).length > 3 ? '10px' : '12px'), flexShrink: 0, aspectRatio: '1/1', padding: '0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                 {getEmployeeNickname(r.name)}
                                                             </div>
                                                         )}
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-[11px] font-bold text-gray-800 truncate">{r.name}</div>
-                                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                                <span className={`px-2 py-0.5 rounded-full text-[7px] font-bold ${leaveColor}`}>{leaveLabel}</span>
-                                                                <span className="text-[8px] text-gray-500">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</span>
+                                                            <div className="text-[12px] font-bold text-gray-800 truncate" style={{ fontSize: "12px" }}>{r.name}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                                                                <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '9px', fontWeight: 700, whiteSpace: 'nowrap', display: 'inline-block', background: r.type === 'ลาพักร้อน' ? 'rgba(14,165,233,0.12)' : r.type === 'ลากิจ' ? 'rgba(249,115,22,0.12)' : r.type === 'ลาป่วย' ? 'rgba(239,68,68,0.12)' : r.type === 'วันหยุดชดเชย' ? 'rgba(16,185,129,0.12)' : 'rgba(139,92,246,0.12)', color: r.type === 'ลาพักร้อน' ? '#0ea5e9' : r.type === 'ลากิจ' ? '#f97316' : r.type === 'ลาป่วย' ? '#ef4444' : r.type === 'วันหยุดชดเชย' ? '#10b981' : '#8b5cf6' }}>{leaveLabel}</span>
+                                                                <span className="text-[10px] text-gray-500" style={{ fontSize: '10px' }}>{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -559,8 +559,8 @@ export default function LeaveManagementReact() {
                         </div>
 
                         {/* Calendar */}
-                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col" style={{ minWidth: 0, width: '100%' }}>
-                            <div className="flex justify-between items-center mb-4">
+                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '16px' }}>
+                            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
                                 <div className="text-[0.8rem] font-extrabold text-gray-800 tracking-tight">ปฏิทินการลา</div>
                                 <div className="flex gap-1.5 items-center">
                                     <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="w-6 h-6 rounded-full border border-slate-100 flex items-center justify-center text-gray-400 hover:text-[#635BFF] hover:bg-slate-50 transition-all">
@@ -572,7 +572,7 @@ export default function LeaveManagementReact() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-7 gap-1 text-center mb-3">
+                            <div className="grid grid-cols-7 text-center mb-3" style={{ gap: '2px', rowGap: '6px' }}>
                                 {['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'].map((d, index) => {
                                     const colorClass = index === 0 ? 'text-red-500' : index === 6 ? 'text-[#635BFF]' : 'text-gray-400';
                                     return (
@@ -586,12 +586,12 @@ export default function LeaveManagementReact() {
                                     const dayLeaves = leaveDaysMap.get(d) || [];
                                     const hasLeave = dayLeaves.length > 0;
                                     return (
-                                        <div key={d} className="h-8 w-full flex items-center justify-center relative">
-                                            <div className={`w-7 h-7 rounded-full flex flex-col items-center justify-center text-[0.7rem] transition-all ${
+                                        <div key={d} className="w-full flex items-center justify-center relative" style={{ height: '32px' }}>
+                                            <div className={`rounded-full flex flex-col items-center justify-center text-[0.7rem] transition-all ${
                                                 isToday 
                                                     ? 'bg-[#635BFF] text-white font-extrabold shadow-[0_4px_10px_rgba(99,91,255,0.3)]' 
                                                     : 'text-gray-700 hover:bg-slate-50 cursor-pointer font-medium'
-                                            }`} style={{ lineHeight: '1' }}>
+                                            }`} style={{ lineHeight: '1', width: '24px', height: '24px' }}>
                                                 <span style={{ transform: hasLeave ? 'translateY(1px)' : 'none' }}>{d}</span>
                                                 {hasLeave && (
                                                     <div className="flex gap-[2.5px] justify-center mt-[1px]">
@@ -606,7 +606,7 @@ export default function LeaveManagementReact() {
                                     );
                                 })}
                             </div>
-                            <div className="mt-2 pt-2 border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center shrink-0">
+                            <div className="border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center shrink-0" style={{ marginTop: '12px', paddingTop: '12px' }}>
                                 {[
                                     { label: 'ลาพักร้อน', color: 'bg-[#635BFF]' },
                                     { label: 'ลากิจ', color: 'bg-[#f97316]' },
@@ -625,9 +625,9 @@ export default function LeaveManagementReact() {
 
                     {/* Table Area */}
                     <div ref={tableCardRef} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', overflow: 'hidden', width: '100%', minWidth: 0 }}>
-                        <div className="p-5 flex justify-between items-center">
+                        <div className="p-5 flex justify-between items-center flex-wrap gap-4" style={{ padding: '16px 20px' }}>
                             <div className="text-sm font-bold text-gray-800">รายการลาทั้งหมด</div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 <div 
                                     style={{ 
                                         width: '200px', 
@@ -640,26 +640,7 @@ export default function LeaveManagementReact() {
                                         display: 'flex', 
                                         alignItems: 'center', 
                                         gap: '8px', 
-                                        boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
-                                        e.currentTarget.style.borderColor = '#cbd5e1';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.transform = 'none';
-                                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,0.04)';
-                                        e.currentTarget.style.borderColor = '#e2e8f0';
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-1px) scale(0.97)';
-                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.04)';
-                                    }}
-                                    onMouseUp={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
+                                        boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
                                     }}
                                 >
                                     <svg className="w-[14px] h-[14px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -689,26 +670,7 @@ export default function LeaveManagementReact() {
                                             alignItems: 'center', 
                                             justifyContent: 'space-between', 
                                             cursor: 'pointer', 
-                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)', 
-                                            transition: 'all 0.2s' 
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
-                                            e.currentTarget.style.borderColor = '#cbd5e1';
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.transform = 'none';
-                                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,0.04)';
-                                            e.currentTarget.style.borderColor = '#e2e8f0';
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-1px) scale(0.97)';
-                                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.04)';
-                                        }}
-                                        onMouseUp={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
+                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
                                         }}
                                     >
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -776,26 +738,7 @@ export default function LeaveManagementReact() {
                                             alignItems: 'center', 
                                             justifyContent: 'space-between', 
                                             cursor: 'pointer', 
-                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)', 
-                                            transition: 'all 0.2s' 
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
-                                            e.currentTarget.style.borderColor = '#cbd5e1';
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.transform = 'none';
-                                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,0.04)';
-                                            e.currentTarget.style.borderColor = '#e2e8f0';
-                                        }}
-                                        onMouseDown={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-1px) scale(0.97)';
-                                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.04)';
-                                        }}
-                                        onMouseUp={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-2px)';
-                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
+                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)'
                                         }}
                                     >
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
@@ -844,55 +787,37 @@ export default function LeaveManagementReact() {
                                         </>
                                     )}
                                 </div>
-                                <div style={{ width: '1px', height: '20px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
-                                <button 
-                                    onClick={() => { setSearchQuery(''); setSelectedTeam('all'); setSelectedLeaveType('all'); }} 
-                                    style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: '6px', 
-                                        borderRadius: '99px', 
-                                        backgroundColor: '#ffffff', 
-                                        border: '1px solid #e2e8f0', 
-                                        color: '#64748b', 
-                                        cursor: 'pointer', 
-                                        boxShadow: '0 1px 2px rgba(15,23,42,0.04)', 
-                                        height: '34px', 
-                                        boxSizing: 'border-box', 
-                                        padding: '0 16px', 
-                                        fontSize: '12px', 
-                                        fontWeight: '600',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onMouseOver={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
-                                        e.currentTarget.style.backgroundColor = '#f8fafc';
-                                        e.currentTarget.style.borderColor = '#cbd5e1';
-                                        e.currentTarget.style.color = '#24204D';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.transform = 'none';
-                                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15,23,42,0.04)';
-                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                        e.currentTarget.style.borderColor = '#e2e8f0';
-                                        e.currentTarget.style.color = '#64748b';
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-1px) scale(0.97)';
-                                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(15, 23, 42, 0.04)';
-                                    }}
-                                    onMouseUp={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(15, 23, 42, 0.08)';
-                                    }}
-                                >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                                        <path d="M3 3v5h5" />
-                                    </svg>
-                                    Clear All Filter
-                                </button>
+                                {(searchQuery !== '' || selectedTeam !== 'all' || selectedLeaveType !== 'all') && (
+                                    <button 
+                                        onClick={() => { setSearchQuery(''); setSelectedTeam('all'); setSelectedLeaveType('all'); }} 
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '4px', 
+                                            borderRadius: '99px', 
+                                            backgroundColor: 'transparent', 
+                                            border: 'none', 
+                                            color: '#ef4444', 
+                                            cursor: 'pointer', 
+                                            height: '34px', 
+                                            boxSizing: 'border-box', 
+                                            padding: '0 12px', 
+                                            fontSize: '12px', 
+                                            fontWeight: '700',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.color = '#dc2626';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.color = '#ef4444';
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '13px', fontWeight: 'bold' }}>✕</span>
+                                        Clear
+                                    </button>
+                                )}
+                                <div style={{ width: '1px', height: '20px', backgroundColor: '#e2e8f0', margin: '0 4px', flexShrink: 0 }}></div>
                                 <button 
                                     onClick={() => typeof window.showLeaveModal === 'function' && window.showLeaveModal()} 
                                     style={{ 
@@ -933,8 +858,8 @@ export default function LeaveManagementReact() {
                                 </button>
                             </div>
                         </div>
-                        <div style={{ overflowX: 'auto', minHeight: '572px', width: '100%' }}>
-                            <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed', minWidth: '850px' }}>
+                        <div className="table-wrap" style={{ overflowX: 'auto', minHeight: '572px', width: '100%', paddingLeft: '0px', paddingRight: '0px' }}>
+                            <table className="w-full text-left border-collapse" style={{ tableLayout: 'fixed', minWidth: '1000px' }}>
                                 <colgroup>
                                     <col style={{ width: '12%' }} />
                                     <col style={{ width: '22%' }} />
@@ -946,15 +871,15 @@ export default function LeaveManagementReact() {
                                     <col style={{ width: '4%' }} />
                                 </colgroup>
                                 <thead>
-                                    <tr className="bg-slate-50/50 text-[11px] font-semibold text-slate-500 tracking-wider border-b border-slate-100">
-                                        <th className="px-4 py-3 whitespace-nowrap">Request Date</th>
-                                        <th className="px-4 py-3">Employee</th>
-                                        <th className="px-4 py-3">Leave Type</th>
-                                        <th className="px-4 py-3">Comp. Day</th>
-                                        <th className="px-4 py-3">Leave Period</th>
-                                        <th className="px-4 py-3 text-center">Days</th>
-                                        <th className="px-4 py-3">Note</th>
-                                        <th className="px-4 py-3"></th>
+                                    <tr style={{ background: '#f8f9fb' }}>
+                                        <th style={{ padding: '8px 8px', paddingLeft: '20px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }} className="whitespace-nowrap">Request Date</th>
+                                        <th style={{ padding: '12px 20px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Employee</th>
+                                        <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Leave Type</th>
+                                        <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Comp. Day</th>
+                                        <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Leave Period</th>
+                                        <th style={{ padding: '8px 8px', textAlign: 'center', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Days</th>
+                                        <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}>Note</th>
+                                        <th style={{ padding: '8px 8px', paddingRight: '20px', textAlign: 'center', fontWeight: '700', color: '#4b5675', fontSize: '.8rem' }}></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -962,8 +887,8 @@ export default function LeaveManagementReact() {
                                         const avatarUrl = getEmployeeAvatar(r.name);
                                         return (
                                             <tr key={r.id} className="hover:bg-[#f8fafc] transition-colors">
-                                                <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{r.requestDate}</td>
-                                                <td className="px-4 py-3">
+                                                <td style={{ padding: '8px 8px', paddingLeft: '20px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.requestDate}</td>
+                                                <td style={{ padding: '6px 10px' }}>
                                                     <div className="flex items-center gap-3">
                                                         {avatarUrl ? (
                                                             <img src={avatarUrl} style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flexShrink: 0, aspectRatio: '1/1' }} />
@@ -972,33 +897,45 @@ export default function LeaveManagementReact() {
                                                                  {getEmployeeNickname(r.name)}
                                                              </div>
                                                          )}
-                                                        <div className="flex-col">
-                                                            <div className="text-xs font-bold text-gray-800">{r.name}</div>
-                                                            <div className="text-[10px] text-indigo-600 font-semibold">{r.id}</div>
+                                                        <div className="flex flex-col" style={{ gap: '2px' }}>
+                                                            <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '.8rem', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{r.name}</div>
+                                                            <div style={{ fontSize: '.65rem', color: 'var(--primary)', fontWeight: 600, letterSpacing: '0.5px' }}>{r.id}</div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
+                                                <td style={{ padding: '8px 8px' }}>
                                                     {(() => {
                                                         const badgeStyle = 
-                                                            r.type === 'ลาพักร้อน' ? { bg: 'bg-[#e0f2fe]', text: 'text-[#0369a1]', dot: 'bg-[#0ea5e9]' } :
-                                                            r.type === 'ลากิจ' ? { bg: 'bg-[#ffedd5]', text: 'text-[#c2410c]', dot: 'bg-[#f97316]' } :
-                                                            r.type === 'ลาป่วย' ? { bg: 'bg-[#fee2e2]', text: 'text-[#b91c1c]', dot: 'bg-[#ef4444]' } :
-                                                            r.type === 'วันหยุดชดเชย' ? { bg: 'bg-[#e6f4ea]', text: 'text-[#137333]', dot: 'bg-[#10b981]' } :
-                                                            { bg: 'bg-[#f3e8ff]', text: 'text-[#6b21a8]', dot: 'bg-[#a855f7]' };
+                                                            r.type === 'ลาพักร้อน' ? { bg: '#e0f2fe', text: '#0369a1', dot: '#0ea5e9' } :
+                                                            r.type === 'ลากิจ' ? { bg: '#ffedd5', text: '#c2410c', dot: '#f97316' } :
+                                                            r.type === 'ลาป่วย' ? { bg: '#fee2e2', text: '#b91c1c', dot: '#ef4444' } :
+                                                            r.type === 'วันหยุดชดเชย' ? { bg: '#e6f4ea', text: '#137333', dot: '#10b981' } :
+                                                            { bg: '#f3e8ff', text: '#6b21a8', dot: '#a855f7' };
                                                         return (
-                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium ${badgeStyle.bg} ${badgeStyle.text} border border-black/[0.02]`}>
-                                                                <span className={`w-1.5 h-1.5 rounded-full ${badgeStyle.dot}`}></span>
+                                                            <span style={{ 
+                                                                display: 'inline-flex', 
+                                                                alignItems: 'center', 
+                                                                gap: '6px', 
+                                                                padding: '2px 10px', 
+                                                                borderRadius: '999px', 
+                                                                fontSize: '10px', 
+                                                                fontWeight: '500', 
+                                                                backgroundColor: badgeStyle.bg, 
+                                                                color: badgeStyle.text, 
+                                                                border: '1px solid rgba(0,0,0,0.02)',
+                                                                whiteSpace: 'nowrap'
+                                                            }}>
+                                                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: badgeStyle.dot, display: 'inline-block' }}></span>
                                                                 {r.type}
                                                             </span>
                                                         );
                                                     })()}
                                                 </td>
-                                                <td className="px-4 py-3 text-xs text-gray-500">{r.refDate}</td>
-                                                <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</td>
-                                                <td className="px-4 py-3 text-xs text-gray-600 font-medium text-center">{r.days}</td>
-                                                <td className="px-4 py-3 text-xs text-gray-400 max-w-[150px] truncate" title={r.note}>{r.note}</td>
-                                                <td className="px-4 py-3 text-center relative">
+                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }}>{r.refDate}</td>
+                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</td>
+                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)', textAlign: 'center' }}>{r.days}</td>
+                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }} className="max-w-[150px] truncate" title={r.note}>{r.note}</td>
+                                                <td style={{ padding: '8px 8px', paddingRight: '20px', textAlign: 'center' }} className="relative">
                                                     <button onClick={(e) => {
                                                         e.stopPropagation();
                                                         document.querySelectorAll('[id^="react_actionMenu_leave_"]').forEach(el => {
@@ -1047,7 +984,7 @@ export default function LeaveManagementReact() {
 
                         {/* Pagination controls */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-between px-4 py-4 border-t border-slate-100 bg-slate-50/10 shrink-0">
+                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/10 shrink-0" style={{ padding: '16px 20px' }}>
                                 <div className="text-[11px] text-gray-500 font-medium">
                                     Showing {totalFiltered > 0 ? startIndex + 1 : 0} to {Math.min(currentPage * pageSize, totalFiltered)} of {totalFiltered} entries
                                 </div>
@@ -1057,7 +994,8 @@ export default function LeaveManagementReact() {
                                         type="button"
                                         onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.max(1, prev - 1)); }}
                                         disabled={currentPage === 1}
-                                        className="h-[26px] px-3 rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        className="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        style={{ height: '28px', padding: '0 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
                                     >
                                         Previous
                                     </button>
@@ -1078,7 +1016,8 @@ export default function LeaveManagementReact() {
                                                     type="button"
                                                     key={1}
                                                     onClick={(e) => { e.preventDefault(); setCurrentPage(1); }}
-                                                    className="w-[26px] h-[26px] rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all"
+                                                    className="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all"
+                                                    style={{ width: '28px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' }}
                                                 >
                                                     1
                                                 </button>
@@ -1095,11 +1034,20 @@ export default function LeaveManagementReact() {
                                                     type="button"
                                                     key={i}
                                                     onClick={(e) => { e.preventDefault(); setCurrentPage(i); }}
-                                                    className={`w-[26px] h-[26px] rounded-full text-[11px] transition-all ${
-                                                        active
-                                                            ? 'bg-[#635BFF] text-white hover:bg-[#5247f5] font-semibold'
-                                                            : 'text-gray-500 hover:text-[#635BFF] font-medium'
-                                                    }`}
+                                                    className="rounded-full text-[11px] transition-all"
+                                                    style={{
+                                                        width: '28px',
+                                                        height: '28px',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        border: 'none',
+                                                        borderRadius: '50%',
+                                                        backgroundColor: active ? '#635BFF' : 'transparent',
+                                                        color: active ? '#ffffff' : '#64748b',
+                                                        fontWeight: active ? '600' : '500'
+                                                    }}
                                                 >
                                                     {i}
                                                 </button>
@@ -1115,7 +1063,8 @@ export default function LeaveManagementReact() {
                                                     type="button"
                                                     key={totalPages}
                                                     onClick={(e) => { e.preventDefault(); setCurrentPage(totalPages); }}
-                                                    className="w-[26px] h-[26px] rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all"
+                                                    className="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all"
+                                                    style={{ width: '28px', height: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', backgroundColor: 'transparent' }}
                                                 >
                                                     {totalPages}
                                                 </button>
@@ -1130,7 +1079,8 @@ export default function LeaveManagementReact() {
                                         type="button"
                                         onClick={(e) => { e.preventDefault(); setCurrentPage(prev => Math.min(totalPages, prev + 1)); }}
                                         disabled={currentPage === totalPages}
-                                        className="h-[26px] px-3 rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        className="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        style={{ height: '28px', padding: '0 12px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
                                     >
                                         Next
                                     </button>

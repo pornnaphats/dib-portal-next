@@ -1,5 +1,5 @@
 "use client";
-
+import Loading from "@/components/Loading";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import LoginOverlay from "@/components/auth/LoginOverlay";
 
@@ -53,7 +53,7 @@ export default function AuthProvider({ children }) {
         fontSize: "1.2rem",
         fontWeight: 500
       }}>
-        กำลังโหลดระบบ...
+        <Loading></Loading>...
       </div>
     );
   }

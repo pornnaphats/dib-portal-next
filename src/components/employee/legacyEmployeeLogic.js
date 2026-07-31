@@ -170,42 +170,69 @@ window.pageEmployee = function() {
 
       const start = totalFiltered > 0 ? (window.empCurrentPage - 1) * window.empPageSize + 1 : 0;
       const end = Math.min(window.empCurrentPage * window.empPageSize, totalFiltered);
-      info.innerText = `แสดง ${start} - ${end} จาก ${totalFiltered} คน`;
+      info.innerText = `Showing ${start} to ${end} of ${totalFiltered} entries`;
 
       let btns = `
-      <button onclick="changeEmployeePage(${window.empCurrentPage - 1})" class="btn btn-icon-sm" style="background:#fff; border:1px solid var(--border)" ${window.empCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
-        <i data-lucide="chevron-left" style="width:14px; height:14px"></i>
+      <button onclick="changeEmployeePage(${window.empCurrentPage - 1})" 
+        class="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all" 
+        style="height: 28px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; cursor: ${window.empCurrentPage === 1 ? 'not-allowed' : 'pointer'}"
+        ${window.empCurrentPage === 1 ? 'disabled' : ''}>
+        Previous
       </button>
     `;
 
       const maxVisible = 5;
-      let startPage = Math.max(1, window.empCurrentPage - 2);
+      let startPage = Math.max(1, window.empCurrentPage - 1);
       let endPage = Math.min(totalPages, startPage + maxVisible - 1);
       if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
 
       if (startPage > 1) {
-        btns += `<button onclick="changeEmployeePage(1)" class="btn btn-sm" style="background:transparent; border:none; color:var(--text-3)">1</button>`;
-        if (startPage > 2) btns += `<span style="color:var(--text-3); font-size:.75rem">...</span>`;
+        btns += `
+          <button onclick="changeEmployeePage(1)" 
+            class="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all" 
+            style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; background-color: transparent;">
+            1
+          </button>
+        `;
+        if (startPage > 2) {
+          btns += `<span class="text-gray-400 text-[10px] px-0.5" style="font-size: 10px; color: #94a3b8; padding: 0 2px;">...</span>`;
+        }
       }
 
       for (let i = startPage; i <= endPage; i++) {
         const active = i === window.empCurrentPage;
-        btns += `<button onclick="changeEmployeePage(${i})" class="btn btn-sm" style="${active ? 'background:var(--primary); color:#fff; border:none; font-weight:700' : 'background:transparent; border:none; color:var(--text-3)'}">${i}</button>`;
+        btns += `
+          <button onclick="changeEmployeePage(${i})" 
+            class="rounded-full text-[11px] transition-all" 
+            style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; border-radius: 50%; background-color: ${active ? '#635BFF' : 'transparent'}; color: ${active ? '#ffffff' : '#64748b'}; font-weight: ${active ? '600' : '500'};">
+            ${i}
+          </button>
+        `;
       }
 
       if (endPage < totalPages) {
-        if (endPage < totalPages - 1) btns += `<span style="color:var(--text-3); font-size:.75rem">...</span>`;
-        btns += `<button onclick="changeEmployeePage(${totalPages})" class="btn btn-sm" style="background:transparent; border:none; color:var(--text-3)">${totalPages}</button>`;
+        if (endPage < totalPages - 1) {
+          btns += `<span class="text-gray-400 text-[10px] px-0.5" style="font-size: 10px; color: #94a3b8; padding: 0 2px;">...</span>`;
+        }
+        btns += `
+          <button onclick="changeEmployeePage(${totalPages})" 
+            class="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all" 
+            style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; background-color: transparent;">
+            ${totalPages}
+          </button>
+        `;
       }
 
       btns += `
-      <button onclick="changeEmployeePage(${window.empCurrentPage + 1})" class="btn btn-icon-sm" style="background:#fff; border:1px solid var(--border)" ${window.empCurrentPage === totalPages || totalPages === 0 ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''}>
-        <i data-lucide="chevron-right" style="width:14px; height:14px"></i>
+      <button onclick="changeEmployeePage(${window.empCurrentPage + 1})" 
+        class="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all" 
+        style="height: 28px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; cursor: ${window.empCurrentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer'}"
+        ${window.empCurrentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
+        Next
       </button>
     `;
 
       pagin.innerHTML = btns;
-      if (window.lucide) lucide.createIcons({ root: pagin });
     };
 
     window.changeEmployeePage = (p) => {
@@ -244,6 +271,14 @@ window.pageEmployee = function() {
       if (tableBody) {
         tableBody.innerHTML = renderEmployeeRows(filtered);
         if (window.lucide) lucide.createIcons({ root: tableBody });
+      }
+      const clearBtn = document.getElementById('clearEmployeeFiltersBtn');
+      if (clearBtn) {
+        if (pos || team || status || search) {
+          clearBtn.style.display = 'flex';
+        } else {
+          clearBtn.style.display = 'none';
+        }
       }
       renderEmployeePagination(filtered.length);
     };
@@ -361,7 +396,7 @@ window.pageEmployee = function() {
     </div>
     <div class="card" style="padding:20px">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <div style="font-size:.9rem; font-weight:700">พนักงานตามระดับตำแหน่ง</div>
+        <div style="font-size:.9rem; font-weight:700">วันเกิดพนักงานเดือนนี้</div>
       </div>
       <div style="display:flex; flex-direction:column; gap:16px; height:240px; overflow-y:auto; padding-right:5px">
         ${(() => {
@@ -396,7 +431,11 @@ window.pageEmployee = function() {
   <div style="display:grid; grid-template-columns:1fr; gap:20px">
     <!-- Left: Data Table -->
     <div class="card fade-in" style="padding:0; overflow:visible">
-      <div class="toolbar" style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:wrap; overflow:visible">
+      <div class="toolbar" style="padding:16px 20px 8px 20px; margin-bottom:8px; border-bottom:none; display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:10px; overflow:visible">
+        <div class="search-box" style="width:220px; background:#f8fafc">
+          <i data-lucide="search" style="width:14px; height:14px; color:var(--text-3)"></i>
+          <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="font-size:.75rem">
+        </div>
         <select id="filterPos" onchange="applyEmployeeFilters()" class="select-input" style="width:140px; flex-shrink:0">
           <option value="">ตำแหน่งทั้งหมด</option>
           <option value="Director">Director</option>
@@ -418,14 +457,10 @@ window.pageEmployee = function() {
           <option value="active">ปฏิบัติงาน</option>
           <option value="resigned">ลาออก</option>
         </select>
-        <div class="search-box" style="flex:1; min-width:200px; background:#f8fafc">
-          <i data-lucide="search" style="width:14px; height:14px; color:var(--text-3)"></i>
-          <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="font-size:.75rem">
-        </div>
-        <button onclick="clearEmployeeFilters()" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; font-family:Kanit; font-size:.7rem; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; white-space:nowrap; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-          <i data-lucide="rotate-ccw" style="width:14px; height:14px"></i> Clear All Filter
+        <button id="clearEmployeeFiltersBtn" onclick="clearEmployeeFilters()" style="display:none; background:none; border:none; color:#ef4444; font-family:Kanit; font-size:.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; padding:8px 16px; border-radius:99px; white-space:nowrap;">
+          <span style="font-weight:bold;font-size:13px">✕</span> Clear
         </button>
-        <div style="width:1px; height:20px; background:var(--border); margin:0 4px"></div>
+        <div style="width:1px; height:20px; background:var(--border); margin:0 4px; flex-shrink:0"></div>
         <button onclick="openEmployeeModal()" class="btn btn-primary" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; font-size:.7rem; flex-shrink:0">
           <i data-lucide="user-plus" style="width:16px; height:16px"></i> เพิ่มพนักงาน
         </button>
@@ -453,9 +488,9 @@ window.pageEmployee = function() {
         </table>
       </div>
 
-      <div style="padding:16px 20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-        <div id="tableInfo" style="font-size:.75rem; color:var(--text-3)">แสดง 1 - 10 จาก ${totalEmployees} คน</div>
-        <div id="empPagination" style="display:flex; gap:8px; align-items:center">
+      <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/10 shrink-0" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); background-color: rgba(248, 250, 252, 0.1);">
+        <div id="tableInfo" class="text-[11px] text-gray-500 font-medium" style="font-size: 11px; color: #64748b; font-weight: 500;">Showing 1 to 10 of ${totalEmployees} entries</div>
+        <div id="empPagination" class="flex items-center gap-1" style="display: flex; align-items: center; gap: 4px;">
           <!-- Dynamic Pagination Buttons -->
         </div>
       </div>
@@ -623,8 +658,8 @@ window.pageEmployee = function() {
     <button class="btn btn-sm" style="background:#fff; border:1px solid var(--border); color:var(--text-2); display:flex; align-items:center; gap:8px; padding:8px 14px">
       <i data-lucide="filter" style="width:14px; height:14px"></i> ตัวกรอง
     </button>
-    <button class="btn btn-danger btn-sm" style="padding:8px 14px; font-size:.7rem; border-radius:8px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:6px">
-      <i data-lucide="rotate-ccw" style="width:13px; height:13px"></i> Clear All Filter
+    <button id="clearProductServiceBtn" onclick="document.getElementById('prodSearch').value=''; filterTable('prodTable','prodSearch'); document.getElementById('clearProductServiceBtn').style.display='none';" style="display:none; background:none; border:none; color:#ef4444; font-family:Kanit; font-size:.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; padding:8px 14px; border-radius:99px; white-space:nowrap;">
+      <span style="font-weight:bold;font-size:13px">✕</span> Clear
     </button>
 
     <div style="display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#fff">
@@ -695,7 +730,7 @@ window.pageEmployee = function() {
       <select class="select-input" style="width:160px"><option>สถานะทั้งหมด</option></select>
       <div class="search-box" style="flex:1; max-width:400px; background:#fff">
         <i data-lucide="search" style="width:16px; height:16px; color:var(--text-3)"></i>
-        <input type="text" placeholder="ค้นหาบริการหรือคำอธิบาย..." id="prodSearch" oninput="filterTable('prodTable','prodSearch')">
+        <input type="text" placeholder="ค้นหาบริการหรือคำอธิบาย..." id="prodSearch" oninput="filterTable('prodTable','prodSearch'); document.getElementById('clearProductServiceBtn').style.display = this.value ? 'flex' : 'none';">
       </div>
     </div>
     <div style="display:flex; gap:12px; align-items:center">
@@ -3277,671 +3312,21 @@ window.pageEmployee = function() {
   
   window.orgGetDefaultStructure = function() {
      return {
-  "id": "ceo",
-  "title": "Director",
-  "jobTitle": "Director",
-  "empId": "RS004",
-  "children": [
-    {
-      "id": "node_1780283866689363",
-      "empId": "RS021",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780283973040117",
-          "empId": "RS638",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780283921601470",
-          "empId": "RS254",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178028398470412",
-              "empId": "RS092,RS455",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780284639682348",
-          "empId": "RS147",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_17802849230784",
-              "empId": "RS474",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780284934606314",
-              "empId": "RS542",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_yuro8jw3q",
-          "empId": "RS257",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285550297360",
-              "empId": "RS544",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285563021123",
-              "empId": "RS545",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_7k68bono5",
-          "empId": "RS310",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285581703437",
-              "empId": "RS518",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285598172874",
-              "empId": "RS642",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        },
-        {
-          "id": "node_panqil76i",
-          "empId": "RS423",
-          "title": "Senior",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780285611382138",
-              "empId": "RS612",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            },
-            {
-              "id": "node_1780285624658549",
-              "empId": "RS676",
-              "title": "Junior",
-              "dept": "-",
-              "children": []
-            }
-          ]
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780162791689251",
-      "empId": "RS028",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780233458214259",
-          "empId": "RS122",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780233552027645",
-              "empId": "RS200",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236194305768",
-                  "empId": "RS191",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_1780236231492891",
-                  "empId": "RS458",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_1780236242142935",
-                  "empId": "RS507",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                },
-                {
-                  "id": "node_178023625722558",
-                  "empId": "RS613",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": [
-                    "node_1780233561418210"
-                  ]
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780238405899404",
-              "empId": "RS203",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236211966665",
-                  "empId": "RS447",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236286067427",
-                  "empId": "RS664",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236269715402",
-                  "empId": "RS658",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780233622128745",
-              "empId": "RS359",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780234539314600",
-                  "empId": "RS461",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_17802345536617",
-                  "empId": "RS467",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234568555492",
-                  "empId": "RS475",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234628467916",
-                  "empId": "RS515",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234646267692",
-                  "empId": "RS519",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234672139294",
-                  "empId": "RS547",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234682838813",
-                  "empId": "RS565",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234714854739",
-                  "empId": "RS648",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780234808885101",
-                  "empId": "RS684",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780233502706545",
-          "empId": "RS192",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780162800799748",
-      "empId": "RS000",
-      "title": "Assistant Manager",
-      "dept": "-",
-      "children": [],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780200720057164",
-      "empId": "RS019",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780233470627246",
-          "empId": "RS165",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780235465438755",
-              "empId": "RS426",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236471024448",
-                  "empId": "RS430",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236484107154",
-                  "empId": "RS434",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236497293823",
-                  "empId": "RS442",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236509707646",
-                  "empId": "RS452",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236519799664",
-                  "empId": "RS453",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236530658430",
-                  "empId": "RS454",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236539623338",
-                  "empId": "RS459",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236548989863",
-                  "empId": "RS488",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236560760394",
-                  "empId": "RS511",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_178023657364515",
-                  "empId": "RS530",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236585592751",
-                  "empId": "RS538",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236596015179",
-                  "empId": "RS539",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236607280679",
-                  "empId": "RS543",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236620561484",
-                  "empId": "RS549",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236631105670",
-                  "empId": "RS554",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236643621448",
-                  "empId": "RS555",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780235499255726",
-              "empId": "RS265",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780233480365993",
-          "empId": "RS385",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780235526445622",
-              "empId": "RS253",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780236032270561",
-                  "empId": "RS485",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                },
-                {
-                  "id": "node_1780236041598700",
-                  "empId": "RS486",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    },
-    {
-      "id": "node_1780200735724957",
-      "empId": "RS362",
-      "title": "Manager",
-      "dept": "-",
-      "children": [
-        {
-          "id": "node_1780200798211998",
-          "empId": "RS136",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178020127779052",
-              "empId": "RS522",
-              "title": "Junior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201287351689",
-              "empId": "RS655",
-              "title": "Junior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201173187894",
-          "empId": "RS451",
-          "title": "Senior",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780200815744228",
-          "empId": "RS170",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780201131267686",
-              "empId": "RS094",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201141706178",
-              "empId": "RS105",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            },
-            {
-              "id": "node_1780201228124995",
-              "empId": "RS532",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201020654383",
-          "empId": "RS229",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_1780201238328251",
-              "empId": "RS552",
-              "title": "Senior",
-              "dept": "-",
-              "children": [],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201046732800",
-          "empId": "RS084",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201057484440",
-          "empId": "RS154",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [
-            {
-              "id": "node_178020107579933",
-              "empId": "RS324",
-              "title": "Senior",
-              "dept": "-",
-              "children": [
-                {
-                  "id": "node_1780201094883586",
-                  "empId": "RS476",
-                  "title": "Junior",
-                  "dept": "-",
-                  "children": [],
-                  "extraParentIds": []
-                }
-              ],
-              "extraParentIds": []
-            }
-          ],
-          "extraParentIds": []
-        },
-        {
-          "id": "node_1780201066350884",
-          "empId": "RS559",
-          "title": "Assistant Manager",
-          "dept": "-",
-          "children": [],
-          "extraParentIds": []
-        }
-      ],
-      "extraParentIds": []
-    }
-  ]
-}
-;
+        "id": "ceo",
+        "title": "Director",
+        "jobTitle": "Director",
+        "empId": "RS004",
+        "children": []
+     };
   };
 
   window.orgLoadStructure = function() {
-     let struct = null;
-     try {
-        struct = JSON.parse(localStorage.getItem('org_structure'));
-     } catch(e) {}
+     let struct = window.orgStructureData;
+     if (!struct) {
+        try {
+           struct = JSON.parse(localStorage.getItem('org_structure'));
+        } catch(e) {}
+     }
      if (!struct) {
         struct = window.orgGetDefaultStructure();
         window.orgSaveStructure(struct);
@@ -3957,7 +3342,27 @@ window.pageEmployee = function() {
   };
 
   window.orgSaveStructure = function(struct) {
+     window.orgStructureData = struct;
      localStorage.setItem('org_structure', JSON.stringify(struct));
+     
+     const supabaseUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : null;
+     const supabaseKey = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : null;
+     if (supabaseUrl && supabaseKey) {
+        fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.default`, {
+           method: 'POST',
+           headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+           },
+           body: JSON.stringify({
+              id: 'default',
+              structure: struct,
+              updated_at: new Date().toISOString()
+           })
+        }).catch(err => console.error('Error saving org structure to Supabase:', err));
+     }
   };
 
   window.orgExportStructure = function() {
@@ -4855,9 +4260,9 @@ window.pageEmployee = function() {
                  </select>
               </div>
               
-              <div class="org-modal-actions">
-                 <button onclick="window.orgCloseModal()" style="padding:8px 16px; background:#f1f5f9; color:#475569; border:none; border-radius:8px; cursor:pointer; font-weight:600;">ยกเลิก</button>
-                 <button onclick="window.orgSaveEdit()" style="padding:8px 16px; background:var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; box-shadow:var(--shadow-sm);">บันทึกข้อมูล</button>
+              <div class="org-modal-actions" style="display:flex; justify-content:flex-end; gap:8px;">
+                 <button onclick="window.orgCloseModal()" class="btn btn-outline" style="font-family:'Kanit', sans-serif;">ยกเลิก</button>
+                 <button onclick="window.orgSaveEdit()" class="btn btn-primary" style="font-family:'Kanit', sans-serif; min-width:120px; justify-content:center;">บันทึกข้อมูล</button>
               </div>
            </div>
         </div>
@@ -4976,6 +4381,13 @@ window.pageEmployee = function() {
     const uniqueYears = Array.from(yearsSet).sort((a,b) => b.localeCompare(a));
     const yearOptions = uniqueYears.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
 
+    window.changeHolidayPage = function(p) {
+      window.holidayCurrentPage = p;
+      if (typeof window.navigate === 'function') {
+        window.navigate('public-holiday');
+      }
+    };
+
     // Dynamic year filter function
     window.filterHolidaysByYear = function(year) {
       const rows = document.querySelectorAll('#holidayTable tbody tr');
@@ -5016,6 +4428,85 @@ window.pageEmployee = function() {
       </div>
     `;
 
+    // Set up pagination
+    if (typeof window.holidayCurrentPage === 'undefined') window.holidayCurrentPage = 1;
+    window.holidayPageSize = 10;
+    
+    const totalFiltered = holidays.length;
+    const totalPages = Math.ceil(totalFiltered / window.holidayPageSize);
+    
+    // Make sure current page is valid
+    if (window.holidayCurrentPage > totalPages && totalPages > 0) {
+      window.holidayCurrentPage = totalPages;
+    }
+    if (window.holidayCurrentPage < 1) window.holidayCurrentPage = 1;
+    
+    const startIndex = (window.holidayCurrentPage - 1) * window.holidayPageSize;
+    const paginatedHolidays = holidays.slice(startIndex, startIndex + window.holidayPageSize);
+
+    const pageStart = totalFiltered > 0 ? startIndex + 1 : 0;
+    const pageEnd = Math.min(window.holidayCurrentPage * window.holidayPageSize, totalFiltered);
+
+    let paginationButtonsHtml = `
+      <button onclick="changeHolidayPage(${window.holidayCurrentPage - 1})" 
+        class="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all" 
+        style="height: 28px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; cursor: ${window.holidayCurrentPage === 1 ? 'not-allowed' : 'pointer'}"
+        ${window.holidayCurrentPage === 1 ? 'disabled' : ''}>
+        Previous
+      </button>
+    `;
+
+    const maxVisible = 5;
+    let startPage = Math.max(1, window.holidayCurrentPage - 1);
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+    if (startPage > 1) {
+      paginationButtonsHtml += `
+        <button onclick="changeHolidayPage(1)" 
+          class="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all" 
+          style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; background-color: transparent;">
+          1
+        </button>
+      `;
+      if (startPage > 2) {
+        paginationButtonsHtml += `<span class="text-gray-400 text-[10px] px-0.5" style="font-size: 10px; color: #94a3b8; padding: 0 2px;">...</span>`;
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      const active = i === window.holidayCurrentPage;
+      paginationButtonsHtml += `
+        <button onclick="changeHolidayPage(${i})" 
+          class="rounded-full text-[11px] transition-all" 
+          style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; border-radius: 50%; background-color: ${active ? '#635BFF' : 'transparent'}; color: ${active ? '#ffffff' : '#64748b'}; font-weight: ${active ? '600' : '500'};">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        paginationButtonsHtml += `<span class="text-gray-400 text-[10px] px-0.5" style="font-size: 10px; color: #94a3b8; padding: 0 2px;">...</span>`;
+      }
+      paginationButtonsHtml += `
+        <button onclick="changeHolidayPage(${totalPages})" 
+          class="rounded-full text-[11px] font-medium text-gray-500 hover:text-[#635BFF] transition-all" 
+          style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; background-color: transparent;">
+          ${totalPages}
+        </button>
+      `;
+    }
+
+    paginationButtonsHtml += `
+      <button onclick="changeHolidayPage(${window.holidayCurrentPage + 1})" 
+        class="rounded-full border border-slate-200 bg-white text-[11px] font-medium text-gray-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all" 
+        style="height: 28px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center; cursor: ${window.holidayCurrentPage === totalPages || totalPages === 0 ? 'not-allowed' : 'pointer'}"
+        ${window.holidayCurrentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
+        Next
+      </button>
+    `;
+
     // PRE-CONSTRUCT TABLE BODY HTML TO AVOID COMPLEX NESTED TEMPLATE LITERALS
     let tableBodyHtml = '';
     if (holidays.length === 0) {
@@ -5028,7 +4519,7 @@ window.pageEmployee = function() {
       `;
     } else {
       let rows = [];
-      holidays.forEach((h, groupIdx) => {
+      paginatedHolidays.forEach((h, groupIdx) => {
         const tasks = (h.tasks && h.tasks.length > 0) ? h.tasks : [{ dept: '-', person: '-', time: '-', isEmptyRow: true }];
         tasks.forEach((t, idx) => {
           let rowHtml = '';
@@ -5083,7 +4574,7 @@ window.pageEmployee = function() {
             }
             
             taskHtml = `
-              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 4px 10px -2px rgba(0,0,0,0.03); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px -4px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 10px -2px rgba(0,0,0,0.03)'">
+              <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 4px 10px -2px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px; margin-bottom: 12px;">
                   <div style="display:flex; align-items:center; gap:8px;">
                     <div style="width:28px; height:28px; border-radius:8px; background: linear-gradient(135deg, #4f46e5, #818cf8); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.85rem; font-family:'Inter', sans-serif; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);">
@@ -5101,7 +4592,8 @@ window.pageEmployee = function() {
             `;
           }
           
-          rowHtml += `<td style="padding: 16px 24px; font-size: .8rem; color: #1e293b; font-weight: 600; vertical-align: top">${taskHtml}</td>`;
+          const borderBottomStyle = idx === tasks.length - 1 ? 'border-bottom: 1px solid var(--border);' : '';
+          rowHtml += `<td style="padding: 16px 24px; font-size: .8rem; color: #1e293b; font-weight: 600; vertical-align: top; ${borderBottomStyle}">${taskHtml}</td>`;
           
           // 4. Employee column
           let employeeHtml = '';
@@ -5132,7 +4624,7 @@ window.pageEmployee = function() {
             employeeHtml = `<div style="font-size: .8rem; color: #94a3b8; font-style: italic">ยังไม่ได้กำหนดคนปฏิบัติงาน</div>`;
           }
           
-          rowHtml += `<td style="padding: 16px 24px">${employeeHtml}</td>`;
+          rowHtml += `<td style="padding: 16px 24px; ${borderBottomStyle}">${employeeHtml}</td>`;
           
           // 5. Time column
           let timeHtml = '';
@@ -5145,7 +4637,7 @@ window.pageEmployee = function() {
             timeHtml = `<span style="color: #94a3b8">-</span>`;
           }
           
-          rowHtml += `<td style="padding: 16px 24px">${timeHtml}</td>`;
+          rowHtml += `<td style="padding: 16px 24px; ${borderBottomStyle}">${timeHtml}</td>`;
           
           // 6. Status and Action columns (only for the first task in the group, using rowspan)
           if (idx === 0) {
@@ -5200,67 +4692,67 @@ window.pageEmployee = function() {
         <div style="height:34px; display:flex; align-items:center">
           ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'auto', null, true, searchHtml) : ''}
         </div>
-        <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:0 16px; border-radius:8px; height:34px; font-size:.7rem; font-weight:600; flex-shrink:0; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; cursor:pointer; transition: background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+
+        <div style="width: 1px; height: 18px; background: #e4e8ef; margin: 0 4px; flex-shrink: 0;"></div>
+
+        <!-- 🟢 ปุ่มเพิ่มวันหยุดใหม่ -->
+        <button onclick="openAddHolidayModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:10px; font-size:.75rem; font-weight:700; flex-shrink:0; background:#635bff; color:#fff; border:none; cursor:pointer; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3); transition: background 0.2s;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#635bff'">
+          <i data-lucide="plus" style="width:14px; height:14px"></i> เพิ่มวันหยุด
+        </button>
+
+        <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:0 16px; border-radius:8px; height:34px; font-size:.7rem; font-weight:700; flex-shrink:0; background:#ffffff; color:#635bff; border:1px solid #635bff; cursor:pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.08);" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#ffffff'">
           <i data-lucide="settings" style="width:14px; height:14px"></i> จัดการชุดงาน (Templates)
         </button>
       </div>
 
       <!-- STATS CARDS -->
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px">
-        <!-- Card 1 -->
-        <div class="card" style="display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 20px">
-          <div style="width: 54px; height: 54px; border-radius: 16px; background: rgba(99, 102, 241, 0.1); color: #6366f1; display: flex; align-items: center; justify-content: center">
-            <i data-lucide="calendar" style="width: 28px; height: 28px"></i>
+        <div class="stat-card fade-in" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #6366f1; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
+            <i data-lucide="calendar" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .8rem; color: #64748b; margin-bottom: 4px">วันหยุดทั้งหมด</div>
-            <div style="display: flex; align-items: baseline; gap: 8px">
-              <span style="font-size: 1.8rem; font-weight: 700; color: #1e293b">${stats.total}</span>
-              <span style="font-size: .8rem; color: #64748b">วัน</span>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดทั้งหมด</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${stats.total} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
             </div>
-            <div style="font-size: .7rem; color: #94a3b8; margin-top: 4px">ข้อมูลทั้งหมด</div>
+            <div style="font-size: .65rem; color: #6366f1; font-weight: 600; margin-top: 4px">ข้อมูลทั้งหมด</div>
           </div>
         </div>
-        <!-- Card 2 -->
-        <div class="card" style="display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 20px">
-          <div style="width: 54px; height: 54px; border-radius: 16px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center">
-            <i data-lucide="check-circle" style="width: 28px; height: 28px"></i>
+        <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4)">
+            <i data-lucide="check-circle" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .8rem; color: #64748b; margin-bottom: 4px">วันหยุดทั้งหมด</div>
-            <div style="display: flex; align-items: baseline; gap: 8px">
-              <span style="font-size: 1.8rem; font-weight: 700; color: #1e293b">${stats.finished}</span>
-              <span style="font-size: .8rem; color: #64748b">วัน</span>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดเสร็จสิ้นแล้ว</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${stats.finished} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
             </div>
-            <div style="font-size: .7rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}%</div>
+            <div style="font-size: .65rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}% ของทั้งหมด</div>
           </div>
         </div>
-        <!-- Card 3 -->
-        <div class="card" style="display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 20px">
-          <div style="width: 54px; height: 54px; border-radius: 16px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; display: flex; align-items: center; justify-content: center">
-            <i data-lucide="clock" style="width: 28px; height: 28px"></i>
+        <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #f59e0b; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4)">
+            <i data-lucide="clock" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .8rem; color: #64748b; margin-bottom: 4px">วันหยุดทั้งหมด</div>
-            <div style="display: flex; align-items: baseline; gap: 8px">
-              <span style="font-size: 1.8rem; font-weight: 700; color: #1e293b">${stats.upcoming}</span>
-              <span style="font-size: .8rem; color: #64748b">วัน</span>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดกำลังจะถึง</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${stats.upcoming} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
             </div>
-            <div style="font-size: .7rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}%</div>
+            <div style="font-size: .65rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}% ของทั้งหมด</div>
           </div>
         </div>
-        <!-- Card 4 -->
-        <div class="card" style="display: flex; align-items: center; gap: 20px; padding: 24px; border-radius: 20px">
-          <div style="width: 54px; height: 54px; border-radius: 16px; background: rgba(99, 102, 241, 0.1); color: #818cf8; display: flex; align-items: center; justify-content: center">
-            <i data-lucide="calendar-plus" style="width: 28px; height: 28px"></i>
+        <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #818cf8; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(129, 140, 248, 0.4)">
+            <i data-lucide="calendar-plus" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .8rem; color: #64748b; margin-bottom: 4px">วันหยุดทั้งหมด</div>
-            <div style="display: flex; align-items: baseline; gap: 8px">
-              <span style="font-size: 1.8rem; font-weight: 700; color: #1e293b">${stats.not_scheduled}</span>
-              <span style="font-size: .8rem; color: #64748b">วัน</span>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">ยังไม่ได้จัดแผน</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
+              ${stats.not_scheduled} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
             </div>
-            <div style="font-size: .7rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}%</div>
+            <div style="font-size: .65rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}% ของทั้งหมด</div>
           </div>
         </div>
       </div>
@@ -5269,10 +4761,6 @@ window.pageEmployee = function() {
       <div class="card" style="padding: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border)">
         <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center">
           <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">รายการวันหยุดนักขัตฤกษ์</h3>
-          <select class="select-input" style="width: 140px; padding: 6px 12px; border-radius: 10px; font-size: .8rem" onchange="window.filterHolidaysByYear(this.value)">
-            <option value="">-- ทั้งหมดทุกปี --</option>
-            ${yearOptions}
-          </select>
         </div>
         <div style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 260px);">
           <table id="holidayTable" style="width: 100%; border-collapse: collapse; text-align: left">
@@ -5293,15 +4781,12 @@ window.pageEmployee = function() {
           </table>
         </div>
         <!-- PAGINATION -->
-        <div style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; background: #fff">
-          <div id="holidayDisplayRange" style="font-size: .8rem; color: #64748b">แสดงทั้งหมด ${holidays.length} รายการ</div>
-          <div style="display: flex; align-items: center; gap: 8px">
-            <button style="width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer"><i data-lucide="chevron-left" style="width: 14px; height: 14px"></i></button>
-            <button style="width: 30px; height: 30px; border-radius: 6px; border: none; background: #4f46e5; color: #fff; font-size: .75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer">1</button>
-            <button style="width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer"><i data-lucide="chevron-right" style="width: 14px; height: 14px"></i></button>
+        <div class="flex items-center justify-between border-t border-slate-100 bg-slate-50/10 shrink-0" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); background-color: rgba(248, 250, 252, 0.1);">
+          <div id="holidayTableInfo" class="text-[11px] text-gray-500 font-medium" style="font-size: 11px; color: #64748b; font-weight: 500;">
+            Showing ${pageStart} to ${pageEnd} of ${totalFiltered} entries
           </div>
-          <div style="display: flex; align-items: center; gap: 10px; font-size: .8rem; color: #64748b">
-            แสดง <span style="font-weight:600; color:#1e293b">${holidays.length}</span> รายการ
+          <div id="holidayPagination" class="flex items-center gap-1" style="display: flex; align-items: center; gap: 4px;">
+            ${paginationButtonsHtml}
           </div>
         </div>
       </div>
@@ -6463,7 +5948,7 @@ window.pageEmployee = function() {
         <p style="margin:0 0 32px; font-size:.9rem; color:#64748b; line-height:1.6; font-family:Kanit; padding:0 10px">${message}</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
           <button onclick="document.getElementById('${modalId}').remove()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; padding:14px; border-radius:16px; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.9rem; transition:all 0.2s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">Cancel</button>
-          <button id="confirmModalBtn" style="background:${color}; color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 8px 20px ${color}30; transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 25px ${color}40'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px ${color}30'">${confirmText}</button>
+          <button id="confirmModalBtn" style="background:${color}; color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 8px 20px ${color}30; transition:all 0.2s">${confirmText}</button>
         </div>
       </div>
     </div>
@@ -6644,6 +6129,17 @@ window.pageEmployee = function() {
     const pVal = document.getElementById('scopeFilterProject')?.value || 'all';
     const nVal = document.getElementById('scopeFilterNode')?.value || 'all';
     const qVal = document.getElementById('scopeSearch')?.value.toLowerCase() || '';
+
+    const clearBtn = document.getElementById('clearScopeDashboardFiltersBtn');
+    if (clearBtn) {
+      const dateInput = document.querySelector('.date-range-wrapper input[type="text"]');
+      const hasDate = dateInput && dateInput.value ? true : false;
+      if (pVal !== 'all' || nVal !== 'all' || qVal !== '' || hasDate) {
+        clearBtn.style.display = 'flex';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
 
     // Filter logic for Grouped Data
     let filtered = window.PREMIUM_SCOPE_DATA.map(group => {
@@ -7191,8 +6687,8 @@ window.pageEmployee = function() {
       })()}
           </select>
 
-          <button class="btn" style="height: 34px; padding: 0 12px; font-size: 0.75rem; white-space: nowrap; border-radius: 8px; background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer" onclick="clearScopeDashboardFilters()">
-            <i data-lucide="rotate-ccw" style="width: 13px; height: 13px"></i> Clear All Filter
+          <button id="clearScopeDashboardFiltersBtn" style="display: none; background: none; border: none; color: #ef4444; font-family: Kanit; font-size: 0.75rem; font-weight: 700; cursor: pointer; align-items: center; gap: 4px; padding: 0 12px; height: 34px; white-space: nowrap;" onclick="clearScopeDashboardFilters()">
+            <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
         </div>
       </div>
@@ -8402,8 +7898,8 @@ window.pageEmployee = function() {
               <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             </div>
           </div>
-          <button onclick="clearSidebarFilters()" style="background:none; border:none; color:#ef4444; font-size:0.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; align-self:flex-end; padding:4px 8px; border-radius:6px; transition:all 0.2s" onmouseover="this.style.background='rgba(239,68,68,0.05)'" onmouseout="this.style.background='none'">
-            <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filters
+          <button id="clearSidebarFiltersBtn" onclick="clearSidebarFilters()" style="display:none; background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; align-self:flex-end; padding:4px 8px; border-radius:6px;">
+            <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
         </div>
       </div>
@@ -8440,6 +7936,15 @@ window.pageEmployee = function() {
     const q = document.getElementById('sidebarSearch')?.value.toLowerCase() || '';
     const proj = document.getElementById('sidebarProjectFilter')?.value || 'all';
     const node = document.getElementById('sidebarNodeFilter')?.value || 'all';
+
+    const clearBtn = document.getElementById('clearSidebarFiltersBtn');
+    if (clearBtn) {
+      if (q !== '' || proj !== 'all' || node !== 'all') {
+        clearBtn.style.display = 'flex';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
 
     const allTasks = getTasksFromScope();
     const filtered = allTasks.filter(t => {
@@ -8813,9 +8318,11 @@ window.pageSchedule = function() {
             <option value="">All Team</option>
             ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._scheduleTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
-          <button class="btn btn-danger btn-sm" onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600">
-             <i data-lucide="rotate-ccw" style="width:12px; height:12px"></i> Clear All Filter
+          ${(window._currentDateRange || window._scheduleSearch || window._scheduleTeamFilter) ? `
+          <button onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none;">
+             <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
+          ` : ''}
           <div style="width:1px; height:20px; background:var(--border); margin:0 2px"></div>
           <button class="btn btn-sm" onclick="toggleTaskSidebar()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(45,110,247,0.08); color:var(--primary); border:1px solid rgba(45,110,247,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600">
             <i data-lucide="plus" style="width:12px; height:12px"></i> Add Task
@@ -9681,10 +9188,10 @@ window.pageSchedule = function() {
 
         <!-- Modal Footer -->
         <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid var(--border); display:flex; gap:12px">
-          <button onclick="window.generateScheduleImageExport()" class="btn" style="flex:1; background:#10b981; color:#fff; border:none; height:44px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+          <button onclick="window.generateScheduleImageExport()" class="btn" style="flex:1; background:#10b981; color:#fff; border:none; height:38px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
             <i data-lucide="image" style="width:18px; height:18px"></i> Export เป็นรูปภาพ (PNG)
           </button>
-          <button onclick="window.generateScheduleTextExport()" class="btn" style="flex:1; background:#6366f1; color:#fff; border:none; height:44px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+          <button onclick="window.generateScheduleTextExport()" class="btn" style="flex:1; background:#6366f1; color:#fff; border:none; height:38px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
             <i data-lucide="file-text" style="width:18px; height:18px"></i> Export เป็นข้อความ (Text)
           </button>
         </div>

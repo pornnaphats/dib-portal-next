@@ -186,7 +186,7 @@ export async function fetchAndSetLegacyData() {
             if (dateStr && holidayName) {
               const [y, m, d] = dateStr.split('-');
               const uDateStr = `${parseInt(d)}/${parseInt(m)}/${y}`;
-              holidayList.push({ date: uDateStr, name: holidayName });
+              holidayList.push({ id: row.id, date: uDateStr, name: holidayName });
               holidayMap[`${parseInt(m)}-${parseInt(d)}`] = holidayName;
             }
           });
@@ -415,6 +415,34 @@ export async function fetchAndSetLegacyData() {
   } catch (err) {
     console.warn('Failed to fetch schedule tasks from Supabase:', err.message || err);
   }
+  })());
+
+  // 9. Fetch Org Structure from Supabase
+  promises.push((async () => {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (supabaseUrl && supabaseKey) {
+        const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.default`, {
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            let struct = data[0].structure;
+            if (typeof struct === 'string') {
+              try { struct = JSON.parse(struct); } catch (e) {}
+            }
+            if (struct) {
+              window.orgStructureData = struct;
+              localStorage.setItem('org_structure', JSON.stringify(struct));
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch org structure from Supabase:', err.message || err);
+    }
   })());
 
   await Promise.all(promises);
