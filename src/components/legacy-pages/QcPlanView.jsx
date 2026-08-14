@@ -16,6 +16,7 @@ export default function QcPlanView() {
     if (initRef.current) return;
     initRef.current = true;
     document.body.dataset.page = "qc-realcyber-plan";
+    window.currentPage = "qc-realcyber-plan";
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {

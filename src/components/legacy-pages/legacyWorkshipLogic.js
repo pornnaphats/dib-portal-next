@@ -593,6 +593,7 @@ function wsClear2() {
   const accSel = document.getElementById('ws2Acc');
   if (accSel) {
     accSel.value = 'all';
+    accSel.dispatchEvent(new Event('change'));
   }
   wsReload2();
 }

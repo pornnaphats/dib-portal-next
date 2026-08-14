@@ -35,10 +35,10 @@ export default function TaskSidebar({ tasks }) {
         </div>
         
         <div className="space-y-3">
-          <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white">
+          <select className="select-input w-full">
             <option value="all">All Projects</option>
           </select>
-          <select className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white">
+          <select className="select-input w-full">
             <option value="all">All Scopes</option>
           </select>
         </div>

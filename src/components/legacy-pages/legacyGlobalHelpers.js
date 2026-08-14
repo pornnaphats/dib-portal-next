@@ -4,6 +4,45 @@ if (typeof window !== 'undefined') {
 }
 
   if (typeof window !== 'undefined' && window.logLoad) window.logLoad("pages.js: Loading...");
+
+  // ===== INLINE CUSTOM SELECT RENDERER (available immediately) =====
+  // Renders a pill-style custom dropdown directly in HTML templates.
+  // Usage: ${window.renderCustomSelect({id, value, options:[{value,label}], onChange})}
+  window.renderCustomSelect = function(opts) {
+    var id = opts.id || ('csd_' + Math.random().toString(36).slice(2));
+    var value = String(opts.value != null ? opts.value : '');
+    var options = opts.options || [];
+    var onChange = opts.onChange || '';
+    var placeholder = opts.placeholder || 'เลือก...';
+    var width = opts.width || '100%';
+    var height = opts.height || '34px';
+
+    var selectedOption = null;
+    for (var i = 0; i < options.length; i++) {
+      if (String(options[i].value) === value) { selectedOption = options[i]; break; }
+    }
+    if (!selectedOption) selectedOption = options[0] || { label: placeholder, value: '' };
+
+    var optionsHtml = options.map(function(o) {
+      var isSelected = String(o.value) === value;
+      var bg = isSelected ? '#f0efff' : 'transparent';
+      var color = isSelected ? '#4f46e5' : '#374151';
+      var fw = isSelected ? '600' : '500';
+      var safeLabel = String(o.label).replace(/\\/g, '\\\\').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      var safeValue = String(o.value).replace(/"/g, '&quot;');
+      return '<div class="csd-option" data-value="' + safeValue + '" data-label="' + safeLabel + '" onclick="(function(el){var wrap=el.closest(\'.csd-wrapper\');var hidden=wrap.querySelector(\'input[type=hidden]\');if(hidden){hidden.value=el.dataset.value;hidden.dispatchEvent(new Event(\'change\',{bubbles:true}));}wrap.querySelector(\'.csd-label\').textContent=el.dataset.label;wrap.querySelector(\'.csd-menu\').style.display=\'none\';wrap.style.zIndex=\'90\';' + onChange + ';})(this)" style="padding:10px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-family:\'Kanit\',\'Prompt\',sans-serif;line-height:1.4;white-space:nowrap;background:' + bg + ';color:' + color + ';font-weight:' + fw + ';transition:background 0.12s;" onmouseover="if(this.style.backgroundColor!==\'rgb(240, 239, 255)\')this.style.background=\'#f8fafc\'" onmouseout="if(this.style.backgroundColor===\'rgb(248, 250, 252)\')this.style.background=\'transparent\'">' + o.label + '</div>';
+    }).join('');
+
+    return '<div class="csd-wrapper" id="csd_wrap_' + id + '" style="position:relative;width:' + width + ';z-index:90;display:inline-block;">' +
+      '<input type="hidden" id="' + id + '" value="' + value + '">' +
+      '<button type="button" class="csd-trigger" onclick="(function(btn){var wrap=btn.closest(\'.csd-wrapper\');var menu=wrap.querySelector(\'.csd-menu\');document.querySelectorAll(\'.csd-menu\').forEach(function(m){if(m!==menu){m.style.display=\'none\';m.closest(\'.csd-wrapper\').style.zIndex=\'90\';}});if(menu.style.display===\'block\'){menu.style.display=\'none\';wrap.style.zIndex=\'90\';}else{menu.style.display=\'block\';wrap.style.zIndex=\'10000\';}})(this)" style="width:100%;height:' + height + ';display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 16px;border:1px solid #e2e8f0;border-radius:9999px;background:#fff;cursor:pointer;font-family:\'Kanit\',\'Prompt\',sans-serif;font-size:12px;font-weight:500;color:#24204D;box-shadow:0 1px 2px rgba(15,23,42,0.04);transition:border-color 0.2s;box-sizing:border-box;outline:none;" onmouseover="this.style.borderColor=\'#cbd5e1\'" onmouseout="this.style.borderColor=\'#e2e8f0\'">' +
+        '<span class="csd-label" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left;">' + selectedOption.label + '</span>' +
+        '<svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>' +
+      '</button>' +
+      '<div class="csd-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:260px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.08);z-index:9999;padding:4px;max-height:240px;overflow-y:auto;">' + optionsHtml + '</div>' +
+    '</div>';
+  };
+
   // ===== PAGE RENDERERS =====
 
   window.fmt = function(n) { return Number(n).toLocaleString('en-US'); }
@@ -487,15 +526,15 @@ if (typeof window !== 'undefined') {
 
     return `
     <div id="${wrapperId}" class="date-range-wrapper" style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-      <div style="display:flex; align-items:center; background:#fff; border:1px solid #e4e8ef; border-radius:9999px; overflow:hidden; height:34px; box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:all 0.2s; flex-shrink:0;">
-        <button id="${prevId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#5a6282; display:flex; align-items:center; height:100%; border-right:1px solid #eef2f6; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+      <div style="display:flex; align-items:center; background:#fff; border:1px solid #e2e8f0; border-radius:9999px; overflow:hidden; height:34px; max-height:34px; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition:all 0.2s; flex-shrink:0; box-sizing:border-box;">
+        <button id="${prevId}" style="padding:0 8px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-right:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div onclick="const input = this.parentNode.querySelector('input'); if (input) { if (input._flatpickr) { input._flatpickr.open(); } else if (window['initFlatpickr_${id}']) { const fp = window['initFlatpickr_${id}'](); if (fp) fp.open(); } }" style="display:flex; align-items:center; gap:8px; padding:0 14px; font-size:0.8rem; font-weight:700; color:#24204D; cursor:pointer; user-select:none; height:100%; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+        <div onclick="const input = this.parentNode.querySelector('input'); if (input) { if (input._flatpickr) { input._flatpickr.open(); } else if (window['initFlatpickr_${id}']) { const fp = window['initFlatpickr_${id}'](); if (fp) fp.open(); } }" style="display:flex; align-items:center; gap:6px; padding:0 10px; font-size:12px; font-weight:500; line-height:1; color:#24204D; cursor:pointer; user-select:none; height:34px; max-height:34px; transition:background 0.15s; font-family:'Kanit',sans-serif; box-sizing:border-box; overflow:hidden;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           ${iconSvg}
-          <span id="${labelId}">Select Date Range</span>
+          <span id="${labelId}" style="max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;">Select Date Range</span>
         </div>
-        <button id="${nextId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#5a6282; display:flex; align-items:center; height:100%; border-left:1px solid #eef2f6; transition:background 0.15s" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+        <button id="${nextId}" style="padding:0 8px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-left:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
         <input id="${id}" type="text" style="position:absolute; width:0; height:0; opacity:0; pointer-events:none" readonly>
@@ -557,21 +596,173 @@ if (typeof window !== 'undefined') {
     window._actionMenuListenerAdded = true;
   }
 
+  // Global helper to rename a team across all employees and org structure
+  window.renameTeamName = async function(oldTeamName) {
+    if (!oldTeamName) return;
+    
+    window.showPromptModal({
+      title: 'แก้ไขชื่อทีม',
+      message: `แก้ไขชื่อทีมจาก "${oldTeamName}" เป็น:`,
+      defaultValue: oldTeamName.trim(),
+      placeholder: 'พิมพ์ชื่อทีมใหม่...',
+      onConfirm: async (newTeamName) => {
+        if (!newTeamName || newTeamName.trim() === '' || newTeamName.trim() === oldTeamName.trim()) return;
+        
+        const trimmedOldName = oldTeamName.trim();
+        const trimmedNewName = newTeamName.trim();
+        if (typeof showToast === 'function') {
+          showToast(`กำลังเปลี่ยนชื่อทีม "${trimmedOldName}" เป็น "${trimmedNewName}"...`, 'info');
+        }
+        
+        try {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jfxesvvswpgeaxhhnnyt.supabase.co';
+          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E';
+          
+          const affectedEmps = (window.DATA && window.DATA.employees || []).filter(e => e.dept && e.dept.trim() === trimmedOldName);
+          if (affectedEmps.length === 0) {
+            if (typeof showToast === 'function') showToast(`ไม่พบพนักงานในทีม "${trimmedOldName}"`, 'warning');
+            return;
+          }
+          
+          const promises = affectedEmps.map(async (emp) => {
+            const response = await fetch(`${supabaseUrl}/rest/v1/employees?id=eq.${emp.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Prefer': 'return=representation'
+              },
+              body: JSON.stringify({ team: trimmedNewName })
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to update employee ${emp.id}`);
+            }
+          });
+          
+          await Promise.all(promises);
+          
+          // ---- อัปเดต window.DATA.employees ในหน่วยความจำทันที ----
+          if (window.DATA && window.DATA.employees) {
+            window.DATA.employees = window.DATA.employees.map(e => {
+              if (e.dept && e.dept.trim() === trimmedOldName) {
+                return { ...e, dept: trimmedNewName };
+              }
+              return e;
+            });
+          }
+          
+          // Update local storage org structure if it exists
+          const structStr = localStorage.getItem('org_structure');
+          if (structStr) {
+            try {
+              const struct = JSON.parse(structStr);
+              let changed = false;
+              function updateDept(node) {
+                if (node.dept && node.dept.trim() === trimmedOldName) {
+                  node.dept = trimmedNewName;
+                  changed = true;
+                }
+                if (node.children) {
+                  node.children.forEach(updateDept);
+                }
+              }
+              updateDept(struct);
+              if (changed) {
+                localStorage.setItem('org_structure', JSON.stringify(struct));
+                await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.default`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`
+                  },
+                  body: JSON.stringify({ structure: struct })
+                });
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          
+          if (typeof showToast === 'function') {
+            showToast(`เปลี่ยนชื่อทีมเป็น "${trimmedNewName}" สำเร็จแล้ว!`, 'success');
+          }
+          
+          // Refetch all data using the background logic helper if it exists
+          const fetchMod = await import('./legacyDataFetcher.js');
+          if (fetchMod && fetchMod.fetchAndSetLegacyData) {
+            await fetchMod.fetchAndSetLegacyData();
+          }
+          
+          // Force UI updates - directly re-render the page container HTML
+          const contentEl = document.getElementById('employeeMainContent') || document.getElementById('pageContent') || document.querySelector('.page-content');
+          if (contentEl) {
+            if (window.currentPage === 'employee' && typeof window.pageEmployee === 'function') {
+              contentEl.innerHTML = window.pageEmployee();
+            } else if (window.currentPage === 'schedule' && typeof window.pageSchedule === 'function') {
+              contentEl.innerHTML = window.pageSchedule();
+            } else if (window.currentPage === 'structure-team' && typeof window.pageStructureTeam === 'function') {
+              contentEl.innerHTML = window.pageStructureTeam();
+            } else if (window.currentPage === 'qc-realcyber-plan' && typeof window.renderQCWorkPlanDashboard === 'function') {
+              contentEl.innerHTML = window.renderQCWorkPlanDashboard();
+            }
+            if (window.lucide) window.lucide.createIcons({ root: contentEl });
+          } else {
+            window.location.reload();
+          }
+          
+        } catch (err) {
+          console.error(err);
+          if (typeof showToast === 'function') {
+            showToast(`เกิดข้อผิดพลาด: ${err.message}`, 'error');
+          }
+        }
+      }
+    });
+  };
+
   // --- AUTOMATIC CUSTOM DROPDOWN CONVERTER FOR ALL FILTERS ---
+  let _convertDebounceTimer = null;
+  let _globalObserver = null;
+  let _isConverting = false;
+
+
   function convertNativeSelectsToCustomDropdowns() {
     if (typeof document === 'undefined') return;
-    const selects = document.querySelectorAll('select.select-input:not([data-custom-select]), select.form-input:not([data-custom-select])');
-    selects.forEach(select => {
-      // Skip if it's already marked as done or hidden
-      select.setAttribute('data-custom-select', 'true');
-      
-      // Keep width and styling from original select
-      const originalWidth = select.style.width || select.getAttribute('width') || '';
-      const originalHeight = select.style.height || select.getAttribute('height') || '';
-      const originalFlex = select.style.flex || '';
-      
-      // Hide original select
-      select.style.display = 'none';
+    if (_isConverting) return; // prevent re-entry
+    _isConverting = true;
+
+    // Temporarily disconnect observer so our DOM changes don't re-trigger us
+    if (_globalObserver) _globalObserver.disconnect();
+
+    try {
+      // Remove orphaned wrappers: a wrapper is orphaned if its inner select has been detached
+      document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+        const hiddenSelect = wrapper.querySelector('select[data-custom-select]');
+        // If the wrapper itself is no longer in the live document, skip (already detached)
+        if (!document.contains(wrapper)) return;
+        // If the select inside it is missing, remove the ghost wrapper
+        if (!hiddenSelect) wrapper.remove();
+      });
+
+      const selects = document.querySelectorAll('select.select-input:not([data-custom-select]), select.form-input:not([data-custom-select]), select:not([data-custom-select])');
+      selects.forEach(select => {
+        if (select.classList.contains('flatpickr-monthDropdown-month') || select.closest('.flatpickr-calendar')) {
+          select.setAttribute('data-custom-select', 'skip');
+          return;
+        }
+        // Skip hidden selects (e.g. inside other custom wrappers already processed)
+        // Keep width and styling from original select
+        const originalWidth = select.style.width || select.getAttribute('width') || '';
+        const originalHeight = select.style.height || select.getAttribute('height') || '';
+        const originalFlex = select.style.flex || '';
+        
+        // Mark as handled
+        select.setAttribute('data-custom-select', 'true');
+
+        // Hide original select
+        select.style.display = 'none';
 
       // Create wrapper
       const wrapper = document.createElement('div');
@@ -596,24 +787,28 @@ if (typeof window !== 'undefined') {
       // Create trigger button replicating select-input class
       const trigger = document.createElement('button');
       trigger.className = 'select-input';
-      trigger.style.cssText = `width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: Kanit, sans-serif; font-size: 13px; cursor: pointer;`;
+      trigger.style.cssText = `width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: 'Kanit', 'Prompt', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; background-image: none !important; padding-right: 14px !important; padding-left: 16px !important; border-radius: 9999px !important; box-sizing: border-box;`;
       if (originalHeight) {
         trigger.style.height = originalHeight;
         trigger.style.setProperty('height', originalHeight, 'important');
       }
 
-      
       const triggerText = document.createElement('span');
       triggerText.style.cssText = `overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
       triggerText.textContent = select.options[select.selectedIndex]?.text || '';
       trigger.appendChild(triggerText);
+
+      const triggerIcon = document.createElement('span');
+      triggerIcon.style.cssText = `display: flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0;`;
+      triggerIcon.innerHTML = `<svg class="w-3.5 h-3.5 text-gray-400" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>`;
+      trigger.appendChild(triggerIcon);
       
       wrapper.appendChild(trigger);
 
       // Create custom dropdown container
       const dropdown = document.createElement('div');
       dropdown.className = 'custom-select-dropdown';
-      dropdown.style.cssText = `display: none; position: absolute; top: 100%; left: 0; margin-top: 6px; width: 100%; min-width: 100%; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 9999; padding: 4px; max-height: 250px; overflow-y: auto;`;
+      dropdown.style.cssText = `display: none; position: absolute; top: 100%; right: 0; margin-top: 6px; width: 100%; min-width: 160px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 9999; padding: 4px; max-height: 240px; overflow-x: hidden; overflow-y: auto;`;
 
       // Helper function to update dropdown items based on select options
       const populateOptions = () => {
@@ -625,10 +820,29 @@ if (typeof window !== 'undefined') {
           // Check if this option is selected
           const isSelected = select.selectedIndex === idx;
           optionDiv.style.cssText = isSelected 
-            ? `padding: 10px 14px !important; font-size: 13px !important; cursor: pointer !important; border-radius: 8px !important; color: #4f46e5 !important; background-color: #f0efff !important; font-weight: 600 !important; font-family: 'Kanit', sans-serif !important; line-height: 1.4 !important; white-space: nowrap !important;`
-            : `padding: 10px 14px !important; font-size: 13px !important; cursor: pointer !important; border-radius: 8px !important; color: #374151 !important; background-color: transparent !important; font-weight: 500 !important; font-family: 'Kanit', sans-serif !important; line-height: 1.4 !important; white-space: nowrap !important; transition: background-color 0.12s ease !important;`;
+            ? `padding: 10px 14px; font-size: 12px; cursor: pointer; border-radius: 8px; color: #4f46e5; background-color: #f0efff; font-weight: 600; font-family: 'Kanit', 'Prompt', sans-serif; line-height: 1.4; white-space: nowrap; display: flex; align-items: center; justify-content: space-between; gap: 8px;`
+            : `padding: 10px 14px; font-size: 12px; cursor: pointer; border-radius: 8px; color: #374151; background-color: transparent; font-weight: 500; font-family: 'Kanit', 'Prompt', sans-serif; line-height: 1.4; white-space: nowrap; transition: background-color 0.12s ease; display: flex; align-items: center; justify-content: space-between; gap: 8px;`;
           
-          optionDiv.textContent = opt.text;
+          const textSpan = document.createElement('span');
+          textSpan.textContent = opt.text;
+          optionDiv.appendChild(textSpan);
+
+          // Add edit icon if it's a team selection and a real team name
+          const isTeamSelect = select.id && select.id.toLowerCase().includes('team');
+          const isRealTeam = opt.value && opt.value !== '' && !opt.value.includes('--') && !opt.value.includes('ทุก') && !opt.text.includes('เลือก') && !opt.text.includes('ทุก');
+          
+          if (isTeamSelect && isRealTeam) {
+            const editBtn = document.createElement('span');
+            editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8; transition: color 0.15s;" onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#94a3b8'"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+            editBtn.style.cssText = `display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; cursor: pointer; margin-left: auto;`;
+            editBtn.onclick = (e) => {
+              e.stopPropagation();
+              if (window.renameTeamName) {
+                window.renameTeamName(opt.value);
+              }
+            };
+            optionDiv.appendChild(editBtn);
+          }
 
           optionDiv.onclick = (e) => {
             e.stopPropagation();
@@ -681,7 +895,21 @@ if (typeof window !== 'undefined') {
         populateOptions();
       });
       selectObserver.observe(select, { childList: true, attributes: true, characterData: true, subtree: true });
-    });
+
+      // Listen for native select change events (e.g. programmatically dispatched changes) to sync trigger text
+      select.addEventListener('change', () => {
+        triggerText.textContent = select.options[select.selectedIndex]?.text || '';
+        populateOptions();
+      });
+    }); // end selects.forEach
+    } catch(e) { console.warn('[customSelect] convert error:', e); }
+    finally {
+      _isConverting = false;
+      // Reconnect observer
+      if (_globalObserver) {
+        _globalObserver.observe(document.documentElement, { childList: true, subtree: true });
+      }
+    }
   }
 
   // Hook global click listener to close dropdowns and reset z-indexes
@@ -695,10 +923,11 @@ if (typeof window !== 'undefined') {
 
   // Watch entire DOM to automatically convert any newly added select filters
   setTimeout(convertNativeSelectsToCustomDropdowns, 100);
-  const globalObserver = new MutationObserver(() => {
-    convertNativeSelectsToCustomDropdowns();
+  _globalObserver = new MutationObserver(() => {
+    clearTimeout(_convertDebounceTimer);
+    _convertDebounceTimer = setTimeout(convertNativeSelectsToCustomDropdowns, 80);
   });
-  globalObserver.observe(document.documentElement, {
+  _globalObserver.observe(document.documentElement, {
     childList: true,
     subtree: true
   });
@@ -714,15 +943,15 @@ if (typeof window !== 'undefined') {
 
     const html = `
     <div id="${modalId}" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999; animation: fadeIn 0.3s ease">
-      <div class="modal-card" style="background:#fff; width:420px; border-radius:24px; padding:40px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
+      <div class="modal-card" style="background:#fff; width:460px; border-radius:24px; padding:40px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
         <div style="width:72px; height:72px; border-radius:22px; background:${bgLight}; color:${color}; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; transform: rotate(-5deg)">
           <i data-lucide="${icon}" style="width:36px; height:36px"></i>
         </div>
         <h3 style="margin:0 0 12px; font-size:1.3rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
         <p style="margin:0 0 32px; font-size:.9rem; color:#64748b; line-height:1.6; font-family:Kanit; padding:0 10px">${message}</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="display:flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; padding:14px; border-radius:9999px !important; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.9rem; transition:all 0.2s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">Cancel</button>
-          <button id="confirmModalBtn" class="btn btn-primary" style="display:flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; background:${color}; color:#fff; border:none; padding:14px; border-radius:9999px !important; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 8px 20px ${color}30">${confirmText}</button>
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="display:flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; height:34px; padding:0 16px; border-radius:9999px !important; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.82rem; transition:all 0.2s; box-sizing:border-box; white-space:nowrap !important;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'"><i data-lucide="x" style="width:16px; height:16px; margin-right:6px"></i>Cancel</button>
+          <button id="confirmModalBtn" class="btn btn-primary" style="display:flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; background:${color}; color:#fff; border:none; height:34px; padding:0 16px; border-radius:9999px !important; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.82rem; box-shadow: 0 8px 20px ${color}30; box-sizing:border-box; white-space:nowrap !important;" onmouseover="this.style.background='${color}'" onmouseout="this.style.background='${color}'"><i data-lucide="${icon}" style="width:16px; height:16px; margin-right:6px"></i>${confirmText}</button>
         </div>
       </div>
     </div>
@@ -778,6 +1007,72 @@ if (typeof window !== 'undefined') {
 
     document.body.insertAdjacentHTML('beforeend', html);
     if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+  };
+
+  // --- GLOBAL CUSTOM PROMPT MODAL DIALOG ---
+  window.showPromptModal = function({ title, message, placeholder = '', defaultValue = '', onConfirm }) {
+    const modalId = 'promptModal';
+    if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+    const color = '#635BFF';
+    const bgLight = '#f5f3ff';
+    const icon = 'edit-3';
+
+    const html = `
+    <div id="${modalId}" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999; animation: fadeIn 0.3s ease">
+      <div class="modal-card" style="background:#fff; width:440px; border-radius:24px; padding:32px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
+          <div style="width:48px; height:48px; border-radius:14px; background:${bgLight}; color:${color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <i data-lucide="${icon}" style="width:24px; height:24px"></i>
+          </div>
+          <div style="text-align:left;">
+            <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
+            <p style="margin:2px 0 0; font-size:.8rem; color:#64748b; font-family:Kanit">${message}</p>
+          </div>
+        </div>
+        
+        <div>
+          <input type="text" id="promptModalInput" class="form-input" value="${defaultValue}" placeholder="${placeholder}" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', 'Prompt', sans-serif; font-size:.88rem; outline:none; padding:0 14px; border:1px solid #e2e8f0;" autocomplete="off">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; font-family:Kanit; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:16px; height:16px"></i>ยกเลิก</button>
+          <button id="promptModalConfirmBtn" class="btn btn-primary" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; font-family:Kanit; background:${color} !important; color:#fff; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:16px; height:16px"></i>บันทึกข้อมูล</button>
+        </div>
+      </div>
+    </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    if (window.lucide) lucide.createIcons({ root: document.getElementById(modalId) });
+    
+    const input = document.getElementById('promptModalInput');
+    if (input) {
+      input.focus();
+      input.select();
+      
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          confirmAction();
+        } else if (e.key === 'Escape') {
+          document.getElementById(modalId).remove();
+        }
+      };
+    }
+
+    const confirmBtn = document.getElementById('promptModalConfirmBtn');
+    
+    function confirmAction() {
+      const val = input.value;
+      document.getElementById(modalId).remove();
+      if (typeof onConfirm === 'function') {
+        onConfirm(val);
+      }
+    }
+    
+    if (confirmBtn) {
+      confirmBtn.onclick = confirmAction;
+    }
   };
 
   window.toggleEmployeeFilterDropdown = function(type, event) {

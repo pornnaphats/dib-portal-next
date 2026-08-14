@@ -35,8 +35,25 @@ window.pageEmployee = function() {
     const employees = DATA.employees || [];
     const totalEmployees = employees.length;
 
+    // Helper to check if today is employee's day off
+    const isEmployeeDayOff = (e) => {
+      if (e.status === 'resigned') return false;
+      const now = new Date();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const todayName = dayNames[now.getDay()];
+      const thaiMap = { 'อา': 'Sun', 'จ': 'Mon', 'อ': 'Tue', 'พ': 'Wed', 'พฤ': 'Thu', 'ศ': 'Fri', 'ส': 'Sat' };
+      const offDays = (e.offdays || '').split(/[,|\-]/).map(d => d.trim()).filter(Boolean);
+      return offDays.some(d => {
+        if (d === todayName) return true;
+        for (const [th, en] of Object.entries(thaiMap)) {
+          if (d.includes(th) && en === todayName) return true;
+        }
+        return false;
+      });
+    };
+
     // Calculate dynamic status counts
-    const stActive = employees.filter(e => e.empType === 'พนักงานประจำ' && e.status !== 'resigned').length;
+    const stActive = employees.filter(e => e.empType === 'พนักงานประจำ' && e.status !== 'resigned' && !isEmployeeDayOff(e)).length;
     const stOnLeave = employees.filter(e => e.status === 'on-leave').length;
     const stSick = employees.filter(e => e.status === 'sick-leave').length;
     const stProbation = employees.filter(e => e.status === 'probation' || e.empType === 'พนักงานทดลองงาน').length;
@@ -44,6 +61,7 @@ window.pageEmployee = function() {
     const stContract = employees.filter(e => e.empType === 'พนักงานสัญญาจ้าง').length;
     const stLeaveToday = stOnLeave + stSick;
     const stNew = 0; // Set to 0 as requested
+    const stDayOff = employees.filter(e => isEmployeeDayOff(e)).length;
     const displayTotal = totalEmployees || 1;
 
     // Sync to window for chart access if needed
@@ -108,32 +126,31 @@ window.pageEmployee = function() {
         <td>
           <div id="emp_status_${e.id}" style="display:inline-flex; align-items:center">
             ${(() => {
-          let label = 'ปฏิบัติงาน';
-          let color = '#10b981';
-          let bg = '#ecfdf5';
-          let border = '#d1fae5';
+            let label = 'Active';
+            let color = '#10b981';
+            let bg = '#ecfdf5';
+            let border = '#d1fae5';
 
-          if (e.status === 'resigned' || e.status === 'ลาออก') {
-            label = 'ลาออก'; color = '#64748b'; bg = '#f8fafc'; border = '#e2e8f0';
-          } else {
-            const now = new Date();
-            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-            const leave = (DATA.leaveRequests || []).find(r =>
-              r.name === e.name &&
-              r.startRaw <= todayStr && r.endRaw >= todayStr
-            );
-            if (leave) {
-              label = leave.type; color = '#0ea5e9'; bg = '#f0f9ff'; border = '#e0f2fe';
+            if (e.status === 'resigned' || e.status === 'ลาออก') {
+              label = 'Resigned'; color = '#64748b'; bg = '#f8fafc'; border = '#e2e8f0';
             } else {
-              const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-              const todayName = dayNames[now.getDay()];
-              const offDays = (e.offdays || '').split(/[,|\-]/).map(d => d.trim());
-              if (offDays.some(d => d.includes(todayName) || (todayName === 'Sun' && d.includes('อา')) || (todayName === 'Mon' && d.includes('จ')) || (todayName === 'Tue' && d.includes('อ')) || (todayName === 'Wed' && d.includes('พ')) || (todayName === 'Thu' && d.includes('พฤ')) || (todayName === 'Fri' && d.includes('ศ')) || (todayName === 'Sat' && d.includes('ส')))) {
-                label = 'วันหยุด'; color = '#f59e0b'; bg = '#fffbeb'; border = '#fef3c7';
+              const now = new Date();
+              const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+              const leave = (DATA.leaveRequests || []).find(r =>
+                r.name === e.name &&
+                r.startRaw <= todayStr && r.endRaw >= todayStr
+              );
+              if (leave) {
+                label = leave.type; color = '#0ea5e9'; bg = '#f0f9ff'; border = '#e0f2fe';
+              } else {
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const todayName = dayNames[now.getDay()];
+                const offDays = (e.offdays || '').split(/[,|\-]/).map(d => d.trim());
+                if (offDays.some(d => d.includes(todayName) || (todayName === 'Sun' && d.includes('อา')) || (todayName === 'Mon' && d.includes('จ')) || (todayName === 'Tue' && d.includes('อ')) || (todayName === 'Wed' && d.includes('พ')) || (todayName === 'Thu' && d.includes('พฤ')) || (todayName === 'Fri' && d.includes('ศ')) || (todayName === 'Sat' && d.includes('ส')))) {
+                  label = 'Day Off'; color = '#f59e0b'; bg = '#fffbeb'; border = '#fef3c7';
+                }
               }
             }
-          }
 
           return `
                 <div style="display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; background:${bg}; border:1px solid ${border}; color:${color}; font-size:.65rem; font-weight:700; white-space:nowrap">
@@ -146,9 +163,15 @@ window.pageEmployee = function() {
         </td>
         <td style="text-align:center; position:relative">
           <button onclick="toggleActionMenu('${e.id}', event)" style="background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px"><i data-lucide="more-vertical" style="width:16px; height:16px"></i></button>
-          <div id="actionMenu_${e.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow-md); z-index:100; min-width:100px; padding:4px">
-            <button onclick="editEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:Kanit; font-size:.75rem; cursor:pointer; color:var(--text-2); border-radius:6px" onmouseover="this.style.background='#f4f7fe'" onmouseout="this.style.background='none'"><i data-lucide="edit-2" style="width:12px; height:12px; margin-right:6px; vertical-align:middle"></i> แก้ไข</button>
-            <button onclick="deleteEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:Kanit; font-size:.75rem; cursor:pointer; color:#ef4444; border-radius:6px" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'"><i data-lucide="trash-2" style="width:12px; height:12px; margin-right:6px; vertical-align:middle"></i> ลบ</button>
+          <div id="actionMenu_${e.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); z-index:100; min-width:110px; padding:6px; flex-direction:column; gap:2px">
+            <button onclick="editEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#475569; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">
+              <i data-lucide="edit-3" style="width:14px; height:14px; color:#64748b; display:inline-block; vertical-align:middle"></i>
+              <span>แก้ไข</span>
+            </button>
+            <button onclick="deleteEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#ef4444; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+              <i data-lucide="trash-2" style="width:14px; height:14px; color:#ef4444; display:inline-block; vertical-align:middle"></i>
+              <span>ลบ</span>
+            </button>
           </div>
         </td>
       </tr>
@@ -256,9 +279,37 @@ window.pageEmployee = function() {
 
       const filtered = allEmps.filter(e => {
         if (!e) return false;
+        
+        let matchesStatus = true;
+        if (status === "active") {
+          matchesStatus = e.status !== "resigned";
+        } else if (status === "resigned") {
+          matchesStatus = e.status === "resigned";
+        } else if (status === "dayoff") {
+          if (e.status === "resigned") {
+            matchesStatus = false;
+          } else {
+            const now = new Date();
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const todayName = dayNames[now.getDay()];
+            const offDays = (e.offdays || '').split(/[,|\-]/).map(d => d.trim());
+            matchesStatus = offDays.some(d => d.includes(todayName) || (todayName === 'Sun' && d.includes('อา')) || (todayName === 'Mon' && d.includes('จ')) || (todayName === 'Tue' && d.includes('อ')) || (todayName === 'Wed' && d.includes('พ')) || (todayName === 'Thu' && d.includes('พฤ')) || (todayName === 'Fri' && d.includes('ศ')) || (todayName === 'Sat' && d.includes('ส')));
+          }
+        } else if (status && status.startsWith("leave_")) {
+          const targetType = status.replace("leave_", "");
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          const hasLeaveToday = (DATA.leaveRequests || []).some(r =>
+            r.name === e.name &&
+            r.type === targetType &&
+            r.startRaw <= todayStr && r.endRaw >= todayStr
+          );
+          matchesStatus = hasLeaveToday;
+        }
+
         return (!pos || e.pos === pos) &&
           (!team || e.dept === team) &&
-          (!status || e.status === status) &&
+          matchesStatus &&
           (!search ||
             (e.name && String(e.name).toLowerCase().includes(search)) ||
             (e.nameEn && String(e.nameEn).toLowerCase().includes(search)) ||
@@ -289,16 +340,25 @@ window.pageEmployee = function() {
       const statusEl = document.getElementById('filterStatus');
       const searchEl = document.getElementById('filterSearch');
 
-      if (posEl) posEl.value = "";
-      if (teamEl) teamEl.value = "";
-      if (statusEl) statusEl.value = "";
+      if (posEl) {
+        posEl.value = "";
+        posEl.dispatchEvent(new Event('change'));
+      }
+      if (teamEl) {
+        teamEl.value = "";
+        teamEl.dispatchEvent(new Event('change'));
+      }
+      if (statusEl) {
+        statusEl.value = "";
+        statusEl.dispatchEvent(new Event('change'));
+      }
       if (searchEl) searchEl.value = "";
       applyEmployeeFilters();
     };
 
     const html = `
 
-  <div class="fade-in" style="display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:24px">
+  <div class="fade-in" style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:24px">
     <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
       <div style="width:40px;height:40px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(99, 102, 241, 0.4)"><i data-lucide="users" style="width:20px;height:20px"></i></div>
       <div>
@@ -339,18 +399,11 @@ window.pageEmployee = function() {
         <div style="font-size:.65rem;color:var(--text-3);font-weight:400;margin-top:4px">${((stResigned / displayTotal) * 100).toFixed(1)}% <span style="color:var(--text-3)">ของทั้งหมด</span></div>
       </div>
     </div>
-    <div class="stat-card" style="padding:20px; align-items:flex-start; gap:8px">
-      <div style="width:40px;height:40px;border-radius:50%;background:#f43f5e;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(244, 63, 94, 0.4)"><i data-lucide="calendar-off" style="width:20px;height:20px"></i></div>
-      <div>
-        <div style="font-size:.7rem;color:var(--text-3);font-weight:600;margin-bottom:4px">พนักงานที่ลางานวันนี้</div>
-        <div style="font-size:1.5rem;font-weight:700;color:var(--text)">${stLeaveToday} <span style="font-size:.75rem; font-weight:400; color:var(--text-3)">คน</span></div>
-        <div style="font-size:.65rem;color:#f43f5e;font-weight:500;margin-top:4px">ลาพักร้อน ${stOnLeave} | ลาป่วย ${stSick}</div>
-      </div>
-    </div>
+
   </div>
 
   <!-- Charts Row -->
-  <div class="fade-in delay-1" style="display:grid; grid-template-columns:1fr 1fr 1.2fr 1fr; gap:16px; margin-bottom:24px">
+  <div class="fade-in delay-1" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px">
     <div class="card" style="padding:20px">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
         <div style="font-size:.9rem; font-weight:700">พนักงานตามระดับตำแหน่ง</div>
@@ -361,7 +414,7 @@ window.pageEmployee = function() {
     </div>
     <div class="card" style="padding:20px">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <div style="font-size:.9rem; font-weight:700">พนักงานตามระดับตำแหน่ง</div>
+        <div style="font-size:.9rem; font-weight:700">พนักงานตามสังกัดทีม</div>
       </div>
       <div style="height:240px; position:relative">
         <canvas id="empDeptChart"></canvas>
@@ -373,25 +426,60 @@ window.pageEmployee = function() {
     </div>
     <div class="card" style="padding:20px">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-        <div style="font-size:.9rem; font-weight:700">สถานะพนักงาน (Employee Status)</div>
+        <div style="font-size:.9rem; font-weight:700">Employee Status</div>
       </div>
-      <div style="display:flex; flex-direction:column; gap:16px; justify-content:center; height:240px">
-        ${[
-        { name: 'ปฏิบัติงาน (Active)', val: stActive, color: '#10b981' },
-        { name: 'ทดลองงาน (Probation)', val: stProbation, color: '#6366f1' },
-        { name: 'ลาพักร้อน (On Leave)', val: stOnLeave, color: '#f59e0b' },
-        { name: 'ลาป่วย (Sick Leave)', val: stSick, color: '#f43f5e' }
-      ].map(s => `
-          <div>
-            <div style="display:flex; justify-content:space-between; font-size:.7rem; margin-bottom:6px">
-              <span style="color:var(--text-2); font-weight:500">${s.name}</span>
-              <span style="font-weight:700">${s.val} คน</span>
+      <div style="display:flex; flex-direction:column; gap:16px; justify-content:center; height:240px; overflow-y:auto; padding-right:4px">
+        ${(() => {
+          const statusItems = [
+            { name: 'Active', val: stActive, color: '#635BFF' },
+            { name: 'Day Off', val: stDayOff, color: '#818cf8' },
+            { name: 'Resigned', val: stResigned, color: '#94a3b8' }
+          ];
+
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          
+          const activeLeavesToday = (DATA.leaveRequests || [])
+            .filter(r => r.startRaw <= todayStr && r.endRaw >= todayStr);
+
+          const leaveTranslations = {
+            'ลาพักร้อน': 'Vacation Leave',
+            'ลากิจ': 'Business Leave',
+            'ลาป่วย': 'Sick Leave',
+            'วันหยุดชดเชย': 'Compensatory Leave',
+            'ลาคลอด / ลาเลี้ยงดูบุตร': 'Maternity Leave',
+            'ลาเพื่อการฌาปนกิจศพ': 'Compassionate Leave',
+            'อบรม / สัมมนา': 'Training Leave',
+            'อื่นๆ': 'Other'
+          };
+
+          const leaveCounts = {};
+          activeLeavesToday.forEach(r => {
+            const translatedName = leaveTranslations[r.type] || r.type;
+            leaveCounts[translatedName] = (leaveCounts[translatedName] || 0) + 1;
+          });
+
+          // Add leave items with a lighter purple/indigo color palette
+          Object.entries(leaveCounts).forEach(([leaveName, count]) => {
+            statusItems.push({
+              name: leaveName,
+              val: count,
+              color: '#c084fc'
+            });
+          });
+
+          return statusItems.map(s => `
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:.7rem; margin-bottom:6px">
+                <span style="color:var(--text-2); font-weight:500">${s.name}</span>
+                <span style="font-weight:700">${s.val} People</span>
+              </div>
+              <div style="height:8px; background:#f1f5f9; border-radius:10px; overflow:hidden">
+                <div style="width:${(s.val / displayTotal * 100)}%; height:100%; background:${s.color}; border-radius:10px"></div>
+              </div>
             </div>
-            <div style="height:8px; background:#f1f5f9; border-radius:10px; overflow:hidden">
-              <div style="width:${(s.val / displayTotal * 100)}%; height:100%; background:${s.color}; border-radius:10px"></div>
-            </div>
-          </div>
-        `).join('')}
+          `).join('');
+        })()}
       </div>
     </div>
     <div class="card" style="padding:20px">
@@ -416,7 +504,7 @@ window.pageEmployee = function() {
               <div style="width:36px; height:36px; border-radius:50%; background:#fff1f2; color:#f43f5e; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.65rem; border:1px solid #ffe4e6">${getAvatarText(e)}</div>
               <div style="flex:1">
                 <div style="font-size:.7rem; font-weight:700; color:var(--text-2)">${e.name}</div>
-                  <div style="font-size:.65rem; color:var(--text-3)">วันเกิด: ${e.birthdate.split('/')[0]} ${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][currentMonth - 1]}</div>
+                  <div style="font-size:.65rem; color:var(--text-3)">Birthday: ${e.birthdate.split('/')[0]} ${['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][currentMonth - 1]}</div>
               </div>
               <div style="color:#f43f5e"><i data-lucide="cake" style="width:16px; height:16px"></i></div>
             </div>
@@ -432,37 +520,64 @@ window.pageEmployee = function() {
     <!-- Left: Data Table -->
     <div class="card fade-in" style="padding:0; overflow:visible">
       <div class="toolbar" style="padding:16px 20px 8px 20px; margin-bottom:8px; border-bottom:none; display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:10px; overflow:visible">
-        <div class="search-box" style="width:220px; background:#f8fafc">
-          <i data-lucide="search" style="width:14px; height:14px; color:var(--text-3)"></i>
-          <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="font-size:.75rem">
+        <div class="search-box" style="width:200px; background:#ffffff">
+          <i data-lucide="search" style="width:14px; height:14px; color:#94a3b8"></i>
+          <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="border:none; outline:none; background:transparent; width:100%">
         </div>
-        <select id="filterPos" onchange="applyEmployeeFilters()" class="select-input" style="width:140px; flex-shrink:0">
-          <option value="">ตำแหน่งทั้งหมด</option>
-          <option value="Director">Director</option>
-          <option value="Manager">Manager</option>
-          <option value="Assistant Manager">Assistant Manager</option>
-          <option value="Senior">Senior</option>
-          <option value="Junior">Junior</option>
+        <select id="filterPos" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
+          <option value="">All Positions</option>
+          ${(() => {
+            const uniqPos = [...new Set(employees.map(e => (e.pos || e.position || '').trim()).filter(Boolean))];
+            const hierarchy = ["director", "manager", "assistant manager", "assistant", "senior", "junior"];
+            return uniqPos.sort((a, b) => {
+              const aLower = a.toLowerCase().trim();
+              const bLower = b.toLowerCase().trim();
+              const idxA = hierarchy.indexOf(aLower);
+              const idxB = hierarchy.indexOf(bLower);
+              if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+              if (idxA !== -1) return -1;
+              if (idxB !== -1) return 1;
+              return a.localeCompare(b);
+            }).map(p => `<option value="${p}">${p}</option>`).join('');
+          })()}
         </select>
-        <select id="filterTeam" onchange="applyEmployeeFilters()" class="select-input" style="width:130px; flex-shrink:0">
-          <option value="">ทีมทั้งหมด</option>
-          <option value="ACE">ACE</option>
-          <option value="Sertec">Sertec</option>
-          <option value="ONIX">ONIX</option>
-          <option value="Sale Support">Sale Support</option>
-          <option value="Call Center">Call Center</option>
+        <select id="filterTeam" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
+          <option value="">All Teams</option>
+          ${[...new Set(employees.map(e => (e.team || e.dept || '').trim()).filter(t => t && t !== '-'))].sort().map(t => `<option value="${t}">${t}</option>`).join('')}
         </select>
-        <select id="filterStatus" onchange="applyEmployeeFilters()" class="select-input" style="width:130px; flex-shrink:0">
-          <option value="">สถานะทั้งหมด</option>
-          <option value="active">ปฏิบัติงาน</option>
-          <option value="resigned">ลาออก</option>
+        <select id="filterStatus" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="dayoff">Day Off</option>
+          <option value="resigned">Resigned</option>
+          ${(() => {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const activeLeavesToday = (DATA.leaveRequests || [])
+              .filter(r => r.startRaw <= todayStr && r.endRaw >= todayStr)
+              .map(r => r.type);
+            const uniqLeaveTypes = [...new Set(activeLeavesToday)].filter(Boolean);
+            
+            const leaveTranslations = {
+              'ลาพักร้อน': 'Vacation Leave',
+              'ลากิจ': 'Business Leave',
+              'ลาป่วย': 'Sick Leave',
+              'วันหยุดชดเชย': 'Compensatory Leave',
+              'ลาคลอด / ลาเลี้ยงดูบุตร': 'Maternity Leave',
+              'ลาเพื่อการฌาปนกิจศพ': 'Compassionate Leave',
+              'อบรม / สัมมนา': 'Training Leave',
+              'อื่นๆ': 'Other'
+            };
+
+            return uniqLeaveTypes.map(t => `<option value="leave_${t}">${leaveTranslations[t] || t}</option>`).join('');
+          })()}
         </select>
         <button id="clearEmployeeFiltersBtn" onclick="clearEmployeeFilters()" style="display:none; background:none; border:none; color:#ef4444; font-family:Kanit; font-size:.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; padding:8px 16px; border-radius:99px; white-space:nowrap;">
           <span style="font-weight:bold;font-size:13px">✕</span> Clear
         </button>
         <div style="width:1px; height:20px; background:var(--border); margin:0 4px; flex-shrink:0"></div>
         <button onclick="openEmployeeModal()" class="btn btn-primary" style="display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:99px; font-size:.7rem; flex-shrink:0">
-          <i data-lucide="user-plus" style="width:16px; height:16px"></i> เพิ่มพนักงาน
+          <i data-lucide="user-plus" style="width:16px; height:16px"></i> Add Employee
         </button>
       </div>
 
@@ -470,16 +585,16 @@ window.pageEmployee = function() {
         <table class="data-table">
           <thead style="display: table-header-group !important;">
             <tr style="background: #f8f9fb !important;">
-              <th style="padding: 12px 20px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef; width: 220px;">พนักงาน</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">ตำแหน่ง</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">ทีม</th>
+              <th style="padding: 12px 20px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef; width: 220px;">Employee</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Position</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Team</th>
               <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">E-mail</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">กะเวลา</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">วันหยุด</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">วันเกิด</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">ประเภทพนักงาน</th>
-              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">สถานะ</th>
-              <th style="padding: 8px 8px; text-align: center; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef; width: 80px; white-space: nowrap;">จัดการ</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Shift</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Day Off</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Birthday</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Employee Type</th>
+              <th style="padding: 8px 8px; text-align: left; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef;">Status</th>
+              <th style="padding: 8px 8px; text-align: center; font-weight: 700; color: #4b5675 !important; font-size: .8rem; border-bottom: 1px solid #e4e8ef; width: 80px; white-space: nowrap;">Actions</th>
             </tr>
           </thead>
           <tbody id="employeeTableBody">
@@ -518,17 +633,28 @@ window.pageEmployee = function() {
     const deptCtx = document.getElementById('empDeptChart')?.getContext('2d');
     if (deptCtx) {
       const emps = DATA.employees || [];
-      const depts = ['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'];
-      const deptData = depts.map(d => emps.filter(e => e.dept === d).length);
+      const depts = [...new Set(emps.map(e => (e.dept || e.team || '').trim()).filter(t => t && t !== '-'))].sort();
+      const deptData = depts.map(d => emps.filter(e => (e.dept === d || e.team === d)).length);
 
       Chart.getChart(deptCtx.canvas)?.destroy();
+      
+      const teamColorsMap = {
+        'ACE': '#6366f1',
+        'Sertec': '#3b82f6',
+        'ONIX': '#818cf8',
+        'Sale Support': '#93c5fd',
+        'Call Center': '#8ecead',
+        'Other': '#10b981'
+      };
+      const colors = depts.map(d => teamColorsMap[d] || '#a855f7');
+
       new Chart(deptCtx, {
         type: 'doughnut',
         data: {
           labels: depts,
           datasets: [{
             data: deptData,
-            backgroundColor: ['#6366f1', '#3b82f6', '#818cf8', '#93c5fd', '#8ecead', '#10b981'],
+            backgroundColor: colors,
             borderWidth: 0,
             cutout: '75%'
           }]
@@ -566,7 +692,7 @@ window.pageEmployee = function() {
           datasets: [{
             label: 'จำนวนพนักงาน',
             data: levelData,
-            backgroundColor: ['#7FD1B9', '#818cf8', '#FCA5A5', '#FDE68A', '#93c5fd', '#c084fc'],
+            backgroundColor: ['rgba(99,91,255,1)', 'rgba(99,91,255,0.82)', 'rgba(99,91,255,0.65)', 'rgba(99,91,255,0.50)', 'rgba(99,91,255,0.35)', 'rgba(99,91,255,0.20)'],
             borderRadius: 6,
             barThickness: 20
           }]
@@ -637,7 +763,7 @@ window.pageEmployee = function() {
         <div class="form-group"><label class="form-label">วิทยากร</label><input class="form-input" placeholder="ชื่อวิทยากร" /></div>
       </div>
       <div class="form-group"><label class="form-label">จำนวนผู้เข้าร่วม</label><input class="form-input" type="number" placeholder="0" /></div>
-      <button class="btn btn-primary" style="width:100%">+ บันทึก Workshop</button>
+      <button class="btn btn-primary" style="width:100%">+ Save Workshop</button>
     </div>
   </div>`;
   }
@@ -775,8 +901,8 @@ window.pageEmployee = function() {
           </div>
           
           <div style="display:flex; gap:6px">
-            <button class="btn btn-sm" style="flex:1; font-size:.65rem; padding:6px; border:1px solid var(--border); background:#fff; color:var(--text-2)">ดูรายละเอียด</button>
-            <button class="btn btn-sm" style="flex:1; font-size:.65rem; padding:6px; border:1px solid var(--border); background:#fff; color:var(--text-2)">โครงการที่เกี่ยวข้อง</button>
+            <button class="btn btn-sm" style="flex:1; font-size:.65rem; padding:6px; border:1px solid var(--border); background:#fff; color:var(--text-2)">View Details</button>
+            <button class="btn btn-sm" style="flex:1; font-size:.65rem; padding:6px; border:1px solid var(--border); background:#fff; color:var(--text-2)">Related Projects</button>
             <button style="width:28px; height:28px; border-radius:6px; border:1px solid var(--border); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-3)"><i data-lucide="more-vertical" style="width:14px; height:14px"></i></button>
           </div>
         </div>
@@ -2271,7 +2397,7 @@ window.pageEmployee = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
             <div style="position:relative">
               <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ชื่อพนักงาน</label>
-              <input type="text" id="leaveEmpName" class="select-input" value="${req ? req.name : ''}" style="width:100%; font-family:'Kanit', sans-serif" placeholder="พิมพ์ค้นหาชื่อพนักงาน..." autocomplete="off" onkeyup="filterLeaveEmployees(this.value)">
+              <input type="text" id="leaveEmpName" class="form-input" value="${req ? req.name : ''}" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', sans-serif" placeholder="พิมพ์ค้นหาชื่อพนักงาน..." autocomplete="off" onkeyup="filterLeaveEmployees(this.value)">
               <div id="leaveEmpSuggestions" style="position:absolute; top:100%; left:0; width:100%; background:#fff; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:200px; overflow-y:auto; z-index:100; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); display:none">
                 ${(DATA.employees || []).map(e => `
                   <div class="suggestion-item" onclick="selectLeaveEmployee('${e.name}')" style="padding:10px 12px; cursor:pointer; font-size:.7rem; border-bottom:1px solid #f1f5f9">
@@ -2283,7 +2409,7 @@ window.pageEmployee = function() {
             </div>
             <div id="leaveTypeContainer" style="display: ${isComp ? 'none' : 'block'}">
               <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ประเภทการลา</label>
-              <select id="leaveType" class="select-input" style="width:100%; font-family:'Kanit', sans-serif">
+              <select id="leaveType" class="form-input" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', sans-serif; appearance:auto">
                 ${['ลาพักร้อน', 'ลากิจ', 'ลาป่วย', 'ลาคลอด / ลาเลี้ยงดูบุตร', 'ลาเพื่อการฌาปนกิจศพ', 'อบรม / สัมมนา', 'อื่นๆ'].map(t => `
                   <option ${req && req.type === t ? 'selected' : ''}>${t}</option>
                 `).join('')}
@@ -2292,7 +2418,7 @@ window.pageEmployee = function() {
             <div id="compDateContainer" style="display: ${isComp ? 'block' : 'none'}">
               <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ใช้ของวันที่เท่าไร (Ref. Date)</label>
               <div style="position:relative">
-                <input type="text" id="leaveRefDate" class="select-input" style="width:100%; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่ชดเชย...">
+                <input type="text" id="leaveRefDate" class="form-input" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่ชดเชย...">
                 <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
               </div>
             </div>
@@ -2302,43 +2428,33 @@ window.pageEmployee = function() {
             <div>
               <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">วันที่ต้องการลา (เริ่ม)</label>
               <div style="position:relative">
-                <input type="text" id="leaveStart" class="select-input" style="width:100%; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่...">
+                <input type="text" id="leaveStart" class="form-input" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่...">
                 <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
               </div>
             </div>
             <div>
               <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">วันที่ต้องการลา (สิ้นสุด)</label>
               <div style="position:relative">
-                <input type="text" id="leaveEnd" class="select-input" style="width:100%; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่...">
+                <input type="text" id="leaveEnd" class="form-input" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', sans-serif" placeholder="เลือกวันที่...">
                 <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
               </div>
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-            <div>
-              <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">จำนวนวัน</label>
-              <input type="text" id="leaveDays" class="select-input" style="width:100%; background:#f8fafc; font-weight:700; font-family:'Kanit', sans-serif" readonly value="${req ? req.days : '0'}">
-            </div>
-            <div>
-              <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">สถานะ</label>
-              <select id="leaveStatus" class="select-input" style="width:100%; font-family:'Kanit', sans-serif">
-                <option value="pending" ${req && req.status === 'pending' ? 'selected' : ''}>รอการอนุมัติ</option>
-                <option value="approved" ${req && (req.status === 'approved' || req.status === 'อนุมัติแล้ว') ? 'selected' : ''}>อนุมัติแล้ว</option>
-                <option value="rejected" ${req && req.status === 'rejected' ? 'selected' : ''}>ไม่อนุมัติ</option>
-              </select>
-            </div>
+          <div>
+            <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">จำนวนวัน</label>
+            <input type="text" id="leaveDays" class="form-input" style="width:100%; height:42px !important; border-radius:10px !important; background:#f8fafc; font-weight:700; font-family:'Kanit', sans-serif" readonly value="${req ? req.days : '0'}">
           </div>
 
           <div>
             <label style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">หมายเหตุ (Note)</label>
-            <textarea id="leaveNote" class="select-input" style="width:100%; height:80px; font-family:'Kanit', sans-serif; resize:none; padding:10px" placeholder="ใส่ข้อมูลเพิ่มเติมที่นี่...">${req ? (req.note || '') : ''}</textarea>
+            <textarea id="leaveNote" class="form-input" style="width:100%; height:80px !important; border-radius:10px !important; font-family:'Kanit', sans-serif; resize:none; padding:10px" placeholder="ใส่ข้อมูลเพิ่มเติมที่นี่...">${req ? (req.note || '') : ''}</textarea>
           </div>
 
         </div>
         <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px">
-          <button onclick="closeLeaveModal()" class="btn btn-sm" style="background:#fff; border:1px solid #e2e8f0; color:#64748b; padding:8px 16px; font-family:'Kanit', sans-serif">ยกเลิก</button>
-          <button onclick="saveLeaveRequest()" class="btn btn-primary" style="padding:8px 24px; font-weight:600; font-family:'Kanit', sans-serif">${editId ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล'}</button>
+          <button onclick="closeLeaveModal()" class="btn btn-outline" style="border-radius:99px !important; height:34px !important; font-size:.82rem; background:#fff; border:1px solid #e2e8f0; color:#64748b; padding:8px 16px; font-family:'Kanit', sans-serif; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:16px; height:16px"></i>ยกเลิก</button>
+          <button onclick="saveLeaveRequest()" class="btn btn-primary" style="border-radius:99px !important; height:34px !important; font-size:.82rem; padding:8px 24px; font-weight:600; font-family:'Kanit', sans-serif; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:16px; height:16px"></i>${editId ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล'}</button>
         </div>
       </div>
     </div>
@@ -2508,7 +2624,8 @@ window.pageEmployee = function() {
     const start = document.getElementById('leaveStart').value;
     const end = document.getElementById('leaveEnd').value;
     const days = parseInt(document.getElementById('leaveDays').value);
-    const status = document.getElementById('leaveStatus').value;
+    const statusEl = document.getElementById('leaveStatus');
+    const status = statusEl ? statusEl.value : 'approved';
 
     if (!empName || !start || !end) {
       if (typeof showToast === 'function') showToast('Please fill in all required fields.', 'error');
@@ -3063,9 +3180,15 @@ window.pageEmployee = function() {
                 <td style="font-size:.7rem; color:var(--text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${r.note || ''}">${r.note || '-'}</td>
                 <td style="text-align:center; position:relative">
                   <button onclick="toggleActionMenu('leave_${r.id}', event)" style="background:none; border:none; color:var(--text-3); cursor:pointer; padding:4px"><i data-lucide="more-vertical" style="width:14px; height:14px"></i></button>
-                  <div id="actionMenu_leave_${r.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:var(--shadow-md); z-index:100; min-width:100px; padding:4px">
-                    <button onclick="editLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:Kanit; font-size:.75rem; cursor:pointer; color:var(--text-2); border-radius:6px" onmouseover="this.style.background='#f4f7fe'" onmouseout="this.style.background='none'"><i data-lucide="edit-2" style="width:12px; height:12px; margin-right:6px; vertical-align:middle"></i> แก้ไข</button>
-                    <button onclick="deleteLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:Kanit; font-size:.75rem; cursor:pointer; color:#ef4444; border-radius:6px" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'"><i data-lucide="trash-2" style="width:12px; height:12px; margin-right:6px; vertical-align:middle"></i> ลบ</button>
+                  <div id="actionMenu_leave_${r.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); z-index:100; min-width:110px; padding:6px; flex-direction:column; gap:2px">
+                    <button onclick="editLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#475569; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">
+                      <i data-lucide="edit-3" style="width:14px; height:14px; color:#64748b; display:inline-block; vertical-align:middle"></i>
+                      <span>แก้ไข</span>
+                    </button>
+                    <button onclick="deleteLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#ef4444; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                      <i data-lucide="trash-2" style="width:14px; height:14px; color:#ef4444; display:inline-block; vertical-align:middle"></i>
+                      <span>ลบ</span>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -4353,33 +4476,74 @@ window.pageEmployee = function() {
       })));
     }
 
-    const stats = {
-      total: holidays.length,
-      finished: holidays.filter(h => h.status === 'finished').length,
-      upcoming: holidays.filter(h => h.status === 'upcoming').length,
-      not_scheduled: holidays.filter(h => h.status === 'not_scheduled').length
-    };
+    if (typeof window.selectedHolidayYear === 'undefined') {
+      window.selectedHolidayYear = String(new Date().getFullYear());
+    }
+    if (typeof window.selectedHolidayProject === 'undefined') {
+      window.selectedHolidayProject = '';
+    }
 
-    const finishedPct = stats.total > 0 ? ((stats.finished / stats.total) * 100).toFixed(2) : '0.00';
-    const upcomingPct = stats.total > 0 ? ((stats.upcoming / stats.total) * 100).toFixed(2) : '0.00';
-    const notScheduledPct = stats.total > 0 ? ((stats.not_scheduled / stats.total) * 100).toFixed(2) : '0.00';
-
-    // Extract unique years from holidays
     const yearsSet = new Set();
+    const projectsSet = new Set();
+
+    if (window.PREMIUM_SCOPE_DATA) {
+      window.PREMIUM_SCOPE_DATA.forEach(group => {
+        if (group.account) projectsSet.add(group.account);
+      });
+    }
+
     holidays.forEach(h => {
-      const match = h.date.match(/\d{4}/);
+      const match = h.date?.match(/\d{4}/);
       if (match) {
         yearsSet.add(match[0]);
-      } else {
+      } else if (h.date) {
         const parts = h.date.split(/[\s/-]+/);
         const lastPart = parts[parts.length - 1];
         if (lastPart && lastPart.length === 4) {
           yearsSet.add(lastPart);
         }
       }
+
+      h.tasks?.forEach(t => {
+        t.assignments?.forEach(a => {
+          if (a.project && a.project !== '-') projectsSet.add(a.project);
+        });
+        if (t.project && t.project !== '-') projectsSet.add(t.project);
+      });
     });
+
     const uniqueYears = Array.from(yearsSet).sort((a,b) => b.localeCompare(a));
-    const yearOptions = uniqueYears.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+    const uniqueProjects = Array.from(projectsSet).sort((a,b) => a.localeCompare(b));
+
+    let filteredHolidays = holidays;
+
+    if (window.selectedHolidayYear) {
+      filteredHolidays = filteredHolidays.filter(h => {
+        return h.date && h.date.includes(window.selectedHolidayYear);
+      });
+    }
+
+    if (window.selectedHolidayProject) {
+      filteredHolidays = filteredHolidays.filter(h => {
+        return h.tasks && h.tasks.some(t => {
+          const list = t.assignments || [];
+          const hasProjInAssignment = list.some(a => a.project === window.selectedHolidayProject);
+          const hasProjInTask = t.project === window.selectedHolidayProject;
+          return hasProjInAssignment || hasProjInTask;
+        });
+      });
+    }
+
+    const stats = {
+      total: filteredHolidays.length,
+      finished: filteredHolidays.filter(h => h.status === 'finished').length,
+      upcoming: filteredHolidays.filter(h => h.status === 'upcoming').length,
+      not_scheduled: filteredHolidays.filter(h => h.status === 'not_scheduled').length
+    };
+
+    const finishedPct = stats.total > 0 ? ((stats.finished / stats.total) * 100).toFixed(2) : '0.00';
+    const upcomingPct = stats.total > 0 ? ((stats.upcoming / stats.total) * 100).toFixed(2) : '0.00';
+    const notScheduledPct = stats.total > 0 ? ((stats.not_scheduled / stats.total) * 100).toFixed(2) : '0.00';
 
     window.changeHolidayPage = function(p) {
       window.holidayCurrentPage = p;
@@ -4388,61 +4552,85 @@ window.pageEmployee = function() {
       }
     };
 
-    // Dynamic year filter function
-    window.filterHolidaysByYear = function(year) {
-      const rows = document.querySelectorAll('#holidayTable tbody tr');
-      let visibleCount = 0;
-      rows.forEach(row => {
-        const dateCell = row.querySelector('td[rowspan]');
-        if (dateCell) {
-          const text = dateCell.textContent;
-          if (!year || text.includes(year)) {
-            row.style.display = '';
-            visibleCount++;
-            let next = row.nextElementSibling;
-            while (next && !next.querySelector('td[rowspan]')) {
-              next.style.display = '';
-              next = next.nextElementSibling;
-            }
-          } else {
-            row.style.display = 'none';
-            let next = row.nextElementSibling;
-            while (next && !next.querySelector('td[rowspan]')) {
-              next.style.display = 'none';
-              next = next.nextElementSibling;
-            }
-          }
-        }
-      });
-      
-      const countEl = document.getElementById('holidayDisplayRange');
-      if (countEl) {
-        countEl.textContent = `แสดงทั้งหมด ${visibleCount} รายการ`;
+    window.changeHolidayYearFilter = function(year) {
+      window.selectedHolidayYear = year;
+      window.holidayCurrentPage = 1;
+      if (typeof window.navigate === 'function') {
+        window.navigate('public-holiday');
+      }
+    };
+
+    window.changeHolidayProjectFilter = function(proj) {
+      window.selectedHolidayProject = proj;
+      window.holidayCurrentPage = 1;
+      if (typeof window.navigate === 'function') {
+        window.navigate('public-holiday');
+      }
+    };
+
+    window.updateHolidayClearButtonVisibility = function() {
+      const clearBtn = document.getElementById('clearHolidayFiltersBtn');
+      if (!clearBtn) return;
+      const searchVal = document.getElementById('holidaySearch') ? document.getElementById('holidaySearch').value : '';
+      const hasYearFilter = window.selectedHolidayYear && window.selectedHolidayYear !== '';
+      const hasProjectFilter = window.selectedHolidayProject && window.selectedHolidayProject !== '';
+      if (searchVal || hasProjectFilter || (hasYearFilter && window.selectedHolidayYear !== String(new Date().getFullYear()))) {
+        clearBtn.style.display = 'inline-flex';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    };
+
+    window.clearHolidayFilters = function() {
+      window.selectedHolidayYear = String(new Date().getFullYear());
+      window.selectedHolidayProject = '';
+      const searchInput = document.getElementById('holidaySearch');
+      if (searchInput) searchInput.value = '';
+      window.holidayCurrentPage = 1;
+      if (typeof window.navigate === 'function') {
+        window.navigate('public-holiday');
       }
     };
 
     const searchHtml = `
-      <div class="search-box" style="width: 200px; background: #fff; height: 34px; display: flex; align-items: center; position: relative; border: 1px solid #e4e8ef; border-radius: 99px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
-        <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 14px; color: var(--text-3)"></i>
-        <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 14px 0 32px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
+      <div class="search-box" style="width: 220px; flex-shrink: 0; border-radius: 9999px !important;">
+        <i data-lucide="search" style="width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0;"></i>
+        <input type="text" id="holidaySearch" placeholder="ค้นหาวันหยุด..." style="padding: 0; border: none; outline: none; background: transparent;" onkeyup="filterTable('holidayTable', 'holidaySearch'); window.updateHolidayClearButtonVisibility();">
       </div>
     `;
 
-    // Set up pagination
+    const yearSelectHtml = `
+      <select id="holidayYearFilter" class="select-input" onchange="window.changeHolidayYearFilter(this.value)" style="width: 120px; flex-shrink: 0; border-radius: 9999px !important;">
+        <option value="">All Years</option>
+        ${uniqueYears.map(y => `<option value="${y}" ${window.selectedHolidayYear === y ? 'selected' : ''}>Year ${y}</option>`).join('')}
+      </select>
+    `;
+
+    const projectSelectHtml = `
+      <select id="holidayProjectFilter" class="select-input" onchange="window.changeHolidayProjectFilter(this.value)" style="width: 180px; flex-shrink: 0; border-radius: 9999px !important;">
+        <option value="">All Projects</option>
+        ${uniqueProjects.map(p => `<option value="${p}" ${window.selectedHolidayProject === p ? 'selected' : ''}>${p}</option>`).join('')}
+      </select>
+    `;
+
+    const showClearStyle = (
+      (window.selectedHolidayYear && window.selectedHolidayYear !== String(new Date().getFullYear())) ||
+      (window.selectedHolidayProject)
+    ) ? 'display: inline-flex;' : 'display: none;';
+
     if (typeof window.holidayCurrentPage === 'undefined') window.holidayCurrentPage = 1;
     window.holidayPageSize = 10;
     
-    const totalFiltered = holidays.length;
+    const totalFiltered = filteredHolidays.length;
     const totalPages = Math.ceil(totalFiltered / window.holidayPageSize);
     
-    // Make sure current page is valid
     if (window.holidayCurrentPage > totalPages && totalPages > 0) {
       window.holidayCurrentPage = totalPages;
     }
     if (window.holidayCurrentPage < 1) window.holidayCurrentPage = 1;
     
     const startIndex = (window.holidayCurrentPage - 1) * window.holidayPageSize;
-    const paginatedHolidays = holidays.slice(startIndex, startIndex + window.holidayPageSize);
+    const paginatedHolidays = filteredHolidays.slice(startIndex, startIndex + window.holidayPageSize);
 
     const pageStart = totalFiltered > 0 ? startIndex + 1 : 0;
     const pageEnd = Math.min(window.holidayCurrentPage * window.holidayPageSize, totalFiltered);
@@ -4513,7 +4701,7 @@ window.pageEmployee = function() {
       tableBodyHtml = `
         <tr>
           <td colspan="7" style="padding: 32px; text-align: center; color: #94a3b8; font-size: .85rem; font-style: italic">
-            ไม่มีข้อมูลวันหยุดนักขัตฤกษ์
+            No holiday data available
           </td>
         </tr>
       `;
@@ -4538,7 +4726,7 @@ window.pageEmployee = function() {
           // 3. Task / Assignment template HTML
           let taskHtml = '';
           if (t.isEmptyRow) {
-            taskHtml = `<span style="font-size: 0.8rem; color: #94a3b8; font-style: italic; font-weight: 500; display: block; margin-top: 4px;">ไม่มีข้อมูลงาน</span>`;
+            taskHtml = `<span style="font-size: 0.8rem; color: #94a3b8; font-style: italic; font-weight: 500; display: block; margin-top: 4px;">No task data</span>`;
           } else {
             const template = (window.HOLIDAY_TEMPLATES || []).find(tpl => tpl.section === t.section);
             const list = template && template.assignments && template.assignments.length > 0
@@ -4551,7 +4739,7 @@ window.pageEmployee = function() {
             
             let assignmentsHtml = '';
             if (list.length === 0) {
-              assignmentsHtml = '<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:12px 0; font-style:italic;">ไม่มีข้อมูลงาน</div>';
+              assignmentsHtml = '<div style="font-size:0.75rem; color:#94a3b8; text-align:center; padding:12px 0; font-style:italic;">No task data</div>';
             } else {
               assignmentsHtml = `
                 <div style="display:flex; flex-direction:column; gap:12px;">
@@ -4584,7 +4772,7 @@ window.pageEmployee = function() {
                   </div>
                   ${list.length > 0 ? `
                   <div style="background: linear-gradient(135deg, #e0e7ff, #e8efff); color: #4338ca; padding: 4px 12px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(99, 102, 241, 0.1);">
-                    <i data-lucide="activity" style="width:12px; height:12px"></i> รวม ${totalPct}%
+                    <i data-lucide="activity" style="width:12px; height:12px"></i> Total ${totalPct}%
                   </div>` : ''}
                 </div>
                 ${assignmentsHtml}
@@ -4621,7 +4809,7 @@ window.pageEmployee = function() {
               </div>
             `;
           } else {
-            employeeHtml = `<div style="font-size: .8rem; color: #94a3b8; font-style: italic">ยังไม่ได้กำหนดคนปฏิบัติงาน</div>`;
+            employeeHtml = `<div style="font-size: .8rem; color: #94a3b8; font-style: italic">No assigned worker</div>`;
           }
           
           rowHtml += `<td style="padding: 16px 24px; ${borderBottomStyle}">${employeeHtml}</td>`;
@@ -4631,7 +4819,7 @@ window.pageEmployee = function() {
           if (t.time !== '-') {
             timeHtml = `
               <div style="font-size: .8rem; font-weight: 600; color: #1e293b">${t.time}</div>
-              <div style="font-size: .7rem; color: #94a3b8">(8 ชม.)</div>
+              <div style="font-size: .7rem; color: #94a3b8">(8 hrs)</div>
             `;
           } else {
             timeHtml = `<span style="color: #94a3b8">-</span>`;
@@ -4646,21 +4834,21 @@ window.pageEmployee = function() {
               statusHtml = `
                 <span style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 99px; background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0; font-size: .72rem; font-weight: 700; white-space: nowrap;">
                   <i data-lucide="check-circle" style="width: 13px; height: 13px; margin-right: 5px; flex-shrink: 0;"></i>
-                  เสร็จสิ้นแล้ว
+                  Finished
                 </span>
               `;
             } else if (h.status === 'upcoming') {
               statusHtml = `
                 <span style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 99px; background: #fff7ed; color: #f59e0b; border: 1px solid #fed7aa; font-size: .72rem; font-weight: 700; white-space: nowrap;">
                   <i data-lucide="clock" style="width: 13px; height: 13px; margin-right: 5px; flex-shrink: 0;"></i>
-                  กำลังจะถึง
+                  Upcoming
                 </span>
               `;
             } else {
               statusHtml = `
                 <span style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 99px; background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; font-size: .72rem; font-weight: 700; white-space: nowrap;">
                   <i data-lucide="help-circle" style="width: 13px; height: 13px; margin-right: 5px; flex-shrink: 0;"></i>
-                  ยังไม่มีกำหนดรายการ
+                  Not Scheduled
                 </span>
               `;
             }
@@ -4688,20 +4876,24 @@ window.pageEmployee = function() {
     <div class="fade-in">
       <!-- HEADER -->
       <!-- Top Action Bar -->
-      <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
-        <div style="height:34px; display:flex; align-items:center">
-          ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'auto', null, true, searchHtml) : ''}
-        </div>
+      <div class="toolbar" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
+        ${searchHtml}
+        ${yearSelectHtml}
+        ${projectSelectHtml}
 
+        <button id="clearHolidayFiltersBtn" onclick="window.clearHolidayFilters()" style="${showClearStyle} background:none; border:none; color:#ef4444; font-family:Kanit; font-size:.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; padding:0 12px; height:34px; white-space:nowrap;">
+          ✕ Clear
+        </button>
+        
         <div style="width: 1px; height: 18px; background: #e4e8ef; margin: 0 4px; flex-shrink: 0;"></div>
 
         <!-- 🟢 ปุ่มเพิ่มวันหยุดใหม่ -->
         <button onclick="openAddHolidayModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:10px; font-size:.75rem; font-weight:700; flex-shrink:0; background:#635bff; color:#fff; border:none; cursor:pointer; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3); transition: background 0.2s;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#635bff'">
-          <i data-lucide="plus" style="width:14px; height:14px"></i> เพิ่มวันหยุด
+          <i data-lucide="plus" style="width:14px; height:14px"></i> Add Holiday
         </button>
 
         <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:0 16px; border-radius:8px; height:34px; font-size:.7rem; font-weight:700; flex-shrink:0; background:#ffffff; color:#635bff; border:1px solid #635bff; cursor:pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.08);" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#ffffff'">
-          <i data-lucide="settings" style="width:14px; height:14px"></i> จัดการชุดงาน (Templates)
+          <i data-lucide="settings" style="width:14px; height:14px"></i> Manage Templates
         </button>
       </div>
 
@@ -4712,11 +4904,11 @@ window.pageEmployee = function() {
             <i data-lucide="calendar" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดทั้งหมด</div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Total Holidays</div>
             <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-              ${stats.total} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+              ${stats.total} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">Days</span>
             </div>
-            <div style="font-size: .65rem; color: #6366f1; font-weight: 600; margin-top: 4px">ข้อมูลทั้งหมด</div>
+            <div style="font-size: .65rem; color: #6366f1; font-weight: 600; margin-top: 4px">All Data</div>
           </div>
         </div>
         <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -4724,11 +4916,11 @@ window.pageEmployee = function() {
             <i data-lucide="check-circle" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดเสร็จสิ้นแล้ว</div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Finished Holidays</div>
             <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-              ${stats.finished} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+              ${stats.finished} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">Days</span>
             </div>
-            <div style="font-size: .65rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}% ของทั้งหมด</div>
+            <div style="font-size: .65rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}% of total</div>
           </div>
         </div>
         <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -4736,11 +4928,11 @@ window.pageEmployee = function() {
             <i data-lucide="clock" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดกำลังจะถึง</div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Upcoming Holidays</div>
             <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-              ${stats.upcoming} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+              ${stats.upcoming} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">Days</span>
             </div>
-            <div style="font-size: .65rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}% ของทั้งหมด</div>
+            <div style="font-size: .65rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}% of total</div>
           </div>
         </div>
         <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -4748,11 +4940,11 @@ window.pageEmployee = function() {
             <i data-lucide="calendar-plus" style="width: 20px; height: 20px"></i>
           </div>
           <div>
-            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">ยังไม่ได้จัดแผน</div>
+            <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Not Scheduled</div>
             <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-              ${stats.not_scheduled} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+              ${stats.not_scheduled} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">Days</span>
             </div>
-            <div style="font-size: .65rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}% ของทั้งหมด</div>
+            <div style="font-size: .65rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}% of total</div>
           </div>
         </div>
       </div>
@@ -4760,19 +4952,19 @@ window.pageEmployee = function() {
       <!-- TABLE CARD -->
       <div class="card" style="padding: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border)">
         <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">รายการวันหยุดนักขัตฤกษ์</h3>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">Public Holidays List</h3>
         </div>
         <div style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 260px);">
           <table id="holidayTable" style="width: 100%; border-collapse: collapse; text-align: left">
             <thead style="background: #f8fafc;">
               <tr>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">วันที่</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">วันหยุด</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">วันหยุด</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">วันหยุด</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">วันหยุด</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">สถานะ</th>
-                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; text-align: center; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">การจัดการ</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Date</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Holiday</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Task Plan</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Worker</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Work Shift</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Status</th>
+                <th style="padding: 16px 24px; font-size: .75rem; font-weight: 600; color: #64748b; text-align: center; position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 1px solid var(--border);">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -4946,7 +5138,7 @@ window.pageEmployee = function() {
         localShifts = localShifts.filter(ls => !(ls.name === holidayName && ls.date === holidayDate));
         localStorage.setItem('holiday_shifts', JSON.stringify(localShifts));
 
-        if (window.showToast) window.showToast('ลบรายการงานวันหยุดทั้งหมดเรียบร้อยแล้ว', 'success');
+        if (window.showToast) window.showToast('All holiday tasks deleted successfully', 'success');
         navigate('public-holiday');
       }
     );
@@ -4956,7 +5148,7 @@ window.pageEmployee = function() {
     const select = document.getElementById('applyTemplateSelect');
     const tplId = select ? select.value : '';
     if (!tplId) {
-      if (window.showToast) window.showToast('กรุณาเลือกชุดงานมาตรฐานก่อน', 'warning');
+      if (window.showToast) window.showToast('Please select a standard task set first', 'warning');
       return;
     }
     const modal = document.getElementById('manageHolidayModal');
@@ -5087,7 +5279,7 @@ window.pageEmployee = function() {
           ` : ''}
           
           <div style="display:flex; justify-content:flex-end; align-items:center">
-            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:12px; font-weight:600; cursor:pointer">ปิดหน้าต่าง</button>
+            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:12px; font-weight:600; cursor:pointer">Close Window</button>
           </div>
         </div>
       </div>
@@ -5129,7 +5321,7 @@ window.pageEmployee = function() {
           
           localStorage.setItem('holiday_shifts', JSON.stringify(localShifts));
           
-          if (window.showToast) window.showToast('ลบชุดงานเรียบร้อยแล้ว', 'success');
+          if (window.showToast) window.showToast('Task set deleted successfully', 'success');
           
           const manageModal = document.getElementById('manageHolidayModal');
           if (manageModal) manageModal.remove();
@@ -5368,7 +5560,7 @@ window.pageEmployee = function() {
             <div>
               <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">วันหยุด (Public Holiday)</label>
               <select id="htHolidaySelect" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-                <option value="" disabled selected>-- เลือกวันหยุด --</option>
+                <option value="" disabled selected>-- Select Holiday --</option>
               </select>
             </div>
           </div>
@@ -5376,7 +5568,7 @@ window.pageEmployee = function() {
           <div style="margin-bottom:16px;">
             <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">แผนก (Section)</label>
             <select id="htSection" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-              <option value="" disabled ${!matchedTask ? 'selected' : ''}>-- เลือก Section --</option>
+              <option value="" disabled ${!matchedTask ? 'selected' : ''}>-- Select Section --</option>
               <option value="Operation" ${matchedTask && matchedTask.section === 'Operation' ? 'selected' : ''}>Operation</option>
               <option value="Content & Graphics" ${matchedTask && matchedTask.section === 'Content & Graphics' ? 'selected' : ''}>Content & Graphics</option>
               <option value="Call Center" ${matchedTask && matchedTask.section === 'Call Center' ? 'selected' : ''}>Call Center</option>
@@ -5390,16 +5582,16 @@ window.pageEmployee = function() {
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
               <button type="button" onclick="window.addHolidayTaskProjectRow()" style="background:none; border:none; color:var(--primary); font-size:.7rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; padding:0;">
-                <i data-lucide="plus" style="width:12px; height:12px"></i> เพิ่มงานอื่นในกะนี้
+                <i data-lucide="plus" style="width:12px; height:12px"></i> Add another job to this shift
               </button>
-              <div id="htTotalPercent" style="font-size:.8rem; font-weight:700; color:#10b981;">รวม: 100%</div>
+              <div id="htTotalPercent" style="font-size:.8rem; font-weight:700; color:#10b981;">Total: 100%</div>
             </div>
           </div>
 
           <div style="margin-bottom:16px">
             <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">กะเวลาปฏิบัติงาน</label>
             <select id="htTime" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-              <option value="" disabled ${!matchedTask ? 'selected' : ''}>-- เลือกกะเวลา --</option>
+              <option value="" disabled ${!matchedTask ? 'selected' : ''}>-- Select Work Shift --</option>
               <option value="เช้าตรู่ 06.00-15.00 น." ${matchedTask && matchedTask.time === 'เช้าตรู่ 06.00-15.00 น.' ? 'selected' : ''}>เช้าตรู่ 06.00-15.00 น.</option>
               <option value="เช้า 09.00-18.00 น." ${matchedTask && matchedTask.time === 'เช้า 09.00-18.00 น.' ? 'selected' : ''}>เช้า 09.00-18.00 น.</option>
               <option value="สาย 12.00-21.00 น." ${matchedTask && matchedTask.time === 'สาย 12.00-21.00 น.' ? 'selected' : ''}>สาย 12.00-21.00 น.</option>
@@ -5412,7 +5604,7 @@ window.pageEmployee = function() {
           <div style="margin-bottom:16px">
             <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">ผู้ดำเนินการ</label>
             <select id="htPerson" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-              <option value="">-- เลือกพนักงาน --</option>
+              <option value="">-- Select Employee --</option>
               ${(DATA.employees || []).map(emp => `
                 <option value="${emp.name}" ${matchedTask && matchedTask.person === emp.name ? 'selected' : ''}>${emp.name} (${emp.nickname || emp.pos})</option>
               `).join('')}
@@ -5429,8 +5621,8 @@ window.pageEmployee = function() {
           </div>
 
           <div style="display:flex; justify-content:flex-end; gap:8px">
-            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:12px; font-weight:600; cursor:pointer">ยกเลิก</button>
-            <button type="submit" class="btn btn-primary" style="background:var(--primary); color:#fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer">${isEditMode ? 'บันทึกการแก้ไข' : 'ถัดไป: เลือกวันหยุด ➔'}</button>
+            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:12px; font-weight:600; cursor:pointer">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background:var(--primary); color:#fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer">${isEditMode ? 'Save Changes' : 'Next: Select Holidays ➔'}</button>
           </div>
         </form>
       </div>
@@ -5467,7 +5659,7 @@ window.pageEmployee = function() {
     if (!sel || !window.currentModalHolidays) return;
     
     const filtered = window.currentModalHolidays.filter(h => h.date.includes(year));
-    let opts = '<option value="" disabled selected>-- เลือกวันหยุด --</option>';
+    let opts = '<option value="" disabled selected>-- Select Holiday --</option>';
     filtered.forEach(h => {
       opts += `<option value="${h.name}" data-date="${h.date}">${h.name} (${h.date})</option>`;
     });
@@ -5494,7 +5686,7 @@ window.pageEmployee = function() {
     if (jobSelect) {
       jobSelect.style.display = '';
       jobSelect.classList.remove('tomselected', 'ts-hidden-accessible');
-      jobSelect.innerHTML = '<option value="">-- เลือกงาน --</option>';
+      jobSelect.innerHTML = '<option value="">-- Select Job --</option>';
       if (jobSelect.tomselect) {
         jobSelect.tomselect.destroy();
       }
@@ -5620,23 +5812,23 @@ window.pageEmployee = function() {
     });
 
     if (isEdit && (!holidayName || !holidayDate)) {
-      if (typeof showToast === 'function') showToast('กรุณาเลือกปีและชื่อวันหยุดให้ครบถ้วน', 'danger');
-      else alert('กรุณาเลือกปีและชื่อวันหยุดให้ครบถ้วน');
+      if (typeof showToast === 'function') showToast('Please select year and holiday name completely', 'danger');
+      else alert('Please select year and holiday name completely');
       return;
     }
     if (!section) {
-      if (typeof showToast === 'function') showToast('กรุณาเลือก Section', 'danger');
-      else alert('กรุณาเลือก Section');
+      if (typeof showToast === 'function') showToast('Please select Section', 'danger');
+      else alert('Please select Section');
       return;
     }
     if (assignments.length === 0) {
-      if (typeof showToast === 'function') showToast('กรุณาเลือกโครงการและงานให้ครบถ้วนอย่างน้อย 1 รายการ', 'danger');
-      else alert('กรุณาเลือกโครงการและงานให้ครบถ้วนอย่างน้อย 1 รายการ');
+      if (typeof showToast === 'function') showToast('Please select at least 1 project and job', 'danger');
+      else alert('Please select at least 1 project and job');
       return;
     }
     if (!time) {
-      if (typeof showToast === 'function') showToast('กรุณาเลือกกะเวลาปฏิบัติงาน', 'danger');
-      else alert('กรุณาเลือกปีและชื่อวันหยุดให้ครบถ้วน');
+      if (typeof showToast === 'function') showToast('Please select work shift', 'danger');
+      else alert('Please select year and holiday name completely');
       return;
     }
     
@@ -5734,9 +5926,9 @@ window.pageEmployee = function() {
     document.getElementById('addHolidayTaskModal').remove();
 
     if (typeof window.showToast === 'function') {
-      window.showToast(isEdit ? 'แก้ไขชุดงานวันหยุดเรียบร้อย' : 'เพิ่มชุดงานวันหยุดเรียบร้อย', 'success');
+      window.showToast(isEdit ? 'Holiday task set updated successfully' : 'Holiday task set added successfully', 'success');
     } else {
-      alert(isEdit ? 'แก้ไขชุดงานวันหยุดเรียบร้อย!' : 'เพิ่มชุดงานวันหยุดเรียบร้อย!');
+      alert(isEdit ? 'Holiday task set updated successfully' : 'Holiday task set added successfully');
     }
 
     if (typeof navigate === 'function') {
@@ -5747,8 +5939,8 @@ window.pageEmployee = function() {
   window.openSelectHolidaysModal = function() {
     const holidays = window.currentModalHolidays || [];
     if (holidays.length === 0) {
-      if (typeof showToast === 'function') showToast('ไม่พบข้อมูลวันหยุด', 'danger');
-      else alert('กรุณาเลือกปีและชื่อวันหยุดให้ครบถ้วน');
+      if (typeof showToast === 'function') showToast('No holiday data found', 'danger');
+      else alert('Please select year and holiday name completely');
       return;
     }
 
@@ -5811,15 +6003,15 @@ window.pageEmployee = function() {
   window.submitHolidayTaskBatch = function() {
     const checkboxes = document.querySelectorAll('.ht-holiday-checkbox:checked');
     if (checkboxes.length === 0) {
-      if (typeof showToast === 'function') showToast('กรุณาเลือกวันหยุดอย่างน้อย 1 วัน', 'danger');
-      else alert('กรุณาเลือกโครงการและงานให้ครบถ้วนอย่างน้อย 1 รายการ');
+      if (typeof showToast === 'function') showToast('Please select at least 1 holiday', 'danger');
+      else alert('Please select at least 1 project and job');
       return;
     }
 
     const pending = window.pendingHolidayTask;
     if (!pending) {
-      if (typeof showToast === 'function') showToast('ไม่พบข้อมูลงานที่รอดำเนินการ', 'danger');
-      else alert('กรุณาเลือกปีและชื่อวันหยุดให้ครบถ้วน');
+      if (typeof showToast === 'function') showToast('No pending task data found', 'danger');
+      else alert('Please select year and holiday name completely');
       return;
     }
 
@@ -5897,9 +6089,9 @@ window.pageEmployee = function() {
     window.pendingHolidayTask = null;
 
     if (typeof window.showToast === 'function') {
-      window.showToast(`เพิ่มชุดงานลงใน ${selectedHolidays.length} วันหยุดเรียบร้อยแล้ว`, 'success');
+      window.showToast(`Added task set to ${selectedHolidays.length} holidays successfully`, 'success');
     } else {
-      alert(`เพิ่มชุดงานลงใน ${selectedHolidays.length} วันหยุดเรียบร้อยแล้ว!`);
+      alert(`Added task set to ${selectedHolidays.length} holidays successfully`);
     }
 
     if (typeof navigate === 'function') {
@@ -5940,15 +6132,15 @@ window.pageEmployee = function() {
 
     const html = `
     <div id="${modalId}" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.4); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:99999; animation: fadeIn 0.3s ease">
-      <div class="modal-card" style="background:#fff; width:420px; border-radius:24px; padding:40px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
+      <div class="modal-card" style="background:#fff; width:460px; border-radius:24px; padding:40px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.2); transform:scale(1); animation: modalBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)">
         <div style="width:72px; height:72px; border-radius:22px; background:${bgLight}; color:${color}; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; transform: rotate(-5deg)">
           <i data-lucide="${icon}" style="width:36px; height:36px"></i>
         </div>
         <h3 style="margin:0 0 12px; font-size:1.3rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
         <p style="margin:0 0 32px; font-size:.9rem; color:#64748b; line-height:1.6; font-family:Kanit; padding:0 10px">${message}</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-          <button onclick="document.getElementById('${modalId}').remove()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; padding:14px; border-radius:16px; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.9rem; transition:all 0.2s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">Cancel</button>
-          <button id="confirmModalBtn" style="background:${color}; color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.9rem; box-shadow: 0 8px 20px ${color}30; transition:all 0.2s">${confirmText}</button>
+          <button onclick="document.getElementById('${modalId}').remove()" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; height:34px; padding:0 16px; border-radius:9999px; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.82rem; transition:all 0.2s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap !important;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'"><i data-lucide="x" style="width:16px; height:16px"></i>Cancel</button>
+          <button id="confirmModalBtn" style="background:${color}; color:#fff; border:none; height:34px; padding:0 16px; border-radius:9999px; font-weight:700; font-family:Kanit; cursor:pointer; font-size:.82rem; box-shadow: 0 8px 20px ${color}30; transition:all 0.2s; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap !important;"><i data-lucide="${icon}" style="width:16px; height:16px"></i>${confirmText}</button>
         </div>
       </div>
     </div>
@@ -6372,7 +6564,7 @@ window.pageEmployee = function() {
         if (!document.getElementById('scopeTableBody')) return;
 
         if (index >= data.length) {
-            if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody });
+            if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody.closest('table') || tbody });
             return;
         }
 
@@ -6462,20 +6654,23 @@ window.pageEmployee = function() {
             </div>
           </div>
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 300px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
-          ${renderNodeBadge(item.node)}
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 300px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            ${renderNodeBadge(item.node)}
+          </div>
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 420px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
-          <div style="font-size: 0.7rem; font-weight: 700; color: ${item.progress > 120 ? '#991b1b' : 'var(--text-2)'}">${item.progress}%</div>
-          <div style="width: 100%; height: 8px; background: #eef2ff; border-radius: 99px; overflow: hidden; margin-top: 4px; border: 1px solid #e2e8f0">
-            <div style="width: ${Math.min(item.progress, 100)}%; height: 100%; background: ${(() => {
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: 420px; z-index: 10; box-shadow: 2px 0 5px rgba(0,0,0,0.02)">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: ${item.progress > 100 ? '#ef4444' : 'var(--text-2)'}; margin-bottom: 4px;">${item.progress}%</div>
+            <div style="width: 80px; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative;">
+              <div style="width: ${Math.min(item.progress, 100)}%; height: 100%; background: ${(() => {
         const p = item.progress;
-        if (p < 50) return '#ef4444'; // Red
-        if (p <= 80) return '#f59e0b'; // Yellow
-        if (p <= 100) return '#10b981'; // Light Green
-        if (p <= 120) return '#065f46'; // Dark Green
-        return '#991b1b'; // Dark Red (>120)
+        if (p <= 50) return '#6366f1'; // Indigo (Normal/Low)
+        if (p <= 100) return '#10b981'; // Green (Optimal)
+        if (p <= 120) return '#fb923c'; // Orange (High)
+        return '#ef4444'; // Red (Overloaded)
       })()}; border-radius: 99px"></div>
+            </div>
           </div>
         </td>
         ${days.map(d => {
@@ -6520,7 +6715,10 @@ window.pageEmployee = function() {
 
         const assignees = matchedTasks.map(t => {
           const emp = (DATA.employees || []).find(e => e.id === t.person || e.name === t.person || e.nickname === t.person);
-          return emp ? window.getEmployeeDisplayName(emp) : t.person;
+          if (emp) {
+            return (emp.nickname && emp.nickname !== '-') ? emp.nickname : emp.name.split(' ')[0];
+          }
+          return t.person;
         });
 
         // Remove duplicates and join
@@ -6573,7 +6771,7 @@ window.pageEmployee = function() {
     };
     const style = nodeColors[node] || nodeColors['Other'];
     return `
-      <div style="display:inline-flex; align-items:center; justify-content:center; padding:4px 12px; border-radius:20px; background:${style.bg}; border:1px solid ${style.border}; color:${style.text}; font-size:.65rem; font-weight:700; white-space:nowrap">
+      <div style="display:inline-flex; align-items:center; justify-content:center; padding:4px 12px; border-radius:99px; background:${style.bg}; border:1px solid ${style.border}; color:${style.text}; font-size:.65rem; font-weight:700; white-space:nowrap">
         ${node}
       </div>
     `;
@@ -6653,12 +6851,12 @@ window.pageEmployee = function() {
           ${renderDateFilter('applyScopeDashboardFilters()', 'auto', null, false)}
 
           <!-- Search Box -->
-          <div class="search-box" style="width: 200px; background: #f8f9fb; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; gap: 8px; height: 34px">
+          <div class="search-box" style="width: 200px; background: #ffffff;">
             <i data-lucide="search" style="width: 14px; height: 14px; color: var(--text-3)"></i>
-            <input type="text" id="scopeSearch" oninput="applyScopeDashboardFilters()" placeholder="Search Project or Scope..." style="background: none; border: none; outline: none; font-size: 0.75rem; width: 100%; color: var(--text); font-family: 'Kanit', sans-serif">
+            <input type="text" id="scopeSearch" oninput="applyScopeDashboardFilters()" placeholder="Search..." style="background: none; border: none; outline: none; font-size: 0.75rem; width: 100%; color: var(--text); font-family: 'Kanit', sans-serif">
           </div>
 
-          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 140px; padding: 0 10px; border-radius: 8px; font-size: 0.8rem; border: 1px solid var(--border); background: #f8f9fb; color: var(--text); outline: none">
+          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="min-width: 140px;">
             <option value="all">All Projects</option>
             ${(() => {
         // Use dynamically fetched accounts
@@ -6679,7 +6877,7 @@ window.pageEmployee = function() {
         return sortedProjects.map(p => `<option value="${p}">${p}</option>`).join('');
       })()}
           </select>
-          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 130px; padding: 0 10px; border-radius: 8px; font-size: 0.8rem; border: 1px solid var(--border); background: #f8f9fb; color: var(--text); outline: none">
+          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="min-width: 130px;">
             <option value="all">All Nodes</option>
             ${(() => {
         const nodes = window.PROJECT_NODES || ['Adhoc', 'AE', 'AI', 'Content', 'Coordinator', 'Graphic', 'Internal', 'Meeting', 'Monitor', 'Other', 'Production', 'Report', 'Seminar'];
@@ -6697,7 +6895,7 @@ window.pageEmployee = function() {
       <div class="stats-grid" style="margin-bottom: 24px">
         <!-- Card: Total Projects -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="briefcase" style="width: 22px; height: 22px; color: var(--primary)"></i>
           </div>
           <div style="min-width: 0">
@@ -6709,7 +6907,7 @@ window.pageEmployee = function() {
         
         <!-- Card: Total Scopes -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="pie-chart" style="width: 22px; height: 22px; color: var(--primary)"></i>
           </div>
           <div style="min-width: 0">
@@ -6721,7 +6919,7 @@ window.pageEmployee = function() {
 
         <!-- Card: Allocation Circle -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--warn-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--warn-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
              <div style="width: 32px; height: 32px; position: relative">
               <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
                 <circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="4"></circle>
@@ -6738,7 +6936,7 @@ window.pageEmployee = function() {
 
         <!-- Card: High Workload -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--danger-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--danger-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="trending-up" style="width: 22px; height: 22px; color: var(--danger)"></i>
           </div>
           <div style="min-width: 0">
@@ -6750,7 +6948,7 @@ window.pageEmployee = function() {
 
         <!-- Card: Normal Workload -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="bar-chart-2" style="width: 22px; height: 22px; color: var(--accent)"></i>
           </div>
           <div style="min-width: 0">
@@ -6762,7 +6960,7 @@ window.pageEmployee = function() {
 
         <!-- Card: Low Workload -->
         <div class="stat-card" style="flex-direction: row; align-items: center; gap: 12px; padding: 16px 18px">
-          <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+          <div style="width: 46px; height: 46px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
             <i data-lucide="minus" style="width: 22px; height: 22px; color: var(--primary)"></i>
           </div>
           <div style="min-width: 0">
@@ -6885,16 +7083,16 @@ window.pageEmployee = function() {
         <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-2)">${name}</div>
       </td>
       <td style="padding: 12px 12px; text-align: center; border-bottom: 1px solid var(--border)">
-        <span style="display: inline-flex; align-items: center; padding: 3px 12px; background: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border}; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase">
+        <span style="display: inline-flex; align-items: center; padding: 4px 14px; background: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border}; border-radius: 99px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">
           ${node}
         </span>
       </td>
-      <td style="padding: 12px 24px; text-align: center; border-bottom: 1px solid var(--border)">
-        <div style="display: flex; align-items: center; gap: 10px; justify-content: center">
-          <div style="flex: 1; max-width: 80px; height: 5px; background: var(--bg); border-radius: 10px; overflow: hidden">
-            <div style="width: ${progress}%; height: 100%; background: ${barColor}; border-radius: 10px"></div>
+      <td style="padding: 12px 24px; border-bottom: 1px solid var(--border)">
+        <div style="display: flex; align-items: center; gap: 12px; justify-content: center">
+          <div style="flex: 1; max-width: 100px; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06)">
+            <div style="width: ${progress}%; height: 100%; background: ${barColor}; border-radius: 99px; transition: width 0.3s ease;"></div>
           </div>
-          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text); min-width: 30px">${progress}%</span>
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text); min-width: 34px; text-align: right;">${progress}%</span>
         </div>
       </td>
     </tr>
@@ -6924,7 +7122,7 @@ window.pageEmployee = function() {
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
             <div style="display: flex; gap: 8px">
-              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value); this.style.color = (this.value && this.value !== 'NEW') ? window.colorForProject(this.value) : '';" style="flex: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; transition: color 0.2s;">
+              <select id="scopeAccount" onchange="toggleNewAccountInput(this.value); this.style.color = (this.value && this.value !== 'NEW') ? window.colorForProject(this.value) : '';" style="flex: 1; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; transition: color 0.2s;">
                 <option value="" selected disabled style="color: #64748b;">---Select Project---</option>
                 ${accounts.map(a => {
                   const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
@@ -6932,14 +7130,14 @@ window.pageEmployee = function() {
                 }).join('')}
                 <option value="NEW" style="color: #6366f1; font-weight: 700;">+ Add New Project</option>
               </select>
-              <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 16px; border: 1.5px solid #6366f1; border-radius: 12px; font-family: inherit; outline: none;">
+              <input id="newAccountInput" type="text" placeholder="Enter new project name" style="display: none; flex: 1.5; padding: 12px 16px; border: 1.5px solid #6366f1; border-radius: 99px; font-family: inherit; outline: none;">
             </div>
           </div>
 
           <!-- Node Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Node</label>
-            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc">
+            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc">
               <option value="" selected disabled>--- Select Node ---</option>
               ${nodes.map(n => `<option value="${n}">${n}</option>`).join('')}
             </select>
@@ -6948,19 +7146,19 @@ window.pageEmployee = function() {
           <!-- Work Detail -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Scope / Details</label>
-            <input id="scopeDetail" type="text" placeholder="e.g., Social Monitoring Plan" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none;">
+            <input id="scopeDetail" type="text" placeholder="e.g., Social Monitoring Plan" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none;">
           </div>
 
           <!-- Proportion % -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Workload (%)</label>
             <div style="display: flex; align-items: center; gap: 12px">
-              <input id="scopePercent" type="number" value="0" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; text-align: center">
+              <input id="scopePercent" type="number" value="0" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; text-align: center">
               <input type="range" min="0" max="200" value="0" oninput="document.getElementById('scopePercent').value = this.value" style="flex: 1; accent-color: #6366f1">
             </div>
           </div>
 
-          <button onclick="saveNewWorkshipScope()" style="margin-top: 12px; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 16px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3)">
+          <button onclick="saveNewWorkshipScope()" style="margin-top: 12px; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 99px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3)">
             Save Scope
           </button>
         </div>
@@ -7108,7 +7306,7 @@ window.pageEmployee = function() {
           <!-- Account Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Project</label>
-            <select id="scopeAccount" onchange="this.style.color = window.colorForProject(this.value);" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; color: ${typeof window.colorForProject === 'function' ? window.colorForProject(acc) : '#6366f1'}; transition: color 0.2s;">
+            <select id="scopeAccount" onchange="this.style.color = window.colorForProject(this.value);" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc; font-weight: 600; color: ${typeof window.colorForProject === 'function' ? window.colorForProject(acc) : '#6366f1'}; transition: color 0.2s;">
               ${accounts.map(a => {
                 const c = typeof window.colorForProject === 'function' ? window.colorForProject(a) : '#6366f1';
                 return `<option value="${a}" style="color: ${c}; font-weight: 600;" ${a === acc ? 'selected' : ''}>● ${a}</option>`;
@@ -7120,7 +7318,7 @@ window.pageEmployee = function() {
           <!-- Node Selection -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Node</label>
-            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; background: #f8fafc">
+            <select id="scopeNode" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; background: #f8fafc">
               ${nodes.map(n => `<option value="${n}" ${n === node ? 'selected' : ''}>${n}</option>`).join('')}
             </select>
           </div>
@@ -7128,23 +7326,23 @@ window.pageEmployee = function() {
           <!-- Work Detail -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Scope / Details</label>
-            <input id="scopeDetail" type="text" value="${name}" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none;">
+            <input id="scopeDetail" type="text" value="${name}" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none;">
           </div>
 
           <!-- Proportion % -->
           <div>
             <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 8px">Workload (%)</label>
             <div style="display: flex; align-items: center; gap: 12px">
-              <input id="scopePercent" type="number" value="${progress}" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; text-align: center">
+              <input id="scopePercent" type="number" value="${progress}" min="0" max="1000" style="width: 80px; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 99px; font-family: inherit; outline: none; text-align: center">
               <input type="range" min="0" max="200" value="${progress}" oninput="document.getElementById('scopePercent').value = this.value" style="flex: 1; accent-color: #6366f1">
             </div>
           </div>
 
           <!-- Actions -->
           <div style="display: flex; gap: 12px; margin-top: 8px">
-            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" style="flex: 1; padding: 14px; border: 1.5px solid #fee2e2; border-radius: 12px; background: #fef2f2; color: #ef4444; font-weight: 700; cursor: pointer; transition: all 0.2s">Delete</button>
-            <button onclick="document.getElementById('addScopeModal').remove()" style="flex: 1; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: white; color: #64748b; font-weight: 700; cursor: pointer; transition: all 0.2s">Cancel</button>
-            <button onclick="saveNewWorkshipScope(true)" style="flex: 2; padding: 14px; border: none; border-radius: 12px; background: #6366f1; color: white; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4)">Update Scope</button>
+            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" style="flex: 1; padding: 14px; border: 1.5px solid #fee2e2; border-radius: 99px; background: #fef2f2; color: #ef4444; font-weight: 700; cursor: pointer; transition: all 0.2s">Delete</button>
+            <button onclick="document.getElementById('addScopeModal').remove()" style="flex: 1; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 99px; background: white; color: #64748b; font-weight: 700; cursor: pointer; transition: all 0.2s">Cancel</button>
+            <button onclick="saveNewWorkshipScope(true)" style="flex: 2; padding: 14px; border: none; border-radius: 99px; background: #6366f1; color: white; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4)">Update Scope</button>
           </div>
         </div>
       </div>
@@ -7538,20 +7736,24 @@ window.pageEmployee = function() {
           person_id: person.id,
           project: task.acc || '',
           node: task.node || '',
-          work_detail: task.title || '',
+          work_detail: task.note ? `${task.title || ''} ||| ${task.note}` : (task.title || ''),
           percentage: parseInt(task.hours) || 0
         };
-        await fetch(`${supabaseUrl}/rest/v1/schedule_tasks`, {
+        const res = await fetch(`${supabaseUrl}/rest/v1/schedule_tasks`, {
           method: 'POST',
           headers,
           body: JSON.stringify(dbPayload)
         });
+        if (!res.ok) {
+          const errMsg = await res.text();
+          throw new Error(`Supabase error: ${res.status} - ${errMsg}`);
+        }
         console.log("Schedule saved to Supabase successfully.");
       }
     } catch (err) {
       console.error('Error saving schedule to Supabase:', err);
       if (typeof window.showToast === 'function') {
-        window.showToast('Error saving to database', 'error');
+        window.showToast('Error saving to database: ' + err.message, 'danger');
       }
     }
   };
@@ -7577,6 +7779,41 @@ window.pageEmployee = function() {
       }
     } catch (err) {
       console.error('Error deleting schedule from Supabase:', err);
+    }
+  };
+
+  window.toggleTaskNoteInput = function (taskId) {
+    const form = document.getElementById(`noteForm_${taskId}`);
+    const text = document.getElementById(`noteText_${taskId}`);
+    if (form) {
+      const isHidden = form.style.display === 'none';
+      form.style.display = isHidden ? 'block' : 'none';
+      if (text) text.style.display = isHidden ? 'none' : 'block';
+    }
+  };
+
+  window.saveTaskNote = function (taskId, personId, dateIso, modalId) {
+    const inp = document.getElementById(`noteInput_${taskId}`);
+    if (!inp) return;
+    const noteVal = inp.value.trim();
+    
+    // Find task and update in memory
+    const task = (window.SCHEDULE_TASKS || []).find(t => t.id === taskId);
+    if (task) {
+      task.note = noteVal;
+      const personObj = (window.DATA.employees || []).find(emp => emp.id === personId);
+      if (typeof window.apiSaveScheduleTask === 'function' && personObj) {
+        window.apiSaveScheduleTask(task, personObj, dateIso);
+      }
+      if (typeof window.refreshReactSchedule === 'function') {
+        window.refreshReactSchedule();
+      }
+    }
+    
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) modalEl.remove();
+    if (typeof window.showDayDetailModal === 'function') {
+      window.showDayDetailModal(personId, dateIso);
     }
   };
 
@@ -7671,20 +7908,40 @@ window.pageEmployee = function() {
       const nodeCol = colorForNode(t.node);
       const projCol = typeof window.colorForProject === 'function' ? window.colorForProject(t.acc) : nodeCol;
       return `
-                <div style="padding:16px; border-radius:16px; background:#fff; border:1px solid #f1f5f9; border-left:4px solid ${projCol}; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center">
-                  <div style="min-width:0; flex:1">
-                    <div style="font-weight:700; color:#1e293b; font-size:0.9rem; margin-bottom:4px">${t.title}</div>
-                    <div style="display:flex; align-items:center; gap:8px">
-                      <span style="font-size:0.75rem; color:#64748b; font-weight:500">${t.acc || '-'}</span>
-                      <span style="width:4px; height:4px; border-radius:50%; background:#cbd5e1"></span>
-                      <span style="font-size:0.75rem; font-weight:700; color:${nodeCol}">${t.node}</span>
+                <div style="padding:16px; border-radius:16px; background:#fff; border:1px solid #f1f5f9; border-left:4px solid ${projCol}; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:8px">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                    <div style="min-width:0; flex:1">
+                      <div style="font-weight:700; color:#1e293b; font-size:0.9rem; margin-bottom:4px">${t.title}</div>
+                      <div style="display:flex; align-items:center; gap:8px">
+                        <span style="font-size:0.75rem; color:#64748b; font-weight:500">${t.acc || '-'}</span>
+                        <span style="width:4px; height:4px; border-radius:50%; background:#cbd5e1"></span>
+                        <span style="font-size:0.75rem; font-weight:700; color:${nodeCol}">${t.node}</span>
+                      </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px">
+                      <div style="font-size:1rem; font-weight:800; color:#1e293b">${t.hours}%</div>
+                      <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" style="background:#fef2f2; color:#ef4444; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                        <i data-lucide="trash-2" style="width:16px; height:16px"></i>
+                      </button>
                     </div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:16px">
-                    <div style="font-size:1rem; font-weight:800; color:#1e293b">${t.hours}%</div>
-                    <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" style="background:#fef2f2; color:#ef4444; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                      <i data-lucide="trash-2" style="width:16px; height:16px"></i>
-                    </button>
+
+                  <!-- Note Section -->
+                  <div style="background:#f8fafc; border:1px dashed #e2e8f0; border-radius:10px; padding:8px 12px; margin-top:4px">
+                    <div style="font-size:0.7rem; font-weight:700; color:#64748b; display:flex; align-items:center; gap:4px; margin-bottom:4px">
+                      <i data-lucide="file-text" style="width:12px; height:12px; color:#635bff"></i> Note
+                    </div>
+                    ${t.note 
+                      ? `<div id="noteText_${t.id}" onclick="toggleTaskNoteInput('${t.id}')" style="font-size:0.78rem; color:#334155; white-space:pre-wrap; word-break:break-word; cursor:pointer; padding:2px 0" title="คลิกเพื่อแก้ไข Note">${t.note}</div>` 
+                      : `<div id="noteText_${t.id}" onclick="toggleTaskNoteInput('${t.id}')" style="font-size:0.72rem; color:#94a3b8; font-style:italic; cursor:pointer; padding:2px 0" title="คลิกเพื่อพิมพ์ Note">ยังไม่มีบันทึกเพิ่มเติม</div>`
+                    }
+                    <div id="noteForm_${t.id}" style="display:none; margin-top:6px">
+                      <textarea id="noteInput_${t.id}" style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:6px 10px; font-size:0.78rem; font-family:inherit; outline:none; box-sizing:border-box; resize:vertical; min-height:50px" placeholder="พิมพ์บันทึกเพิ่มเติม...">${t.note || ''}</textarea>
+                      <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px">
+                        <button onclick="toggleTaskNoteInput('${t.id}')" style="background:#e2e8f0; border:none; border-radius:6px; padding:3px 10px; font-size:0.7rem; color:#475569; cursor:pointer; font-weight:600">ยกเลิก</button>
+                        <button onclick="saveTaskNote('${t.id}', '${person.id}', '${dateIso}', '${modalId}')" style="background:#635bff; color:#fff; border:none; border-radius:6px; padding:3px 12px; font-size:0.7rem; cursor:pointer; font-weight:600">บันทึก</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               `;
@@ -7859,6 +8116,24 @@ window.pageEmployee = function() {
     const projects = [...new Set(tasks.map(t => t.acc))].sort();
     const nodes = [...new Set(tasks.map(t => t.node))].sort();
 
+    // Self-contained inline custom select (pill shape, no external dependency)
+    function makeSelect(id, value, opts, onChange, height) {
+      height = height || '36px';
+      var sel = opts.find(function(o){ return String(o.value)===String(value); }) || opts[0] || {label:'เลือก...',value:''};
+      var items = opts.map(function(o){
+        var isSel = String(o.value)===String(value);
+        return '<div onclick="(function(el){var w=el.closest(\'.csd-w\');w.querySelector(\'input\').value=el.dataset.v;w.querySelector(\'.csd-lbl\').textContent=el.dataset.lbl;w.querySelector(\'.csd-m\').style.display=\'none\';w.style.zIndex=\'90\';'+onChange+';})(this)" data-v="'+o.value+'" data-lbl="'+String(o.label).replace(/"/g,'&quot;')+'" style="padding:10px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-family:Kanit,sans-serif;background:'+(isSel?'#f0efff':'transparent')+';color:'+(isSel?'#4f46e5':'#374151')+';font-weight:'+(isSel?'600':'500')+';" onmouseover="if(this.style.background!==\'#f0efff\')this.style.background=\'#f8fafc\'" onmouseout="if(this.style.background===\'#f8fafc\')this.style.background=\'transparent\'">'+o.label+'</div>';
+      }).join('');
+      return '<div class="csd-w" style="position:relative;width:100%;display:inline-block;z-index:90;">'+
+        '<input type="hidden" id="'+id+'" value="'+value+'">'+
+        '<button type="button" onclick="(function(b){var m=b.closest(\'.csd-w\').querySelector(\'.csd-m\');document.querySelectorAll(\'.csd-m\').forEach(function(x){if(x!==m)x.style.display=\'none\';});m.style.display=m.style.display===\'block\'?\'none\':\'block\';b.closest(\'.csd-w\').style.zIndex=m.style.display===\'block\'?\'10000\':\'90\';})(this)" style="width:100%;height:'+height+';display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border:1px solid #e2e8f0;border-radius:9999px;background:#fff;cursor:pointer;font-family:Kanit,sans-serif;font-size:12px;font-weight:500;color:#24204D;box-shadow:0 1px 2px rgba(0,0,0,0.04);outline:none;box-sizing:border-box;transition:border-color .2s;" onmouseover="this.style.borderColor=\'#cbd5e1\'" onmouseout="this.style.borderColor=\'#e2e8f0\'">'+
+          '<span class="csd-lbl" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left;">'+sel.label+'</span>'+
+          '<svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>'+
+        '</button>'+
+        '<div class="csd-m" style="display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.08);z-index:9999;padding:4px;max-height:240px;overflow-y:auto;">'+items+'</div>'+
+      '</div>';
+    }
+
     return `
     <div id="taskSidebar" style="display:flex; flex-direction:column; height:100%; background:#fff; font-family:'Kanit', sans-serif">
       <!-- Sidebar Header -->
@@ -7876,27 +8151,13 @@ window.pageEmployee = function() {
         <!-- Filters -->
         <div style="display:flex; flex-direction:column; gap:8px">
           <div style="position:relative">
-            <i data-lucide="search" style="width:16px; height:16px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8"></i>
+            <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             <input type="text" id="sidebarSearch" placeholder="Search tasks or projects..." onkeyup="filterSidebarTasks()" 
-                   style="width:100%; height:44px; padding:0 12px 0 42px; border-radius:14px; border:1.5px solid #f1f5f9; font-size:0.85rem; outline:none; background:#f8fafc; font-family:inherit; transition:all 0.2s; color:#1e293b">
+                   style="width:100%; height:38px; padding:0 16px 0 38px; border-radius:9999px; border:1px solid #e2e8f0; font-size:0.8rem; outline:none; background:#fff; font-family:inherit; transition:border-color 0.2s; color:#1e293b; box-shadow:0 1px 2px rgba(15,23,42,0.04); box-sizing:border-box;">
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-            <div style="position:relative">
-              <select id="sidebarProjectFilter" onchange="filterSidebarTasks()" 
-                      style="width:100%; height:40px; padding:0 12px; border-radius:12px; border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
-                <option value="all">All Projects</option>
-                ${projects.map(p => `<option value="${p}">${p}</option>`).join('')}
-              </select>
-              <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
-            </div>
-            <div style="position:relative">
-              <select id="sidebarNodeFilter" onchange="filterSidebarTasks()" 
-                      style="width:100%; height:40px; padding:0 12px; border-radius:12px; border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
-                <option value="all">All Nodes</option>
-                ${nodes.map(n => `<option value="${n}">${n}</option>`).join('')}
-              </select>
-              <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
-            </div>
+            ${makeSelect('sidebarProjectFilter', window._sidebarProjectFilter||'all', [{value:'all',label:'All Projects'}].concat(projects.map(p=>({value:p,label:p}))), 'filterSidebarTasks()', '36px')}
+            ${makeSelect('sidebarNodeFilter', window._sidebarNodeFilter||'all', [{value:'all',label:'All Nodes'}].concat(nodes.map(n=>({value:n,label:n}))), 'filterSidebarTasks()', '36px')}
           </div>
           <button id="clearSidebarFiltersBtn" onclick="clearSidebarFilters()" style="display:none; background:none; border:none; color:#ef4444; font-size:0.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; align-self:flex-end; padding:4px 8px; border-radius:6px;">
             <span style="font-weight:bold;font-size:13px">✕</span> Clear
@@ -7911,12 +8172,9 @@ window.pageEmployee = function() {
       
       <style>
         #sidebarSearch:focus {
-          border-color: #6366f1 !important;
-          background: #fff !important;
-          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-        #sidebarProjectFilter:hover, #sidebarNodeFilter:hover {
-          border-color: #cbd5e1;
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
       </style>
     </div>`;
@@ -8307,16 +8565,16 @@ window.pageSchedule = function() {
 
         <!-- Right: Filters and Actions -->
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
-          <div style="height:34px; display:flex; align-items:center">
+          <div style="height:34px; display:flex; align-items:center; overflow:hidden; flex-shrink:0;">
              ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden">
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:var(--text-3)"></i>
             <input id="schedSearchInput" type="text" placeholder="Search..." value="${window._scheduleSearch}" onkeyup="filterScheduleUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:0.8rem">
           </div>
-          <select id="schedTeamFilter" onchange="filterScheduleUI()" style="height:34px; padding:0 12px; border:1px solid var(--border); border-radius:8px; font-size:.8rem; font-family:Kanit; outline:none; background:#fff; cursor:pointer">
+          <select id="schedTeamFilter" onchange="filterScheduleUI()" class="select-input" style="min-width:120px;">
             <option value="">All Team</option>
-            ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._scheduleTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
+            ${Array.from(new Set((DATA.employees || []).map(e => e.dept ? e.dept.trim() : '').filter(Boolean))).map(t => `<option value="${t}" ${window._scheduleTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
           ${(window._currentDateRange || window._scheduleSearch || window._scheduleTeamFilter) ? `
           <button onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none;">
@@ -8328,10 +8586,10 @@ window.pageSchedule = function() {
             <i data-lucide="plus" style="width:12px; height:12px"></i> Add Task
           </button>
           <button class="btn btn-sm" onclick="window.qcShowManageEmployeesModal && window.qcShowManageEmployeesModal('schedule')" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:#fff; color:#475569; border:1px solid var(--border); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
-            <i data-lucide="users" style="width:12px; height:12px"></i> จัดการพนักงาน
+            <i data-lucide="users" style="width:12px; height:12px"></i> Manage Employees
           </button>
           <button class="btn btn-sm" onclick="window.openExportScheduleModal()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
-            <i data-lucide="download" style="width:12px; height:12px"></i> Export ตารางการทำงาน
+            <i data-lucide="download" style="width:12px; height:12px"></i> Export Schedule
           </button>
 
         </div>
@@ -8646,14 +8904,14 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">รหัสพนักงาน</label>
-              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:10px; overflow:hidden; height:42px">
-                <span style="padding:0 10px; font-family:Kanit; font-weight:700; color:var(--text-3); background:#f1f5f9; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.75rem">RS</span>
-                <input type="text" id="empIdDigits" class="form-input" style="border:none; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="000" value="${isEdit ? emp.id.replace('RS', '') : ''}">
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:42px">
+                <span style="padding:0 14px; font-family:Kanit; font-weight:700; color:var(--text-3); background:#f1f5f9; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.75rem">RS</span>
+                <input type="text" id="empIdDigits" class="form-input" style="border:none; border-radius:0; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="000" value="${isEdit ? emp.id.replace('RS', '') : ''}">
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">ชื่อเล่น</label>
-              <input type="text" id="empNick" class="form-input" style="height:42px" value="${isEdit ? emp.nickname : ''}" placeholder="ชื่อเล่น">
+              <input type="text" id="empNick" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? emp.nickname : ''}" placeholder="ชื่อเล่น">
             </div>
           </div>
           
@@ -8661,11 +8919,11 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">ชื่อ-นามสกุล (ไทย)</label>
-              <input type="text" id="empName" class="form-input" style="height:42px" value="${isEdit ? emp.name : ''}" placeholder="ระบุชื่อภาษาไทย">
+              <input type="text" id="empName" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? emp.name : ''}" placeholder="ระบุชื่อภาษาไทย">
             </div>
             <div class="form-group">
               <label class="form-label">ชื่อ-นามสกุล (อังกฤษ)</label>
-              <input type="text" id="empNameEn" class="form-input" style="height:42px" value="${isEdit ? (emp.nameEn || '') : ''}" placeholder="Name in English">
+              <input type="text" id="empNameEn" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? (emp.nameEn || '') : ''}" placeholder="Name in English">
             </div>
           </div>
 
@@ -8673,23 +8931,23 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">E-mail</label>
-              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:10px; overflow:hidden; height:42px">
-                <input type="text" id="empEmailUser" class="form-input" style="border:none; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="username" value="${isEdit ? (emp.email || '').split('@')[0] : ''}">
-                <span style="padding:0 10px; font-family:Kanit; font-weight:600; color:var(--text-3); background:#f1f5f9; border-left:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.7rem">@realsmart.co.th</span>
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:42px">
+                <input type="text" id="empEmailUser" class="form-input" style="border:none; border-radius:0; flex:1; padding:0 14px; height:100%; background:transparent" placeholder="username" value="${isEdit ? (emp.email || '').split('@')[0] : ''}">
+                <span style="padding:0 14px; font-family:Kanit; font-weight:600; color:var(--text-3); background:#f1f5f9; border-left:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.7rem">@realsmart.co.th</span>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">วันเกิด</label>
+              <label class="form-label">Birthday</label>
               <div style="display:flex; gap:4px; height:42px">
-                <select id="empBirthDay" class="form-input" style="flex:1; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                <select id="empBirthDay" class="form-input" style="flex:1; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
                   <option value="" disabled selected>วัน</option>
                   ${Array.from({ length: 31 }, (_, i) => i + 1).map(d => `<option value="${d}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[0] == d ? 'selected' : ''}>${d}</option>`).join('')}
                 </select>
-                <select id="empBirthMonth" class="form-input" style="flex:1.5; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                <select id="empBirthMonth" class="form-input" style="flex:1.5; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
                   <option value="" disabled selected>เดือน</option>
                   ${['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, i) => `<option value="${i + 1}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[1] == i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
                 </select>
-                <select id="empBirthYear" class="form-input" style="flex:1.2; appearance:auto; padding:0 4px; font-size:.7rem; height:100%">
+                <select id="empBirthYear" class="form-input" style="flex:1.2; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
                   <option value="" disabled selected>พ.ศ.</option>
                   ${Array.from({ length: 80 }, (_, i) => 2567 - i).map(y => `<option value="${y}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[2] == y ? 'selected' : ''}>${y}</option>`).join('')}
                 </select>
@@ -8701,21 +8959,25 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">ตำแหน่ง</label>
-              <select id="empPos" onchange="handlePosChange()" class="form-input" style="appearance:auto">
+              <select id="empPos" onchange="handlePosChange()" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกตำแหน่ง</option>
                 ${uniquePositions.map(p => `<option value="${p}" ${isEdit && emp.pos === p ? 'selected' : ''}>${p}</option>`).join('')}
+                <option value="__NEW_POS__">+ เพิ่มตำแหน่งใหม่...</option>
               </select>
+              <div id="newPosInputWrapper" style="display:none; margin-top:8px">
+                <input type="text" id="newPosInput" class="form-input" placeholder="ระบุตำแหน่งใหม่..." style="height:42px; border-radius:99px" />
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">ทีม</label>
-              <select id="empTeam" onchange="handleTeamChange()" class="form-input" style="appearance:auto">
+              <select id="empTeam" onchange="handleTeamChange()" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกทีม</option>
-                <option value="ACE" ${isEdit && emp.dept === 'ACE' ? 'selected' : ''}>ACE</option>
-                <option value="Sertec" ${isEdit && emp.dept === 'Sertec' ? 'selected' : ''}>Sertec</option>
-                <option value="ONIX" ${isEdit && emp.dept === 'ONIX' ? 'selected' : ''}>ONIX</option>
-                <option value="Sale Support" ${isEdit && emp.dept === 'Sale Support' ? 'selected' : ''}>Sale Support</option>
-                <option value="Call Center" ${isEdit && emp.dept === 'Call Center' ? 'selected' : ''}>Call Center</option>
+                ${[...new Set((dataObj.employees || []).map(e => (e.team || e.dept || '').trim()).filter(t => t && t !== '-'))].sort().map(t => `<option value="${t}" ${isEdit && (emp.dept === t || emp.team === t) ? 'selected' : ''}>${t}</option>`).join('')}
+                <option value="__NEW_TEAM__">+ เพิ่มทีมใหม่...</option>
               </select>
+              <div id="newTeamInputWrapper" style="display:none; margin-top:8px">
+                <input type="text" id="newTeamInput" class="form-input" placeholder="ระบุชื่อทีมใหม่..." style="height:42px; border-radius:99px" />
+              </div>
             </div>
           </div>
 
@@ -8723,7 +8985,7 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">กะเวลาทำงาน</label>
-              <select id="empShift" class="form-input" style="appearance:auto">
+              <select id="empShift" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกกะเวลา</option>
                 <option value="06:00 - 15:00" ${isEdit && emp.shift === '06:00 - 15:00' ? 'selected' : ''}>06:00 - 15:00</option>
                 <option value="09:00 - 18:00" ${isEdit && emp.shift === '09:00 - 18:00' ? 'selected' : ''}>09:00 - 18:00</option>
@@ -8732,7 +8994,7 @@ window.pageSchedule = function() {
             </div>
             <div class="form-group">
               <label class="form-label">วันหยุด</label>
-              <select id="empOff" class="form-input" style="appearance:auto">
+              <select id="empOff" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกวันหยุด</option>
                 <option value="เสาร์ - อาทิตย์" ${isEdit && emp.offdays === 'เสาร์ - อาทิตย์' ? 'selected' : ''}>เสาร์ - อาทิตย์</option>
                 <option value="จันทร์ - อังคาร" ${isEdit && emp.offdays === 'จันทร์ - อังคาร' ? 'selected' : ''}>จันทร์ - อังคาร</option>
@@ -8745,7 +9007,7 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
             <div class="form-group">
               <label class="form-label">ประเภทพนักงาน</label>
-              <select id="empType" onchange="handleTypeChange()" class="form-input" style="appearance:auto">
+              <select id="empType" onchange="handleTypeChange()" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="" disabled ${!isEdit ? 'selected' : ''}>เลือกประเภท</option>
                 <option value="พนักงานประจำ" ${isEdit && emp.empType === 'พนักงานประจำ' ? 'selected' : ''}>พนักงานประจำ</option>
                 <option value="พนักงานสัญญาจ้าง" ${isEdit && emp.empType === 'พนักงานสัญญาจ้าง' ? 'selected' : ''}>พนักงานสัญญาจ้าง</option>
@@ -8754,7 +9016,7 @@ window.pageSchedule = function() {
             </div>
             <div class="form-group">
               <label class="form-label">สถานะ</label>
-              <select id="empStatus" class="form-input" style="appearance:auto">
+              <select id="empStatus" class="form-input" style="appearance:auto; border-radius:99px">
                 <option value="active" ${(!isEdit || emp.status === 'active') ? 'selected' : ''}>ปฏิบัติงาน</option>
                 <option value="resigned" ${isEdit && emp.status === 'resigned' ? 'selected' : ''}>ลาออก</option>
               </select>
@@ -8764,9 +9026,9 @@ window.pageSchedule = function() {
         </div>
 
         <div style="padding:20px 28px; background:var(--surface2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px">
-          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline">ยกเลิก</button>
-          <button id="saveEmpBtn" onclick="submitEmployeeData('${editId || ''}')" class="btn btn-primary" style="min-width:140px">
-            <i data-lucide="save" style="width:16px; height:16px"></i> ${isEdit ? 'อัปเดตข้อมูล' : 'บันทึกพนักงาน'}
+          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:16px; height:16px"></i>Cancel</button>
+          <button id="saveEmpBtn" onclick="submitEmployeeData('${editId || ''}')" class="btn btn-primary" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; min-width:140px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i data-lucide="save" style="width:16px; height:16px"></i>${isEdit ? 'Update' : 'Save'}
           </button>
         </div>
       </div>
@@ -8790,12 +9052,23 @@ window.pageSchedule = function() {
 
     // Handle position/team/type changes to disable/enable fields
     window.handlePosChange = function () {
-      const pos = document.getElementById('empPos').value;
+      const posSelect = document.getElementById('empPos');
+      const pos = posSelect.value;
       const teamSelect = document.getElementById('empTeam');
       const shiftSelect = document.getElementById('empShift');
       const offSelect = document.getElementById('empOff');
       const type = document.getElementById('empType').value;
       const team = teamSelect.value;
+
+      // Handle custom input visibility
+      const newPosWrapper = document.getElementById('newPosInputWrapper');
+      if (newPosWrapper) {
+        newPosWrapper.style.display = pos === '__NEW_POS__' ? 'block' : 'none';
+      }
+      const newTeamWrapper = document.getElementById('newTeamInputWrapper');
+      if (newTeamWrapper) {
+        newTeamWrapper.style.display = team === '__NEW_TEAM__' ? 'block' : 'none';
+      }
 
       // Director or Contract: No team
       if (pos === 'Director' || type === 'พนักงานสัญญาจ้าง') {
@@ -8853,8 +9126,14 @@ window.pageSchedule = function() {
     const bYear = document.getElementById('empBirthYear').value;
     const birth = (bDay && bMonth) ? `${bDay}/${bMonth}/${bYear || '-'}` : "-";
 
-    const pos = document.getElementById('empPos').value;
-    const team = document.getElementById('empTeam').value;
+    let pos = document.getElementById('empPos').value;
+    if (pos === '__NEW_POS__') {
+      pos = document.getElementById('newPosInput').value.trim();
+    }
+    let team = document.getElementById('empTeam').value;
+    if (team === '__NEW_TEAM__') {
+      team = document.getElementById('newTeamInput').value.trim();
+    }
     const status = document.getElementById('empStatus').value;
     const shift = document.getElementById('empShift').value;
     const off = document.getElementById('empOff').value;
@@ -8881,7 +9160,7 @@ window.pageSchedule = function() {
     if (!status) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกสถานะปัจจุบัน', 'warning'); return; }
 
     const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<i class="spin" data-lucide="refresh-cw" style="width:16px; height:16px; animation:spin 1s linear infinite"></i> กำลังบันทึก...';
+    btn.innerHTML = '<i class="spin" data-lucide="refresh-cw" style="width:16px; height:16px; animation:spin 1s linear infinite"></i> Saving...';
     btn.disabled = true;
     if (window.lucide) window.lucide.createIcons({ root: btn });
 
@@ -8908,12 +9187,61 @@ window.pageSchedule = function() {
 
       console.log("Submitting Employee Data...", payload);
 
+      // Save to Google Sheets (legacy sync)
       await fetch(WEB_APP_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
       });
+
+      // Save to Supabase (primary database)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jfxesvvswpgeaxhhnnyt.supabase.co';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E';
+      if (supabaseUrl && supabaseKey) {
+        const bodyPayload = {
+          id: payload.id,
+          name: payload.name,
+          name_en: payload.nameEn,
+          nickname: payload.nickname,
+          email: payload.email,
+          birthdate: payload.birthdate,
+          position: payload.position,
+          team: payload.team,
+          shift: payload.shift,
+          dayoff: payload.offdays, // Map offdays to dayoff in Supabase
+          status: payload.status,
+          emp_type: payload.empType
+        };
+
+        let response;
+        if (isEdit) {
+          response = await fetch(`${supabaseUrl}/rest/v1/employees?id=eq.${payload.id}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+        } else {
+          response = await fetch(`${supabaseUrl}/rest/v1/employees`, {
+            method: 'POST',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bodyPayload)
+          });
+        }
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Supabase error: ${errText}`);
+        }
+      }
 
       console.log("Sync request sent to Google Sheets");
 
@@ -8981,14 +9309,30 @@ window.pageSchedule = function() {
         type: 'danger',
         onConfirm: async () => {
           try {
-            const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzCWHyfyPUWQ6NlOlLRORY1s2bFu82RO3fbEp9RaRYgVDXaT82ZSph8FETLTmdM4PSqqw/exec';
-
+            // Delete from Google Sheets (legacy sync)
             await fetch(WEB_APP_URL, {
               method: 'POST',
               mode: 'no-cors',
               headers: { 'Content-Type': 'text/plain' },
               body: JSON.stringify({ action: 'delete', id: id })
             });
+
+            // Delete from Supabase (primary database)
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jfxesvvswpgeaxhhnnyt.supabase.co';
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E';
+            if (supabaseUrl && supabaseKey) {
+              const res = await fetch(`${supabaseUrl}/rest/v1/employees?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`
+                }
+              });
+              if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`Supabase delete error: ${errText}`);
+              }
+            }
 
             if (dataObj.employees) {
               dataObj.employees = dataObj.employees.filter(e => e.id !== id);
@@ -9060,7 +9404,7 @@ window.pageSchedule = function() {
     if (!textarea) return;
     textarea.select();
     document.execCommand('copy');
-    if (typeof showToast === 'function') showToast('คัดลอกข้อความสำเร็จ!', 'success');
+    if (typeof showToast === 'function') showToast('Text copied successfully!', 'success');
   };
 
   window.downloadExportedTextFile = function () {
@@ -9176,10 +9520,10 @@ window.pageSchedule = function() {
             <textarea id="exportTextResultTextarea" readonly style="width:100%; height:150px; padding:12px; border-radius:12px; border:1.5px solid #cbd5e1; background:#f8fafc; font-family:monospace; font-size:0.8rem; outline:none; resize:none" class="scheduler-scrollbar"></textarea>
             <div style="display:flex; gap:10px">
               <button onclick="window.copyExportedText()" class="btn" style="flex:1; background:var(--primary); color:#fff; border:none; height:38px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem">
-                <i data-lucide="copy" style="width:16px; height:16px"></i> คัดลอกข้อความ
+                <i data-lucide="copy" style="width:16px; height:16px"></i> Copy Text
               </button>
               <button onclick="window.downloadExportedTextFile()" class="btn" style="flex:1; background:#fff; color:#475569; border:1.5px solid var(--border); height:38px; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem">
-                <i data-lucide="file-text" style="width:16px; height:16px"></i> ดาวน์โหลดไฟล์ .txt
+                <i data-lucide="file-text" style="width:16px; height:16px"></i> Download .txt File
               </button>
             </div>
           </div>
@@ -9189,10 +9533,10 @@ window.pageSchedule = function() {
         <!-- Modal Footer -->
         <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid var(--border); display:flex; gap:12px">
           <button onclick="window.generateScheduleImageExport()" class="btn" style="flex:1; background:#10b981; color:#fff; border:none; height:38px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
-            <i data-lucide="image" style="width:18px; height:18px"></i> Export เป็นรูปภาพ (PNG)
+            <i data-lucide="image" style="width:18px; height:18px"></i> Export as Image (PNG)
           </button>
           <button onclick="window.generateScheduleTextExport()" class="btn" style="flex:1; background:#6366f1; color:#fff; border:none; height:38px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:0.85rem; transition:all 0.2s" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
-            <i data-lucide="file-text" style="width:18px; height:18px"></i> Export เป็นข้อความ (Text)
+            <i data-lucide="file-text" style="width:18px; height:18px"></i> Export as Text (Text)
           </button>
         </div>
 
@@ -9499,7 +9843,7 @@ window.pageSchedule = function() {
         } else {
           const dayTasks = tasksByPersonDay[`${e.id}_${d.dateIso}`] || [];
           if (dayTasks.length > 0) {
-            statusText = dayTasks.map(t => `${t.title} [${t.acc}]`).join(', ');
+            statusText = dayTasks.map(t => `${t.title} [${t.acc}]${t.note ? ` (Note: ${t.note})` : ''}`).join(', ');
           } else if (holidayTasks.length > 0) {
             statusText = holidayTasks.map(ht => {
               if (ht.assignments && ht.assignments.length > 0) {
@@ -9825,15 +10169,18 @@ window.pageSchedule = function() {
                 const nodeCol = colorForNodeLocal(t.node);
                 const borderColor = mixWithWhite(nodeCol, 0.25);
                 return `
-                  <div style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; border-radius: 10px; background: #ffffff; border: 1px solid ${borderColor}; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02)">
-                    <div style="width: 4px; min-height: 36px; background: ${nodeCol}; border-radius: 99px; flex-shrink: 0; margin-top: 2px;"></div>
-                    <div style="flex: 1; min-width: 0;">
-                      <div style="color: ${nodeCol}; font-weight: 700; font-size: 13px; white-space: normal; word-break: break-word; line-height: 1.4">${t.title}</div>
-                      <div style="font-size: 11px; color: #64748b; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
-                        <span style="white-space: normal; word-break: break-word; flex: 1;">${t.acc}</span>
-                        <span style="color: #94a3b8; font-size: 10px; flex-shrink: 0;">${t.node}</span>
+                  <div style="display: flex; flex-direction: column; gap: 4px; padding: 9px 10px; border-radius: 10px; background: #ffffff; border: 1px solid ${borderColor}; margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02)">
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                      <div style="width: 4px; min-height: 36px; background: ${nodeCol}; border-radius: 99px; flex-shrink: 0; margin-top: 2px;"></div>
+                      <div style="flex: 1; min-width: 0;">
+                        <div style="color: ${nodeCol}; font-weight: 700; font-size: 13px; white-space: normal; word-break: break-word; line-height: 1.4">${t.title}</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+                          <span style="white-space: normal; word-break: break-word; flex: 1;">${t.acc}</span>
+                          <span style="color: #94a3b8; font-size: 10px; flex-shrink: 0;">${t.node}</span>
+                        </div>
                       </div>
                     </div>
+                    ${t.note ? `<div style="font-size: 10.5px; color: #475569; background: #f8fafc; border-radius: 6px; padding: 4px 8px; border: 1px dashed #cbd5e1; margin-top: 2px; word-break: break-word; line-height: 1.3"><span style="font-weight: 700; color: #635bff">Note:</span> ${t.note}</div>` : ''}
                   </div>
                 `;
               }).join('');
@@ -9927,7 +10274,15 @@ window.pageSchedule = function() {
           <tr style="background:#ffffff">
             <td style="padding:16px; border-bottom:1px solid #e2e8f0; border-right:1px solid #e2e8f0; vertical-align:middle; width:220px; min-width:220px; background:#ffffff">
               <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4">${displayName}</div>
-              <div style="display:inline-block; padding:3px 10px; border-radius:99px; background:${getPosBgColor(e.pos)}; color:${getPosTextColor(e.pos)}; font-size:9.5px; font-weight:700; margin-top:6px; text-transform:uppercase; letter-spacing:0.5px; border:1px solid rgba(0,0,0,0.03)">${e.pos}</div>
+              <div style="margin-top:6px;">
+                <table style="border-collapse: collapse; border: none; padding: 0; margin: 0;">
+                  <tr>
+                    <td style="background:${getPosBgColor(e.pos)}; color:${getPosTextColor(e.pos)}; padding:3px 10px; border-radius:99px; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; border:1px solid rgba(0,0,0,0.03); line-height:14px; text-align:center; vertical-align:middle; white-space:nowrap;">
+                      ${e.pos}
+                    </td>
+                  </tr>
+                </table>
+              </div>
               <div style="font-size:10.5px; color:#64748b; margin-top:8px; line-height:1.5; font-weight:500">
                 <span style="color:#94a3b8">กะ:</span> ${e.shift || '-'} <br/>
                 <span style="color:#94a3b8">วันหยุด:</span> ${e.offdays || '-'}
@@ -9995,13 +10350,27 @@ window.pageSchedule = function() {
     const headerHtml = `
       <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 18px 28px; border-radius: 16px; color: #ffffff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.15)">
         <div>
-          <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 4px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; border: 1px solid rgba(56, 189, 248, 0.2)">
-            RealSmart DIB
+          <div style="margin-bottom: 8px;">
+            <table style="border-collapse: collapse; border: none; padding: 0; margin: 0;">
+              <tr>
+                <td style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 10px 1px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(56, 189, 248, 0.2); line-height: 1; text-align: center; vertical-align: middle; white-space: nowrap;">
+                  REALSMART DIB
+                </td>
+              </tr>
+            </table>
           </div>
           <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px; font-family: 'Kanit', sans-serif">ระบบจัดการตารางเวลาพนักงาน RealSmart DIB</h1>
-          <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; font-weight: 500">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: rgba(255, 255, 255, 0.1); border-radius: 50%"><span style="width: 5px; height: 5px; border-radius: 50%; background: #38bdf8"></span></span>
-            วันที่: ${startDate.getDate()} ${thaiMonthsFull[startDate.getMonth()]} ${startDate.getFullYear() + 543} - ${endDate.getDate()} ${thaiMonthsFull[endDate.getMonth()]} ${endDate.getFullYear() + 543}
+          <div style="margin-top: 6px;">
+            <table style="border-collapse: collapse; border: none; padding: 0; margin: 0; font-size: 12px; color: #cbd5e1; font-weight: 500;">
+              <tr>
+                <td style="vertical-align: middle; padding-right: 6px;">
+                  <div style="width: 6px; height: 6px; border-radius: 50%; background: #38bdf8;"></div>
+                </td>
+                <td style="vertical-align: middle; line-height: 16px; white-space: nowrap;">
+                  วันที่: ${startDate.getDate()} ${thaiMonthsFull[startDate.getMonth()]} ${startDate.getFullYear() + 543} - ${endDate.getDate()} ${thaiMonthsFull[endDate.getMonth()]} ${endDate.getFullYear() + 543}
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
         <div style="text-align: right; display: flex; flex-direction: column; gap: 4px">
@@ -10014,7 +10383,7 @@ window.pageSchedule = function() {
     tempDiv.innerHTML = headerHtml + tablesHtml;
     document.body.appendChild(tempDiv);
 
-    if (typeof showToast === 'function') showToast('กำลังประมวลผลข้อมูล...', 'info');
+    if (typeof showToast === 'function') showToast('Processing data...', 'info');
 
     setTimeout(() => {
       if (typeof html2canvas === 'undefined') {
@@ -10038,7 +10407,7 @@ window.pageSchedule = function() {
         link.click();
         
         tempDiv.remove();
-        if (typeof showToast === 'function') showToast('ดาวน์โหลดรูปภาพตารางเวรสำเร็จ!', 'success');
+        if (typeof showToast === 'function') showToast('Schedule image downloaded successfully!', 'success');
       }).catch(err => {
         console.error('Export image error:', err);
         if (typeof showAlert === 'function') showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกรูปภาพได้: ' + err.message, 'error');

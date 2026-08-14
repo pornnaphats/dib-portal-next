@@ -458,7 +458,7 @@ window.renderQCWorkPlanDashboard = function() {
           let cellContent = '';
           let totalPct = 0;
 
-          if (leave) {
+          if (leave && dayPlans.length === 0 && scheduleTasks.length === 0) {
             const leaveTypeMap = {
               'ลาพักร้อน': { label: 'Vacation Leave', color: '#0ea5e9' },
               'ลากิจ': { label: 'Business Leave', color: '#f97316' },
@@ -469,19 +469,15 @@ window.renderQCWorkPlanDashboard = function() {
               'อบรม / สัมมนา': { label: 'Training', color: '#14b8a6' },
             };
             const lvInfo = leaveTypeMap[leave.type] || { label: leave.type || 'On Leave', color: '#635BFF' };
-            const tasksCount = dayPlans.length + scheduleTasks.length;
-            const tasksText = tasksCount > 0 ? `<div style="font-size:0.5rem; color:#94a3b8; margin-top:2px;">${tasksCount} task(s) scheduled</div>` : '';
-            
             cellContent = `
               <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; min-height:40px; padding:4px;">
                 <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
                   <div style="font-size:0.68rem; font-weight:800; color:${lvInfo.color}; letter-spacing:0.06em;">ON LEAVE</div>
                   <div style="font-size:0.52rem; color:#fff; font-weight:700; background:${lvInfo.color}; padding:2px 8px; border-radius:99px; letter-spacing:0.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; text-align:center;">${lvInfo.label}</div>
                 </div>
-                ${tasksText}
               </div>
             `;
-          } else if (dayPlans.length > 0 || scheduleTasks.length > 0) {
+          } else if (dayPlans.length > 0 || scheduleTasks.length > 0 || leave) {
             const totalItems = dayPlans.length + scheduleTasks.length;
             const limit = 2;
             let renderedCount = 0;
@@ -564,8 +560,29 @@ window.renderQCWorkPlanDashboard = function() {
               else wlColor = '#7f1d1d';
             }
 
+            let leaveHeader = '';
+            if (leave) {
+              const leaveTypeMap = {
+                'ลาพักร้อน': { label: 'Vacation Leave', color: '#0ea5e9' },
+                'ลากิจ': { label: 'Business Leave', color: '#f97316' },
+                'ลาป่วย': { label: 'Sick Leave', color: '#ef4444' },
+                'วันหยุดชดเชย': { label: 'Compensatory', color: '#10b981' },
+                'ลาคลอด / ลาเลี้ยงดูบุตร': { label: 'Maternity Leave', color: '#8b5cf6' },
+                'ลาเพื่อการฌาปนกิจศพ': { label: 'Compassionate', color: '#64748b' },
+                'อบรม / สัมมนา': { label: 'Training', color: '#14b8a6' },
+              };
+              const lvInfo = leaveTypeMap[leave.type] || { label: leave.type || 'On Leave', color: '#635BFF' };
+              leaveHeader = `
+                <div style="display:flex; flex-direction:column; alignItems:center; gap:2px; margin-bottom:6px; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:6px; width:100%; box-sizing:border-box; text-align:center;">
+                  <div style="font-size:0.62rem; font-weight:800; color:${lvInfo.color}; letter-spacing:0.06em; margin-bottom:2px;">ON LEAVE</div>
+                  <div style="font-size:0.52rem; color:#fff; font-weight:700; background:${lvInfo.color}; padding:2px 8px; border-radius:99px; letter-spacing:0.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; text-align:center; box-sizing:border-box; margin:0 auto;" title="${leave.type}">${lvInfo.label}</div>
+                </div>
+              `;
+            }
+
             cellContent = `
-              <div class="scheduler-scrollbar" style="max-height:108px; display:flex; flex-direction:column; gap:2px; overflow-y:auto; padding-right:2px; height:100%; padding-bottom:26px;">
+              ${leaveHeader}
+              <div class="scheduler-scrollbar" style="max-height:${leave ? '68px' : '108px'}; display:flex; flex-direction:column; gap:2px; overflow-y:auto; padding-right:2px; height:100%; padding-bottom:26px;">
                 ${qcChips}
                 ${scheduleChips ? `
                   <div style="margin-top:${dayPlans.length > 0 && renderedCount > dayPlans.length ? '4px' : '0'};">
@@ -841,11 +858,11 @@ window.renderQCWorkPlanDashboard = function() {
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden">
             <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:#64748b"></i>
-            <input id="qcSearchInput" type="text" placeholder="ค้นหาพนักงาน..." value="${window._qcSearch || ''}" onkeyup="qcFilterUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:0.8rem; font-family:'Kanit', sans-serif;">
+            <input id="qcSearchInput" type="text" placeholder="Search..." value="${window._qcSearch || ''}" onkeyup="qcFilterUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:0.8rem; font-family:'Kanit', sans-serif;">
           </div>
           <select id="qcTeamFilter" class="select-input" onchange="qcFilterUI()" style="height:34px; width:150px; padding:0 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:.8rem; font-family:Kanit; outline:none; background:#fff; cursor:pointer">
-            <option value="">ทุกทีม (All Teams)</option>
-            ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._qcTeamFilter === t ? 'selected' : ''}>ทีม ${t}</option>`).join('')}
+            <option value="">All Teams</option>
+            ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._qcTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
           ${(window._qcSearch || window._qcTeamFilter || window._qcDateRange) ? `
           <button onclick="qcClearFilters()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none; font-family:'Kanit';">
@@ -855,16 +872,16 @@ window.renderQCWorkPlanDashboard = function() {
           <div style="width:1px; height:20px; background:#e2e8f0; margin:0 2px"></div>
 
           <button class="btn" onclick="qcShowManageEmployeesModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
-             <i data-lucide="users" style="width:14px; height:14px"></i> จัดการพนักงาน
+             <i data-lucide="users" style="width:14px; height:14px"></i> Manage Employees
           </button>
           
           <button class="btn" onclick="qcShowSettingsModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
-             <i data-lucide="settings" style="width:14px; height:14px"></i> ตั้งค่า % งาน
+             <i data-lucide="settings" style="width:14px; height:14px"></i> Workload Settings
           </button>
 
 
           <button class="btn-auto-plan" onclick="qcShowAutoPlanModal()" style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; padding:6px 12px; font-size:.7rem; font-weight:600; cursor:pointer; font-family:'Kanit'; box-shadow:0 2px 8px rgba(139,92,246,0.2); margin-top:0; transition: all 0.2s;">
-            <i data-lucide="zap" style="width:14px; height:14px;"></i> จัดแผนงานอัตโนมัติ
+            <i data-lucide="zap" style="width:14px; height:14px;"></i> Auto Assign Plan
           </button>
 
         </div>

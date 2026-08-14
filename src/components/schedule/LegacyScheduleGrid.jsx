@@ -461,10 +461,18 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                 height: '160px',
                                 maxWidth: '150px',
                                 transition: 'background 0.15s',
+                                cursor: 'pointer',
+                              }}
+                              onClick={(e) => {
+                                if (typeof window !== 'undefined' && typeof window.toggleTaskSidebar === 'function') {
+                                  if (!window.IS_TASK_SIDEBAR_OPEN) {
+                                    window.toggleTaskSidebar();
+                                  }
+                                }
                               }}
                             >
                               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '6px', position: 'relative', overflow: 'hidden' }}>
-                                {approvedLeaves.length > 0 ? (
+                                {approvedLeaves.length > 0 && dayTasks.length === 0 ? (
                                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                     {approvedLeaves.map((lv, lvIdx) => {
                                       const leaveTypeMap = {
@@ -478,25 +486,45 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                       };
                                       const lvInfo = leaveTypeMap[lv.type] || { label: lv.type || 'On Leave', color: '#635BFF' };
                                       return (
-                                        <div key={lvIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                                        <div key={lvIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }} onClick={(e) => e.stopPropagation()}>
                                           <div style={{ fontSize: '0.68rem', fontWeight: 800, color: lvInfo.color, letterSpacing: '0.06em' }}>ON LEAVE</div>
                                           <div style={{ fontSize: '0.52rem', color: '#fff', fontWeight: 700, background: lvInfo.color, padding: '2px 8px', borderRadius: '99px', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', textAlign: 'center' }}>{lvInfo.label}</div>
                                         </div>
                                       );
                                     })}
-                                    {dayTasks.length > 0 && (
-                                      <div style={{ fontSize: '0.5rem', color: '#94a3b8', marginTop: '2px' }}>{dayTasks.length} task(s) scheduled</div>
-                                    )}
                                   </div>
-                                ) : dayTasks.length > 0 ? (
+                                ) : (dayTasks.length > 0 || approvedLeaves.length > 0) ? (
                                   <>
-                                    <div className="cell-task-list" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px', overflowY: 'auto', maxHeight: '115px', marginBottom: '24px', paddingRight: '2px' }}>
+                                    {approvedLeaves.length > 0 && (
+                                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', marginBottom: '6px', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '6px', width: '100%', boxSizing: 'border-box' }} onClick={(e) => e.stopPropagation()}>
+                                        {approvedLeaves.map((lv, lvIdx) => {
+                                          const leaveTypeMap = {
+                                            'ลาพักร้อน': { label: 'Vacation Leave', color: '#0ea5e9' },
+                                            'ลากิจ': { label: 'Business Leave', color: '#f97316' },
+                                            'ลาป่วย': { label: 'Sick Leave', color: '#ef4444' },
+                                            'วันหยุดชดเชย': { label: 'Compensatory', color: '#10b981' },
+                                            'ลาคลอด / ลาเลี้ยงดูบุตร': { label: 'Maternity Leave', color: '#8b5cf6' },
+                                            'ลาเพื่อการฌาปนกิจศพ': { label: 'Compassionate', color: '#64748b' },
+                                            'อบรม / สัมมนา': { label: 'Training', color: '#14b8a6' },
+                                          };
+                                          const lvInfo = leaveTypeMap[lv.type] || { label: lv.type || 'On Leave', color: '#635BFF' };
+                                          return (
+                                            <div key={lvIdx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', width: '100%' }}>
+                                              <div style={{ fontSize: '0.62rem', fontWeight: 800, color: lvInfo.color, letterSpacing: '0.06em' }}>ON LEAVE</div>
+                                              <div style={{ fontSize: '0.52rem', color: '#fff', fontWeight: 700, background: lvInfo.color, padding: '2px 8px', borderRadius: '99px', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '130px', textAlign: 'center', boxSizing: 'border-box' }} title={lv.type}>{lvInfo.label}</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                    <div className="cell-task-list" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '3px', overflowY: 'auto', maxHeight: approvedLeaves.length > 0 ? '75px' : '115px', marginBottom: '24px', paddingRight: '2px' }}>
                                       {dayTasks.map((t, taskIdx) => {
                                         const nodeCol = colorForAcc(t.acc);
                                         return (
                                           <div
                                             key={taskIdx}
                                             draggable="true"
+                                            onClick={(e) => e.stopPropagation()}
                                             onDragStart={(e) => {
                                               if (typeof window.handleTaskDragStart === 'function') {
                                                 window.handleTaskDragStart(e, 'scheduled-' + t.id);
@@ -536,7 +564,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                     {/* Footer bar */}
                                     <div style={{ position: 'absolute', bottom: '4px', right: '6px', left: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                       <div
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           if (typeof window.showDayDetailModal === 'function') {
                                             window.showDayDetailModal(p.id, d.dateIso);
                                           }
@@ -549,7 +578,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                         <span>View More ({dayTasks.length})</span>
                                       </div>
                                       <div
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           if (typeof window.showDayDetailModal === 'function') {
                                             window.showDayDetailModal(p.id, d.dateIso);
                                           }

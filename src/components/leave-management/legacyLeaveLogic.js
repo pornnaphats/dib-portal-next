@@ -68,11 +68,11 @@
       return `
         <div class="custom-dropdown-container form-dropdown-container" style="position:relative; width:100%;">
           <input type="hidden" id="${id}" value="${actualValue}">
-          <button type="button" onclick="toggleCustomDropdown('${id}_dropdown')" style="width:100% !important; border-radius:99px !important; border:1px solid #e2e8f0 !important; background:#ffffff !important; color:#24204D !important; font-weight:500 !important; height:42px !important; box-sizing:border-box !important; font-size:0.85rem !important; padding:0 6px 0 12px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; cursor:pointer !important; box-shadow:0 1px 2px rgba(15,23,42,0.04) !important; transition:all 0.2s !important" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <button type="button" onclick="toggleCustomDropdown('${id}_dropdown')" style="width:100% !important; border-radius:9999px !important; border:1px solid #e2e8f0 !important; background:#ffffff !important; color:#24204D !important; font-weight:500 !important; height:42px !important; box-sizing:border-box !important; font-size:0.85rem !important; padding:0 16px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; cursor:pointer !important; box-shadow:0 1px 2px rgba(15,23,42,0.04) !important; transition:all 0.2s !important" onmouseover="this.style.borderColor='#cbd5e1'" onmouseout="this.style.borderColor='#e2e8f0'">
             <span id="label_${id}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:4px;">${displayLabel}</span>
             <i data-lucide="chevron-down" style="width:12px; height:12px; color:#94a3b8; flex-shrink:0;"></i>
           </button>
-          <div id="${id}_dropdown" class="custom-dropdown-menu" style="display:none; position:absolute; top:46px; ${positionStyle} width:100%; ${minWidthStyle} text-align:left !important; background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:99999; overflow-x:hidden; overflow-y:auto; max-height:240px; padding:6px; animation: fadeIn 0.15s ease-out;">
+          <div id="${id}_dropdown" class="custom-dropdown-menu" style="display:none; position:absolute; top:46px; ${positionStyle} width:100%; ${minWidthStyle} text-align:left !important; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:99999; overflow-x:hidden; overflow-y:auto; max-height:240px; padding:6px; animation: fadeIn 0.15s ease-out;">
             ${optsHtml}
           </div>
         </div>
@@ -139,7 +139,7 @@
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
             <div style="position:relative">
               <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ชื่อพนักงาน</label>
-              <input type="text" id="leaveEmpName" class="form-input" value="${req ? req.name : ''}" style="width:100%; font-family:'Prompt', sans-serif" placeholder="พิมพ์ค้นหาชื่อพนักงาน..." autocomplete="off" onkeyup="filterLeaveEmployees(this.value)">
+              <input type="text" id="leaveEmpName" class="form-input" value="${req ? req.name : ''}" style="width:100%; border-radius:99px !important; font-family:'Prompt', sans-serif" placeholder="พิมพ์ค้นหาชื่อพนักงาน..." autocomplete="off" onkeyup="filterLeaveEmployees(this.value)">
               <div id="leaveEmpSuggestions" style="position:absolute; top:100%; left:0; width:100%; background:#fff; border:1px solid var(--border); border-radius:8px; margin-top:4px; max-height:200px; overflow-y:auto; z-index:100; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); display:none">
                 ${(window.DATA.employees || []).map(e => `
                   <div class="suggestion-item" onclick="selectLeaveEmployee('${e.name}', '${e.dept}')" style="padding:10px 12px; cursor:pointer; font-size:.7rem; border-bottom:1px solid #f1f5f9">
@@ -151,7 +151,7 @@
             </div>
             <div>
               <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ทีม (Team)</label>
-              <input type="text" id="leaveEmpTeam" class="form-input" value="${req ? ((window.DATA.employees || []).find(e => e.name === req.name)?.dept || '-') : ''}" style="width:100%; background:var(--surface2); font-family:'Prompt', sans-serif" readonly placeholder="ทีมพนักงาน...">
+              <input type="text" id="leaveEmpTeam" class="form-input" value="${req ? ((window.DATA.employees || []).find(e => e.name === req.name)?.dept || '-') : ''}" style="width:100%; border-radius:99px !important; background:var(--surface2); font-family:'Prompt', sans-serif" readonly placeholder="ทีมพนักงาน...">
             </div>
           </div>
 
@@ -171,7 +171,7 @@
             <div id="compDateContainer" style="display: ${isComp ? 'block' : 'none'}">
               <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">ใช้ของวันที่เท่าไร (Ref. Date)</label>
               <div style="position:relative">
-                <input type="text" id="leaveRefDate" class="form-input" style="width:100%; font-family:'Prompt', sans-serif" placeholder="เลือกวันที่ชดเชย...">
+                <input type="text" id="leaveRefDate" class="form-input" style="width:100%; border-radius:99px !important; font-family:'Prompt', sans-serif" placeholder="เลือกวันที่ชดเชย...">
                 <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
               </div>
             </div>
@@ -195,38 +195,29 @@
             </div>
           </div>
           
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px">
-            <div>
-              <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">วันที่ต้องการลา (เริ่ม)</label>
-              <div style="position:relative">
-                <input type="text" id="leaveStart" class="form-input" style="width:100%; font-family:'Prompt', sans-serif" placeholder="เลือกวันที่...">
-                <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
-              </div>
-            </div>
-            <div>
-              <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">วันที่ต้องการลา (สิ้นสุด)</label>
-              <div style="position:relative">
-                <input type="text" id="leaveEnd" class="form-input" style="width:100%; font-family:'Prompt', sans-serif" placeholder="เลือกวันที่...">
-                <i data-lucide="calendar" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3)"></i>
-              </div>
+          <div>
+            <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">วันที่ต้องการลา</label>
+            <div style="position:relative">
+              <input type="text" id="leaveDateRange" class="form-input" style="width:100%; border-radius:99px !important; font-family:'Prompt', sans-serif; padding-right:40px" placeholder="เลือกวันเริ่ม — วันสิ้นสุด...">
+              <i data-lucide="calendar" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-3); pointer-events:none"></i>
             </div>
           </div>
 
           <div>
             <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">จำนวนวัน</label>
-            <input type="text" id="leaveDays" class="form-input" style="width:100%; background:var(--surface2); font-weight:500; font-family:'Prompt', sans-serif" readonly value="${req ? req.days : '0'}">
+            <input type="text" id="leaveDays" class="form-input" style="width:100%; border-radius:99px !important; background:var(--surface2); font-weight:500; font-family:'Prompt', sans-serif" readonly value="${req ? req.days : '0'}">
           </div>
 
           <div>
             <label class="form-label" style="display:block; font-size:.75rem; font-weight:600; color:#475569; margin-bottom:6px">หมายเหตุ (Note)</label>
-            <textarea id="leaveNote" class="form-input" style="width:100%; height:80px; font-family:'Prompt', sans-serif; resize:none; padding:10px" placeholder="ใส่ข้อมูลเพิ่มเติมที่นี่...">${req ? (req.note || '') : ''}</textarea>
+            <textarea id="leaveNote" class="form-input" style="width:100%; height:80px; border-radius:16px !important; font-family:'Prompt', sans-serif; resize:none; padding:10px" placeholder="ใส่ข้อมูลเพิ่มเติมที่นี่...">${req ? (req.note || '') : ''}</textarea>
           </div>
 
         </div>
         <div style="padding:20px 28px; background:var(--surface2); border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px">
-          <button onclick="closeLeaveModal()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-outline" style="font-family:'Prompt', sans-serif">ยกเลิก</button>
-          <button onclick="saveLeaveRequest()" class="text-[12px] font-semibold px-4 py-1.5 btn btn-primary" style="font-family:'Prompt', sans-serif; min-width:140px">
-            <i data-lucide="save" style="width:16px; height:16px; margin-right:6px; vertical-align:middle"></i>${editId ? 'อัปเดตข้อมูล' : 'บันทึกข้อมูล'}
+          <button onclick="closeLeaveModal()" class="btn btn-outline" style="border-radius:99px !important; height:34px !important; font-size:.82rem; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:16px; height:16px"></i>Cancel</button>
+          <button onclick="saveLeaveRequest()" class="btn btn-primary" style="border-radius:99px !important; height:34px !important; font-size:.82rem; font-family:'Prompt', sans-serif; min-width:140px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i data-lucide="save" style="width:16px; height:16px"></i>${editId ? 'Update' : 'Save'}
           </button>
         </div>
       </div>
@@ -320,8 +311,16 @@
         instance.calendarContainer.style.zIndex = "10000";
       }
     };
-    flatpickr('#leaveStart', { ...fpConfig, defaultDate: startVal });
-    flatpickr('#leaveEnd', { ...fpConfig, defaultDate: endVal });
+    let defaultRange = [];
+    if (startVal) defaultRange.push(startVal);
+    if (endVal) defaultRange.push(endVal);
+
+    window._leaveFpRange = flatpickr('#leaveDateRange', {
+      ...fpConfig,
+      mode: 'range',
+      defaultDate: defaultRange.length > 0 ? defaultRange : undefined,
+      onChange: () => { updateLeaveDays(); }
+    });
     flatpickr('#leaveRefDate', { ...fpConfig, defaultDate: refDateVal });
 
     // Helper function for toggling mode inside modal
@@ -399,24 +398,17 @@
   }
 
   window.updateLeaveDays = function() {
-    const s = document.getElementById('leaveStart').value;
-    const e = document.getElementById('leaveEnd').value;
-    if (s && e) {
-      const d1 = new Date(s);
-      const d2 = new Date(e);
-      d1.setHours(0, 0, 0, 0);
-      d2.setHours(0, 0, 0, 0);
-      const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-      let finalDays = diff >= 0 ? diff + 1 : 0;
-
-      // Handle Half Day selection
-      const durationEl = document.querySelector('input[name="leaveDuration"]:checked');
-      if (durationEl && durationEl.value !== 'full' && finalDays === 1) {
-        finalDays = 0.5;
-      }
-
-      document.getElementById('leaveDays').value = finalDays;
+    const fp = window._leaveFpRange;
+    if (!fp || fp.selectedDates.length < 2) return;
+    const d1 = fp.selectedDates[0];
+    const d2 = fp.selectedDates[1];
+    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+    let finalDays = diff >= 0 ? diff + 1 : 0;
+    const durationEl = document.querySelector('input[name="leaveDuration"]:checked');
+    if (durationEl && durationEl.value !== 'full' && finalDays === 1) {
+      finalDays = 0.5;
     }
+    document.getElementById('leaveDays').value = finalDays;
   }
 
   window.saveLeaveRequest = function() {
@@ -437,8 +429,9 @@
       }
     }
 
-    const start = document.getElementById('leaveStart').value;
-    const end = document.getElementById('leaveEnd').value;
+    const fp = window._leaveFpRange;
+    const start = fp && fp.selectedDates[0] ? fp.formatDate(fp.selectedDates[0], 'Y-m-d') : '';
+    const end = fp && fp.selectedDates[1] ? fp.formatDate(fp.selectedDates[1], 'Y-m-d') : (start || '');
     const days = parseFloat(document.getElementById('leaveDays').value);
     const statusEl = document.getElementById('leaveStatus');
     const status = statusEl ? statusEl.value : 'approved';
@@ -512,7 +505,9 @@
         // Save update to Database
         apiSaveLeave({ ...window.DATA.leaveRequests[idx], action: 'edit' }).then((success) => {
           if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
+            showAlert('Error', 'Failed to save database', 'error');
+          } else {
+            if (typeof showToast === 'function') showToast('Leave request updated successfully', 'success');
           }
         });
       }
@@ -549,7 +544,9 @@
       // Save to Database
       apiSaveLeave({ ...newReq, action: 'add' }).then((success) => {
         if (!success) {
-            showAlert('Error', 'บันทึกข้อมูลลง Database ไม่สำเร็จ', 'error');
+            showAlert('Error', 'Failed to save database', 'error');
+        } else {
+            if (typeof showToast === 'function') showToast('Leave request added successfully', 'success');
         }
       });
     }

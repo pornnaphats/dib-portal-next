@@ -200,33 +200,38 @@ export default function ScheduleView() {
             display: "flex", 
             alignItems: "center", 
             background: "#fff", 
-            border: "1px solid #e4e8ef", 
+            border: "1px solid #e2e8f0", 
             borderRadius: "9999px", 
             overflow: "hidden", 
-            height: "38px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            height: "34px",
+            maxHeight: "34px",
+            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
             transition: "all 0.2s",
-            flexShrink: 0
+            flexShrink: 0,
+            boxSizing: "border-box"
           }}
         >
           <button 
             onClick={handlePrev} 
             style={{ 
-              padding: "0 12px", 
+              padding: "0 8px", 
               border: "none", 
               background: "transparent", 
               cursor: "pointer", 
-              color: "#5a6282", 
+              color: "#94a3b8", 
               display: "flex", 
               alignItems: "center",
-              height: "100%",
-              borderRight: "1px solid #eef2f6",
-              transition: "background 0.15s"
+              justifyContent: "center",
+              height: "34px",
+              maxHeight: "34px",
+              borderRight: "1px solid #e2e8f0",
+              transition: "background 0.15s",
+              flexShrink: 0
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={14} />
           </button>
           
           {/* Flatpickr trigger wrapper */}
@@ -235,21 +240,25 @@ export default function ScheduleView() {
             style={{ 
               display: "flex", 
               alignItems: "center", 
-              gap: "8px", 
-              padding: "0 16px", 
-              fontSize: "0.82rem", 
-              fontWeight: 700, 
+              gap: "6px", 
+              padding: "0 10px", 
+              fontSize: "12px", 
+              fontWeight: 500, 
+              lineHeight: 1,
               color: "#24204D", 
               cursor: "pointer",
               userSelect: "none",
-              height: "100%",
-              transition: "background 0.15s"
+              height: "34px",
+              maxHeight: "34px",
+              overflow: "hidden",
+              transition: "background 0.15s",
+              fontFamily: "'Kanit', sans-serif"
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
-            <CalendarIcon size={16} color="#635bff" />
-            <span>{formatThaiDateRange(weekStart, weekEnd)}</span>
+            <CalendarIcon size={14} color="#635bff" />
+            <span style={{ maxWidth: "120px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1 }}>{formatThaiDateRange(weekStart, weekEnd)}</span>
             <input 
               ref={dateInputRef} 
               type="text" 
@@ -261,21 +270,24 @@ export default function ScheduleView() {
           <button 
             onClick={handleNext} 
             style={{ 
-              padding: "0 12px", 
+              padding: "0 8px", 
               border: "none", 
               background: "transparent", 
               cursor: "pointer", 
-              color: "#5a6282", 
+              color: "#94a3b8", 
               display: "flex", 
               alignItems: "center",
-              height: "100%",
-              borderLeft: "1px solid #eef2f6",
-              transition: "background 0.15s"
+              justifyContent: "center",
+              height: "34px",
+              maxHeight: "34px",
+              borderLeft: "1px solid #e2e8f0",
+              transition: "background 0.15s",
+              flexShrink: 0
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={14} />
           </button>
         </div>
 
@@ -285,11 +297,13 @@ export default function ScheduleView() {
             <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#b0b8cc" }} size={14} />
             <input
               type="text"
-              placeholder="ค้นหาชื่อพนักงาน..."
+              placeholder="Search..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
-                paddingLeft: "30px", paddingRight: "10px", paddingTop: "7px", paddingBottom: "7px",
+                height: "34px",
+                boxSizing: "border-box",
+                paddingLeft: "30px", paddingRight: "10px",
                 border: "1px solid #e4e8ef", borderRadius: "9999px",
                 fontSize: "0.78rem", outline: "none", width: "100%",
                 background: "#fff", color: "#24204D",
@@ -309,14 +323,17 @@ export default function ScheduleView() {
           background: "#f0f0f8",
           borderRadius: "9999px",
           padding: "3px",
+          height: "34px",
           flexShrink: 1,
           minWidth: 0,
-          overflow: "hidden"
+          overflow: "hidden",
+          boxSizing: "border-box"
         }}>
           <button
             onClick={() => setTeamFilter("all")}
             style={{
-              padding: "6px 14px",
+              padding: "0 12px",
+              height: "28px",
               borderRadius: "9999px",
               border: "none",
               fontSize: "0.73rem",
@@ -324,8 +341,11 @@ export default function ScheduleView() {
               cursor: "pointer",
               whiteSpace: "nowrap",
               transition: "all 0.2s",
+              display: "flex",
+              alignItems: "center",
               background: teamFilter === "all" ? "#635bff" : "transparent",
-              color: teamFilter === "all" ? "#fff" : "#5a6282"
+              color: teamFilter === "all" ? "#fff" : "#5a6282",
+              boxSizing: "border-box"
             }}
           >
             All Teams
@@ -335,7 +355,8 @@ export default function ScheduleView() {
               key={t}
               onClick={() => setTeamFilter(t)}
               style={{
-                padding: "6px 14px",
+                padding: "0 12px",
+                height: "28px",
                 borderRadius: "9999px",
                 border: "none",
                 fontSize: "0.73rem",
@@ -344,7 +365,8 @@ export default function ScheduleView() {
                 whiteSpace: "nowrap",
                 transition: "all 0.2s",
                 background: teamFilter === t ? "#635bff" : "transparent",
-                color: teamFilter === t ? "#fff" : "#5a6282"
+                color: teamFilter === t ? "#fff" : "#5a6282",
+                boxSizing: "border-box"
               }}
             >
               {t}
@@ -369,7 +391,7 @@ export default function ScheduleView() {
               height: "34px", padding: "0 12px", fontSize: "0.72rem", borderRadius: "9999px",
               background: "transparent", color: "#ef4444", border: "none",
               display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", fontWeight: 700,
-              flexShrink: 0, whiteSpace: "nowrap"
+              flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
             }}
           >
             <span style={{ fontSize: "13px", fontWeight: "bold" }}>✕</span>
@@ -387,8 +409,7 @@ export default function ScheduleView() {
             height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
             background: "#635bff", color: "#fff", border: "none",
             display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontWeight: 700,
-            boxShadow: "0 4px 12px rgba(99,91,255,0.25)",
-            flexShrink: 0, whiteSpace: "nowrap"
+            flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
           }}
         >
           <span style={{ fontSize: "1rem", lineHeight: 1, fontWeight: 400 }}>+</span>
@@ -405,12 +426,11 @@ export default function ScheduleView() {
             height: "34px", padding: "0 16px", fontSize: "0.72rem", borderRadius: "9999px",
             background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", border: "none",
             display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 700,
-            boxShadow: "0 4px 14px rgba(16, 185, 129, 0.4), 0 2px 6px rgba(16, 185, 129, 0.25)",
-            flexShrink: 0, whiteSpace: "nowrap"
+            flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
           }}
         >
           <Download size={13} color="#ffffff" />
-          Export แพลนงาน
+          Export Plan
         </button>
 
         <button 
@@ -421,14 +441,13 @@ export default function ScheduleView() {
           }}
           style={{
             height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
-            background: "#ffffff", color: "#64748b", border: "1px solid #e8eaf0",
+            background: "#ffffff", color: "#64748b", border: "1px solid #e2e8f0",
             display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)",
-            flexShrink: 0, whiteSpace: "nowrap"
+            flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
           }}
         >
           <Users size={13} color="#94a3b8" />
-          จัดการพนักงาน
+          Manage Employees
         </button>
         </div>
       </div>

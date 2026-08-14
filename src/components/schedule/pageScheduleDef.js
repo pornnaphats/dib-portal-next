@@ -344,19 +344,17 @@ window.pageSchedule = function() {
 
         <!-- Right: Filters and Actions -->
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
-          <div style="height:34px; display:flex; align-items:center">
-             ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
+
+          <div style="height:34px; display:flex; align-items:center; overflow:hidden; flex-shrink:0;">
+            ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
           </div>
-          <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden">
-            <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:var(--text-3)"></i>
-            <input id="schedSearchInput" type="text" placeholder="Search..." value="${window._scheduleSearch}" onkeyup="filterScheduleUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:0.8rem">
+          <div class="search-box" style="width:200px; background:#ffffff; height:34px; display:flex; align-items:center; position:relative; border:1px solid #e2e8f0; border-radius:99px; box-shadow:0 1px 2px rgba(15,23,42,0.04); overflow:hidden">
+            <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:12px; color:#94a3b8"></i>
+            <input id="schedSearchInput" type="text" placeholder="Search..." value="${window._scheduleSearch}" onkeyup="filterScheduleUI()" style="padding:0 12px 0 32px; height:100%; width:100%; border:none; outline:none; background:transparent; font-size:13px; color:#24204D; font-family:'Kanit',sans-serif">
           </div>
-          <select id="schedTeamFilter" onchange="filterScheduleUI()" style="height:34px; padding:0 12px; border:1px solid var(--border); border-radius:8px; font-size:.8rem; font-family:Kanit; outline:none; background:#fff; cursor:pointer">
-            <option value="">All Team</option>
-            ${['ACE', 'Sertec', 'ONIX', 'Sale Support', 'Call Center'].map(t => `<option value="${t}" ${window._scheduleTeamFilter === t ? 'selected' : ''}>${t}</option>`).join('')}
-          </select>
+          ${window.renderCustomSelect({ id:'schedTeamFilter', value: window._scheduleTeamFilter||'', options:[{value:'',label:'All Teams'}].concat(Array.from(new Set((DATA.employees||[]).map(e=>e.dept?e.dept.trim():'').filter(Boolean))).map(t=>({value:t,label:t}))), onChange:'filterScheduleUI()', height:'34px', width:'150px' })}
           ${(window._currentDateRange || window._scheduleSearch || window._scheduleTeamFilter) ? `
-          <button onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; document.getElementById('schedTeamFilter').value=''; filterScheduleUI()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none;">
+          <button onclick="window._currentDateRange=''; window._scheduleSearch=''; window._scheduleTeamFilter=''; document.getElementById('schedSearchInput').value=''; var hf=document.getElementById('schedTeamFilter'); if(hf)hf.value=''; filterScheduleUI()" style="height:34px; padding:0 12px; font-size:.75rem; border:none; color:#ef4444; display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:700; background:none;">
              <span style="font-weight:bold;font-size:13px">✕</span> Clear
           </button>
           ` : ''}
@@ -365,10 +363,10 @@ window.pageSchedule = function() {
             <i data-lucide="plus" style="width:12px; height:12px"></i> Add Task
           </button>
           <button class="btn btn-sm" onclick="window.qcShowManageEmployeesModal && window.qcShowManageEmployeesModal('schedule')" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:#fff; color:#475569; border:1px solid var(--border); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
-            <i data-lucide="users" style="width:12px; height:12px"></i> จัดการพนักงาน
+            <i data-lucide="users" style="width:12px; height:12px"></i> Manage Employees
           </button>
           <button class="btn btn-sm" onclick="window.openExportScheduleModal()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
-            <i data-lucide="download" style="width:12px; height:12px"></i> Export ตารางการทำงาน
+            <i data-lucide="download" style="width:12px; height:12px"></i> Export Schedule
           </button>
 
         </div>

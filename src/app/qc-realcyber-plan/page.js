@@ -1,5 +1,11 @@
+"use client";
+
 import Topbar from "@/components/layout/Topbar";
-import QcPlanView from "@/components/legacy-pages/QcPlanView";
+import dynamic from "next/dynamic";
+
+const QcPlanView = dynamic(() => import("@/components/legacy-pages/QcPlanView"), {
+  ssr: false,
+});
 
 export default function Page() {
   return (
@@ -11,3 +17,4 @@ export default function Page() {
     </>
   );
 }
+

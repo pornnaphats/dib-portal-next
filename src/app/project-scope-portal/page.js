@@ -1,5 +1,11 @@
+"use client";
+
 import Topbar from "@/components/layout/Topbar";
-import ScopeView from "@/components/legacy-pages/ScopeView";
+import dynamic from "next/dynamic";
+
+const ScopeView = dynamic(() => import("@/components/legacy-pages/ScopeView"), {
+  ssr: false,
+});
 
 export default function Page() {
   return (
@@ -11,3 +17,4 @@ export default function Page() {
     </>
   );
 }
+

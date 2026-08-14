@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 // ── Empeo Report Panel ──────────────────────────────────────────────────────
 function EmpeoReportPanel() {
@@ -88,11 +90,13 @@ function EmpeoReportPanel() {
                 <div style={{ position: 'relative' }}>
                     <button
                         onClick={() => setEmpeoMonthOpen(!empeoMonthOpen)}
-                        style={{ borderRadius: '99px', border: '1px solid #e2e8f0', background: '#fff', color: '#24204D', fontWeight: '500', height: '34px', padding: '0 14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}
+                        style={{ borderRadius: '99px', border: '1px solid #e2e8f0', background: '#fff', color: '#24204D', fontWeight: '500', height: '34px', width: '140px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', fontSize: '12px', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', boxSizing: 'border-box' }}
                     >
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        {selectedMonthLabel}
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedMonthLabel}</span>
+                        </div>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     {empeoMonthOpen && (
                         <>
@@ -118,7 +122,7 @@ function EmpeoReportPanel() {
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#94a3b8', flexShrink: 0 }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input
                         type="text"
-                        placeholder="ค้นหาชื่อพนักงาน..."
+                        placeholder="Search..."
                         value={empeoSearch}
                         onChange={e => setEmpeoSearch(e.target.value)}
                         style={{ fontSize: '13px', border: 'none', outline: 'none', background: 'transparent', width: '100%', color: '#24204D' }}
@@ -142,12 +146,39 @@ export default function LeaveManagementReact() {
     const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
     const [leaveTypeDropdownOpen, setLeaveTypeDropdownOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedDate, setSelectedDate] = useState('');
     const pageSize = 10;
     const tableCardRef = React.useRef(null);
+    const dateInputRef = React.useRef(null);
+    const fpInstance = React.useRef(null);
+
+    useEffect(() => {
+        if (!loading && dateInputRef.current) {
+            fpInstance.current = flatpickr(dateInputRef.current, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                onChange: (selectedDates, dateStr) => {
+                    setSelectedDate(dateStr);
+                }
+            });
+        }
+        return () => {
+            if (fpInstance.current) {
+                fpInstance.current.destroy();
+                fpInstance.current = null;
+            }
+        };
+    }, [loading]);
+
+    useEffect(() => {
+        if (fpInstance.current) {
+            fpInstance.current.setDate(selectedDate || '', false);
+        }
+    }, [selectedDate]);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, selectedTeam, selectedLeaveType]);
+    }, [searchQuery, selectedTeam, selectedLeaveType, selectedDate]);
     useEffect(() => {
         if (tableCardRef.current) {
             const container = tableCardRef.current.closest('.overflow-y-auto');
@@ -305,7 +336,24 @@ export default function LeaveManagementReact() {
         );
         const matchesTeam = selectedTeam === 'all' || team === selectedTeam;
         const matchesLeaveType = selectedLeaveType === 'all' || r.type === selectedLeaveType;
-        return matchesSearch && matchesTeam && matchesLeaveType;
+        
+        let matchesDate = true;
+        if (selectedDate) {
+            let filterStart = '';
+            let filterEnd = '';
+            if (selectedDate.includes(' to ')) {
+                const parts = selectedDate.split(' to ');
+                filterStart = parts[0];
+                filterEnd = parts[1] || parts[0];
+            } else {
+                filterStart = selectedDate;
+                filterEnd = selectedDate;
+            }
+            // Check if the leave request interval intersects with the filter date interval
+            matchesDate = r.fromDate <= filterEnd && r.toDate >= filterStart;
+        }
+        
+        return matchesSearch && matchesTeam && matchesLeaveType && matchesDate;
     });
 
     const totalFiltered = filteredRequests.length;
@@ -447,25 +495,25 @@ export default function LeaveManagementReact() {
                         ))}
                     </div>
                     {/* Charts and Calendar Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-[300px_1fr_300px_240px] gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-[300px_1fr_300px_240px] gap-4 mb-6" style={{ alignItems: 'stretch' }}>
                         {/* Leave Type Chart */}
-                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px' }}>
+                        <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '320px', boxSizing: 'border-box' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">สถิติประเภทการลา</div>
-                            <div style={{ height: '240px', width: '100%', position: 'relative', marginTop: '10px' }}>
+                            <div style={{ flex: 1, width: '100%', position: 'relative', marginTop: '10px', minHeight: 0 }}>
                                 <canvas id="leaveTypeChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* Trend Chart */}
-                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px' }}>
+                        <div key="chart-trend" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '320px', boxSizing: 'border-box' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">แนวโน้มการลาในแต่ละเดือน</div>
-                            <div style={{ height: '240px', width: '100%', position: 'relative', marginTop: '10px' }}>
+                            <div style={{ flex: 1, width: '100%', position: 'relative', marginTop: '10px', minHeight: 0 }}>
                                 <canvas id="leaveTrendChart" style={{ width: '100%', height: '100%', display: 'block' }}></canvas>
                             </div>
                         </div>
 
                         {/* On Leave Today & Tomorrow Card */}
-                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '100%', overflow: 'hidden' }}>
+                        <div key="on-leave-today" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '320px', boxSizing: 'border-box', overflow: 'hidden' }}>
                             <div className="flex items-center justify-between mb-3 shrink-0">
                                 <div className="flex items-center gap-3">
                                     <div style={{ width: '34px', height: '34px', minWidth: '34px', minHeight: '34px', borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.25)', flexShrink: 0, aspectRatio: '1/1' }}>
@@ -559,8 +607,8 @@ export default function LeaveManagementReact() {
                         </div>
 
                         {/* Calendar */}
-                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '16px' }}>
-                            <div className="flex justify-between items-center" style={{ marginBottom: '16px' }}>
+                        <div key="calendar" className="bg-white rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border border-slate-100/80 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '16px', height: '320px', boxSizing: 'border-box', overflow: 'hidden' }}>
+                            <div className="flex justify-between items-center shrink-0" style={{ marginBottom: '12px' }}>
                                 <div className="text-[0.8rem] font-extrabold text-gray-800 tracking-tight">ปฏิทินการลา</div>
                                 <div className="flex gap-1.5 items-center">
                                     <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="w-6 h-6 rounded-full border border-slate-100 flex items-center justify-center text-gray-400 hover:text-[#635BFF] hover:bg-slate-50 transition-all">
@@ -572,7 +620,7 @@ export default function LeaveManagementReact() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-7 text-center mb-3" style={{ gap: '2px', rowGap: '6px' }}>
+                            <div className="grid grid-cols-7 text-center mb-1 flex-1" style={{ gap: '2px', rowGap: '2px', minHeight: 0, contentVisibility: 'auto' }}>
                                 {['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'].map((d, index) => {
                                     const colorClass = index === 0 ? 'text-red-500' : index === 6 ? 'text-[#635BFF]' : 'text-gray-400';
                                     return (
@@ -586,12 +634,12 @@ export default function LeaveManagementReact() {
                                     const dayLeaves = leaveDaysMap.get(d) || [];
                                     const hasLeave = dayLeaves.length > 0;
                                     return (
-                                        <div key={d} className="w-full flex items-center justify-center relative" style={{ height: '32px' }}>
+                                        <div key={d} className="w-full flex items-center justify-center relative" style={{ aspectRatio: '1', minHeight: 0 }}>
                                             <div className={`rounded-full flex flex-col items-center justify-center text-[0.7rem] transition-all ${
                                                 isToday 
                                                     ? 'bg-[#635BFF] text-white font-extrabold shadow-[0_4px_10px_rgba(99,91,255,0.3)]' 
                                                     : 'text-gray-700 hover:bg-slate-50 cursor-pointer font-medium'
-                                            }`} style={{ lineHeight: '1', width: '24px', height: '24px' }}>
+                                            }`} style={{ lineHeight: '1', width: '20px', height: '20px' }}>
                                                 <span style={{ transform: hasLeave ? 'translateY(1px)' : 'none' }}>{d}</span>
                                                 {hasLeave && (
                                                     <div className="flex gap-[2.5px] justify-center mt-[1px]">
@@ -606,7 +654,7 @@ export default function LeaveManagementReact() {
                                     );
                                 })}
                             </div>
-                            <div className="border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center shrink-0" style={{ marginTop: '12px', paddingTop: '12px' }}>
+                            <div className="border-t border-slate-100 flex flex-wrap gap-x-2 gap-y-1 justify-center shrink-0" style={{ marginTop: '6px', paddingTop: '6px' }}>
                                 {[
                                     { label: 'ลาพักร้อน', color: 'bg-[#635BFF]' },
                                     { label: 'ลากิจ', color: 'bg-[#f97316]' },
@@ -626,7 +674,7 @@ export default function LeaveManagementReact() {
                     {/* Table Area */}
                     <div ref={tableCardRef} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', overflow: 'hidden', width: '100%', minWidth: 0 }}>
                         <div className="p-5 flex justify-between items-center flex-wrap gap-4" style={{ padding: '16px 20px' }}>
-                            <div className="text-sm font-bold text-gray-800">รายการลาทั้งหมด</div>
+                            <div className="text-sm font-bold text-gray-800">All Leave Requests</div>
                             <div className="flex items-center gap-3 flex-wrap">
                                 <div 
                                     style={{ 
@@ -646,13 +694,59 @@ export default function LeaveManagementReact() {
                                     <svg className="w-[14px] h-[14px] text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                     <input 
                                         type="text" 
-                                        placeholder="ค้นหา..." 
+                                        placeholder="Search..." 
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         style={{ fontSize: '13px', border: 'none', outline: 'none', backgroundColor: 'transparent', width: '100%', color: '#24204D' }}
                                     />
                                 </div>
-                                <div style={{ position: 'relative', width: '150px', flexShrink: 0 }}>
+                                <div style={{ position: 'relative' }}>
+                                    <button 
+                                        onClick={() => fpInstance.current && fpInstance.current.open()}
+                                        style={{ 
+                                            borderRadius: '99px', 
+                                            border: '1px solid #e2e8f0', 
+                                            backgroundColor: '#ffffff', 
+                                            color: '#24204D', 
+                                            fontWeight: '500', 
+                                            height: '34px', 
+                                            minWidth: '150px', 
+                                            padding: '0 16px', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '8px', 
+                                            cursor: 'pointer', 
+                                            fontSize: '12px', 
+                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)', 
+                                            boxSizing: 'border-box',
+                                            justifyContent: 'flex-start'
+                                        }}
+                                    >
+                                        <svg className="w-[14px] h-[14px] text-[#635bff] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedDate ? '#24204D' : '#94a3b8' }}>
+                                            {selectedDate ? (() => {
+                                                const formatSingle = (dStr) => {
+                                                    const d = new Date(dStr);
+                                                    if (isNaN(d.getTime())) return dStr;
+                                                    const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                    return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+                                                };
+                                                if (selectedDate.includes(' to ')) {
+                                                    const parts = selectedDate.split(' to ');
+                                                    return `${formatSingle(parts[0])} - ${formatSingle(parts[1] || parts[0])}`;
+                                                }
+                                                return formatSingle(selectedDate);
+                                            })() : 'Select Date Range'}
+                                        </span>
+                                    </button>
+                                    <input 
+                                        ref={dateInputRef}
+                                        type="text" 
+                                        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+                                        readOnly
+                                    />
+                                </div>
+                                <div style={{ position: 'relative', width: '180px', flexShrink: 0 }}>
                                     <button 
                                         onClick={() => setLeaveTypeDropdownOpen(!leaveTypeDropdownOpen)} 
                                         style={{ 
@@ -674,7 +768,7 @@ export default function LeaveManagementReact() {
                                         }}
                                     >
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {selectedLeaveType === 'all' ? 'ประเภทการลาทั้งหมด' : selectedLeaveType}
+                                            {selectedLeaveType === 'all' ? 'All Leave Types' : selectedLeaveType}
                                         </span>
                                         <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
@@ -699,19 +793,19 @@ export default function LeaveManagementReact() {
                                             }}>
                                                 <div 
                                                     onClick={() => { setSelectedLeaveType('all'); setLeaveTypeDropdownOpen(false); }} 
-                                                    style={{ padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', color: '#64748b', fontWeight: '500', backgroundColor: 'transparent', transition: 'all 0.1s' }}
-                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; }}
-                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                                                    style={{ padding: '10px 14px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: selectedLeaveType === 'all' ? '#4f46e5' : '#374151', fontWeight: selectedLeaveType === 'all' ? '600' : '500', backgroundColor: selectedLeaveType === 'all' ? '#f0efff' : 'transparent', transition: 'all 0.12s ease' }}
+                                                    onMouseOver={(e) => { if (selectedLeaveType !== 'all') { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; } }}
+                                                    onMouseOut={(e) => { if (selectedLeaveType !== 'all') { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; } }}
                                                 >
-                                                    ประเภทการลาทั้งหมด
+                                                    All Leave Types
                                                 </div>
                                                 {['ลาพักร้อน', 'ลากิจ', 'ลาป่วย', 'วันหยุดชดเชย', 'ลาคลอด / ลาเลี้ยงดูบุตร', 'ลาเพื่อการฌาปนกิจศพ', 'อบรม / สัมมนา', 'อื่นๆ'].map(t => (
                                                     <div 
                                                         key={t}
                                                         onClick={() => { setSelectedLeaveType(t); setLeaveTypeDropdownOpen(false); }} 
-                                                        style={{ padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', color: '#64748b', fontWeight: '500', backgroundColor: 'transparent', transition: 'all 0.1s' }}
-                                                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; }}
-                                                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                                                        style={{ padding: '10px 14px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: selectedLeaveType === t ? '#4f46e5' : '#374151', fontWeight: selectedLeaveType === t ? '600' : '500', backgroundColor: selectedLeaveType === t ? '#f0efff' : 'transparent', transition: 'all 0.12s ease' }}
+                                                        onMouseOver={(e) => { if (selectedLeaveType !== t) { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; } }}
+                                                        onMouseOut={(e) => { if (selectedLeaveType !== t) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; } }}
                                                     >
                                                         {t}
                                                     </div>
@@ -742,7 +836,7 @@ export default function LeaveManagementReact() {
                                         }}
                                     >
                                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
-                                            {selectedTeam === 'all' ? 'ทีมทั้งหมด' : selectedTeam}
+                                            {selectedTeam === 'all' ? 'All Teams' : selectedTeam}
                                         </span>
                                         <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7"></path></svg>
                                     </button>
@@ -766,19 +860,19 @@ export default function LeaveManagementReact() {
                                             }}>
                                                 <div 
                                                     onClick={() => { setSelectedTeam('all'); setTeamDropdownOpen(false); }} 
-                                                    style={{ padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', color: '#64748b', fontWeight: '500', backgroundColor: 'transparent', transition: 'all 0.1s' }}
-                                                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; }}
-                                                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                                                    style={{ padding: '10px 14px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: selectedTeam === 'all' ? '#4f46e5' : '#374151', fontWeight: selectedTeam === 'all' ? '600' : '500', backgroundColor: selectedTeam === 'all' ? '#f0efff' : 'transparent', transition: 'all 0.12s ease' }}
+                                                    onMouseOver={(e) => { if (selectedTeam !== 'all') { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; } }}
+                                                    onMouseOut={(e) => { if (selectedTeam !== 'all') { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; } }}
                                                 >
-                                                    ทีมทั้งหมด
+                                                    All Teams
                                                 </div>
                                                 {teams.map(t => (
                                                     <div 
                                                         key={t}
                                                         onClick={() => { setSelectedTeam(t); setTeamDropdownOpen(false); }} 
-                                                        style={{ padding: '8px 12px', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', color: '#64748b', fontWeight: '500', backgroundColor: 'transparent', transition: 'all 0.1s' }}
-                                                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; }}
-                                                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#64748b'; }}
+                                                        style={{ padding: '10px 14px', fontSize: '12px', cursor: 'pointer', borderRadius: '8px', color: selectedTeam === t ? '#4f46e5' : '#374151', fontWeight: selectedTeam === t ? '600' : '500', backgroundColor: selectedTeam === t ? '#f0efff' : 'transparent', transition: 'all 0.12s ease' }}
+                                                        onMouseOver={(e) => { if (selectedTeam !== t) { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.color = '#24204D'; } }}
+                                                        onMouseOut={(e) => { if (selectedTeam !== t) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; } }}
                                                     >
                                                         {t}
                                                     </div>
@@ -787,9 +881,9 @@ export default function LeaveManagementReact() {
                                         </>
                                     )}
                                 </div>
-                                {(searchQuery !== '' || selectedTeam !== 'all' || selectedLeaveType !== 'all') && (
+                                {(searchQuery !== '' || selectedTeam !== 'all' || selectedLeaveType !== 'all' || selectedDate !== '') && (
                                     <button 
-                                        onClick={() => { setSearchQuery(''); setSelectedTeam('all'); setSelectedLeaveType('all'); }} 
+                                        onClick={() => { setSearchQuery(''); setSelectedTeam('all'); setSelectedLeaveType('all'); setSelectedDate(''); }} 
                                         style={{ 
                                             display: 'flex', 
                                             alignItems: 'center', 
@@ -838,23 +932,9 @@ export default function LeaveManagementReact() {
                                         fontWeight: '600',
                                         transition: 'all 0.2s'
                                     }}
-                                    onMouseOver={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(99,91,255,0.4)';
-                                    }}
-                                    onMouseOut={(e) => {
-                                        e.currentTarget.style.transform = 'none';
-                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,91,255,0.25)';
-                                    }}
-                                    onMouseDown={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-1px) scale(0.97)';
-                                    }}
-                                    onMouseUp={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                    }}
                                 >
                                     <svg className="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                    เพิ่มการลา
+                                    Add Leave
                                 </button>
                             </div>
                         </div>
@@ -887,13 +967,13 @@ export default function LeaveManagementReact() {
                                         const avatarUrl = getEmployeeAvatar(r.name);
                                         return (
                                             <tr key={r.id} className="hover:bg-[#f8fafc] transition-colors">
-                                                <td style={{ padding: '8px 8px', paddingLeft: '20px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.requestDate}</td>
-                                                <td style={{ padding: '6px 10px' }}>
+                                                <td style={{ padding: '16px 12px', paddingLeft: '20px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.requestDate}</td>
+                                                <td style={{ padding: '12px 12px' }}>
                                                     <div className="flex items-center gap-3">
                                                         {avatarUrl ? (
                                                             <img src={avatarUrl} style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flexShrink: 0, aspectRatio: '1/1' }} />
                                                          ) : (
-                                                             <div style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '8px' : (getEmployeeNickname(r.name).length > 3 ? '9px' : '11px'), boxShadow: '0 4px 10px rgba(99,102,241,0.18)', flexShrink: 0, aspectRatio: '1/1', padding: '0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                             <div style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', alignContent: 'center', fontWeight: 'bold', fontSize: getEmployeeNickname(r.name).length > 5 ? '8px' : (getEmployeeNickname(r.name).length > 3 ? '9px' : '11px'), boxShadow: '0 4px 10px rgba(99,102,241,0.18)', flexShrink: 0, aspectRatio: '1/1', padding: '0 3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', justifyContent: 'center' }}>
                                                                  {getEmployeeNickname(r.name)}
                                                              </div>
                                                          )}
@@ -903,7 +983,7 @@ export default function LeaveManagementReact() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '8px 8px' }}>
+                                                <td style={{ padding: '16px 12px' }}>
                                                     {(() => {
                                                         const badgeStyle = 
                                                             r.type === 'ลาพักร้อน' ? { bg: '#e0f2fe', text: '#0369a1', dot: '#0ea5e9' } :
@@ -931,11 +1011,11 @@ export default function LeaveManagementReact() {
                                                         );
                                                     })()}
                                                 </td>
-                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }}>{r.refDate}</td>
-                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</td>
-                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)', textAlign: 'center' }}>{r.days}</td>
-                                                <td style={{ padding: '8px 8px', fontSize: '.7rem', color: 'var(--text-2)' }} className="max-w-[150px] truncate" title={r.note}>{r.note}</td>
-                                                <td style={{ padding: '8px 8px', paddingRight: '20px', textAlign: 'center' }} className="relative">
+                                                <td style={{ padding: '16px 12px', fontSize: '.7rem', color: 'var(--text-2)' }}>{r.refDate}</td>
+                                                <td style={{ padding: '16px 12px', fontSize: '.7rem', color: 'var(--text-2)' }} className="whitespace-nowrap">{r.days > 1 ? `${r.start} - ${r.end}` : r.start}</td>
+                                                <td style={{ padding: '16px 12px', fontSize: '.7rem', color: 'var(--text-2)', textAlign: 'center' }}>{r.days}</td>
+                                                <td style={{ padding: '16px 12px', fontSize: '.7rem', color: 'var(--text-2)' }} className="max-w-[150px] truncate" title={r.note}>{r.note}</td>
+                                                <td style={{ padding: '16px 12px', paddingRight: '20px', textAlign: 'center' }} className="relative">
                                                     <button onClick={(e) => {
                                                         e.stopPropagation();
                                                         document.querySelectorAll('[id^="react_actionMenu_leave_"]').forEach(el => {
@@ -973,7 +1053,7 @@ export default function LeaveManagementReact() {
                                         );
                                     }) : (
                                         <tr>
-                                            <td colSpan="8" className="px-4 py-12 text-center text-gray-400 text-sm">
+                                            <td colSpan="8" style={{ padding: '80px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem', fontFamily: 'Kanit' }}>
                                                 ไม่มีข้อมูลการลา
                                             </td>
                                         </tr>

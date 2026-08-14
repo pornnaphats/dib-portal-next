@@ -4,6 +4,7 @@ import Script from "next/script";
 import Sidebar from "@/components/layout/Sidebar";
 import AuthProvider from "@/components/providers/AuthProvider";
 import DataProvider from "@/components/providers/DataProvider";
+import PermissionGuard from "@/components/providers/PermissionGuard";
 
 const kanit = Kanit({
   weight: ["300", "400", "500", "600", "700"],
@@ -31,7 +32,9 @@ export default function RootLayout({ children }) {
           <DataProvider>
             <Sidebar />
             <main className="main-content" style={{ height: "100vh", overflow: "hidden" }}>
-              {children}
+              <PermissionGuard>
+                {children}
+              </PermissionGuard>
             </main>
           </DataProvider>
         </AuthProvider>

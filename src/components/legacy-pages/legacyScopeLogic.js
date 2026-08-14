@@ -272,7 +272,7 @@ const getWorkloadColor = (hours) => {
         if (!document.getElementById('scopeTableBody')) return;
 
         if (index >= data.length) {
-            if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody });
+            if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody.closest('table') || tbody });
             if (typeof window.checkScopeSelection === 'function') window.checkScopeSelection();
             return;
         }
@@ -381,20 +381,23 @@ const getWorkloadColor = (hours) => {
             </div>
           </div>
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${300 + colOffset}px; z-index: 10; box-shadow: var(--shadow)">
-          ${renderNodeBadge(item.node)}
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${300 + colOffset}px; z-index: 10; box-shadow: var(--shadow)">
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            ${renderNodeBadge(item.node)}
+          </div>
         </td>
-        <td style="padding: 8px 8px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${420 + colOffset}px; z-index: 10; box-shadow: var(--shadow)">
-          <div style="font-size: 0.7rem; font-weight: 700; color: ${item.progress > 120 ? '#991b1b' : 'var(--text-2)'}">${item.progress}%</div>
-          <div style="width: 100%; height: 8px; background: #eef2ff; border-radius: 99px; overflow: hidden; margin-top: 4px; border: 1px solid var(--border)">
-            <div style="width: ${Math.min(item.progress, 100)}%; height: 100%; background: ${(() => {
+        <td style="padding: 8px 12px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); background: var(--surface); position: sticky; left: ${420 + colOffset}px; z-index: 10; box-shadow: var(--shadow)">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: ${item.progress > 100 ? '#ef4444' : 'var(--text-2)'}; margin-bottom: 4px;">${item.progress}%</div>
+            <div style="width: 80px; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative;">
+              <div style="width: ${Math.min(item.progress, 100)}%; height: 100%; background: ${(() => {
         const p = item.progress;
-        if (p < 50) return '#ef4444'; // Red
-        if (p <= 80) return '#f59e0b'; // Yellow
-        if (p <= 100) return '#10b981'; // Light Green
-        if (p <= 120) return '#065f46'; // Dark Green
-        return '#991b1b'; // Dark Red (>120)
+        if (p <= 50) return '#6366f1'; // Indigo (Normal/Low)
+        if (p <= 100) return '#10b981'; // Green (Optimal)
+        if (p <= 120) return '#fb923c'; // Orange (High)
+        return '#ef4444'; // Red (Overloaded)
       })()}; border-radius: 99px"></div>
+            </div>
           </div>
         </td>
         ${days.map(d => {
@@ -439,7 +442,10 @@ const getWorkloadColor = (hours) => {
 
         const assignees = matchedTasks.map(t => {
           const emp = (window.DATA.employees || []).find(e => e.id === t.person || e.name === t.person || e.nickname === t.person);
-          return emp ? window.getEmployeeDisplayName(emp) : t.person;
+          if (emp) {
+            return (emp.nickname && emp.nickname !== '-') ? emp.nickname : emp.name.split(' ')[0];
+          }
+          return t.person;
         });
 
         // Remove duplicates and join
@@ -492,7 +498,7 @@ const getWorkloadColor = (hours) => {
     };
     const style = nodeColors[node] || nodeColors['Other'];
     return `
-      <div style="display:inline-flex; align-items:center; justify-content:center; padding:4px 12px; border-radius:20px; background:${style.bg}; border:1px solid ${style.border}; color:${style.text}; font-size:.65rem; font-weight:700; white-space:nowrap">
+      <div style="display:inline-flex; align-items:center; justify-content:center; padding:4px 12px; border-radius:99px; background:${style.bg}; border:1px solid ${style.border}; color:${style.text}; font-size:.65rem; font-weight:700; white-space:nowrap">
         ${node}
       </div>
     `;
@@ -503,8 +509,14 @@ const getWorkloadColor = (hours) => {
     const pSelect = document.getElementById('scopeFilterProject');
     const nSelect = document.getElementById('scopeFilterNode');
     const sInput = document.getElementById('scopeSearch');
-    if (pSelect) pSelect.value = 'all';
-    if (nSelect) nSelect.value = 'all';
+    if (pSelect) {
+      pSelect.value = 'all';
+      pSelect.dispatchEvent(new Event('change'));
+    }
+    if (nSelect) {
+      nSelect.value = 'all';
+      nSelect.dispatchEvent(new Event('change'));
+    }
     if (sInput) sInput.value = '';
 
     // 2. Reset Date Picker
@@ -528,6 +540,7 @@ const getWorkloadColor = (hours) => {
 
   window.renderPremiumScopeDashboard = function() {
     window.currentPage = 'project-scope-portal';
+    window.isScopeBulkMode = false;
 
     // Async rendering to prevent UI freeze
     setTimeout(() => {
@@ -575,7 +588,7 @@ const getWorkloadColor = (hours) => {
         #scopeFilterNode,
         #custom_wrap_scopeFilterProject .select-input,
         #custom_wrap_scopeFilterNode .select-input {
-          height: 38px !important;
+          height: 34px !important;
           border-radius: 99px !important;
           border: 1.5px solid var(--border) !important;
           background: var(--surface) !important;
@@ -600,7 +613,7 @@ const getWorkloadColor = (hours) => {
         /* Date range input override */
         div[id$="_from"], 
         div[id$="_to"] { 
-          height: 38px !important; 
+          height: 34px !important; 
           border-radius: 99px !important;
           border: 1.5px solid var(--border) !important;
           background: var(--surface) !important;
@@ -617,7 +630,7 @@ const getWorkloadColor = (hours) => {
         /* Search box override */
         .scope-search-box {
           border-radius: 99px !important;
-          height: 38px !important;
+          height: 34px !important;
           border: 1.5px solid var(--border) !important;
           background: var(--surface) !important;
           padding: 0 16px !important;
@@ -648,7 +661,7 @@ const getWorkloadColor = (hours) => {
         /* Buttons styling */
         .scope-btn-pill {
           border-radius: 99px !important;
-          height: 38px !important;
+          height: 34px !important;
           padding: 0 20px !important;
           font-size: 13px !important;
           font-weight: 600 !important;
@@ -690,10 +703,10 @@ const getWorkloadColor = (hours) => {
           <!-- Search Box -->
           <div class="search-box scope-search-box" style="width: 220px; display: flex; align-items: center; gap: 8px;">
             <i data-lucide="search" style="width: 14px; height: 14px; color: var(--text-3)"></i>
-            <input type="text" id="scopeSearch" oninput="applyScopeDashboardFilters()" placeholder="Search Project or Scope..." style="background: none; border: none; outline: none; font-size: 0.75rem; width: 100%; color: var(--text); font-family: 'Kanit', sans-serif">
+            <input type="text" id="scopeSearch" oninput="applyScopeDashboardFilters()" placeholder="Search..." style="background: none; border: none; outline: none; font-size: 0.75rem; width: 100%; color: var(--text); font-family: 'Kanit', sans-serif">
           </div>
 
-          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 38px; min-width: 180px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
+          <select id="scopeFilterProject" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 180px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
             <option value="all">All Projects</option>
             ${(() => {
         // Use dynamically fetched accounts
@@ -717,7 +730,7 @@ const getWorkloadColor = (hours) => {
         return sortedProjects.map(p => `<option value="${p}">${p}</option>`).join('');
       })()}
           </select>
-          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 38px; min-width: 160px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
+          <select id="scopeFilterNode" onchange="applyScopeDashboardFilters()" class="select-input" style="height: 34px; min-width: 160px; padding: 0 10px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid var(--border); background: var(--surface2); color: var(--text); outline: none">
             <option value="all">All Nodes</option>
             ${(() => {
         const nodes = window.PROJECT_NODES || ['Adhoc', 'AE', 'AI', 'Content', 'Coordinator', 'Graphic', 'Internal', 'Meeting', 'Monitor', 'Other', 'Production', 'Report', 'Seminar'];
@@ -815,16 +828,16 @@ const getWorkloadColor = (hours) => {
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px">
         <div style="display: flex; align-items: center; gap: 12px">
           <h3 class="section-title" style="margin: 0">Scope Workload Details</h3>
-          <button id="bulkDeleteScopeBtn" onclick="bulkDeleteWorkshipScope()" class="scope-btn-pill btn btn-sm btn-danger" style="display: none; align-items: center;">
-            <i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected
+          <button id="bulkDeleteScopeBtn" onclick="bulkDeleteWorkshipScope()" class="scope-btn-pill btn btn-sm btn-danger" style="display: none !important; align-items: center; gap: 6px;">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px"></i> <span id="bulkDeleteScopeCount">Delete Selected (0)</span>
           </button>
-          <button id="bulkDeselectScopeBtn" onclick="toggleAllWorkshipScope({checked: false})" class="scope-btn-pill btn btn-sm btn-outline" style="display: none; align-items: center; background: #fff; border-color: var(--border);">
+          <button id="bulkDeselectScopeBtn" onclick="toggleAllWorkshipScope({checked: false})" class="scope-btn-pill btn btn-sm btn-outline" style="display: none !important; align-items: center; background: #fff; border-color: var(--border);">
             <i data-lucide="x-square" style="width: 14px; height: 14px"></i> Clear Selection
           </button>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button onclick="toggleScopeBulkMode()" class="scope-btn-pill btn btn-outline" style="background: ${window.isScopeBulkMode ? '#fef2f2' : '#fff'}; color: ${window.isScopeBulkMode ? '#ef4444' : 'var(--text-2)'}; border-color: ${window.isScopeBulkMode ? '#fecaca' : 'var(--border)'}">
-            <i data-lucide="check-square" style="width: 16px; height: 16px"></i> ${window.isScopeBulkMode ? 'Cancel Selection' : 'Select Multiple'}
+          <button id="toggleScopeBulkModeBtn" onclick="toggleScopeBulkMode()" class="scope-btn-pill btn btn-outline" style="background: #fff; color: var(--text-2); border-color: var(--border);">
+            <i data-lucide="check-square" style="width: 16px; height: 16px"></i> <span id="toggleScopeBulkModeText">Select Multiple</span>
           </button>
           <button onclick="showAddWorkshipScopeModal()" class="scope-btn-pill btn btn-primary">
             <i data-lucide="plus-circle" style="width: 16px; height: 16px"></i> Add Scope
@@ -936,16 +949,16 @@ const getWorkloadColor = (hours) => {
         <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-2)">${name}</div>
       </td>
       <td style="padding: 12px 12px; text-align: center; border-bottom: 1px solid var(--border)">
-        <span style="display: inline-flex; align-items: center; padding: 3px 12px; background: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border}; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase">
+        <span style="display: inline-flex; align-items: center; padding: 4px 14px; background: ${style.bg}; color: ${style.text}; border: 1px solid ${style.border}; border-radius: 99px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">
           ${node}
         </span>
       </td>
-      <td style="padding: 12px 24px; text-align: center; border-bottom: 1px solid var(--border)">
-        <div style="display: flex; align-items: center; gap: 10px; justify-content: center">
-          <div style="flex: 1; max-width: 80px; height: 5px; background: var(--bg); border-radius: var(--radius-sm); overflow: hidden">
-            <div style="width: ${progress}%; height: 100%; background: ${barColor}; border-radius: var(--radius-sm)"></div>
+      <td style="padding: 12px 24px; border-bottom: 1px solid var(--border)">
+        <div style="display: flex; align-items: center; gap: 12px; justify-content: center">
+          <div style="flex: 1; max-width: 100px; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06)">
+            <div style="width: ${progress}%; height: 100%; background: ${barColor}; border-radius: 99px; transition: width 0.3s ease;"></div>
           </div>
-          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text); min-width: 30px">${progress}%</span>
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text); min-width: 34px; text-align: right;">${progress}%</span>
         </div>
       </td>
     </tr>
@@ -1011,7 +1024,7 @@ const getWorkloadColor = (hours) => {
             </div>
           </div>
 
-          <button onclick="saveNewWorkshipScope()" class="scope-btn-pill btn btn-primary" style="margin-top: 12px; width: 100%; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">
+          <button onclick="saveNewWorkshipScope()" class="scope-btn-pill btn btn-primary" style="margin-top: 12px; width: 100%; justify-content: center; border-radius: 99px; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">
             Save Scope
           </button>
         </div>
@@ -1141,7 +1154,7 @@ const getWorkloadColor = (hours) => {
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700">Edit Scope Details</h2>
             <p style="margin: 4px 0 0; font-size: 0.8rem; opacity: 0.9">Update workload and details</p>
           </div>
-          <button onclick="document.getElementById('addScopeModal').remove()" style="background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center">
+          <button onclick="document.getElementById('addScopeModal').remove()" style="background: rgba(255,255,255,0.2); border: none; width: 40px; height: 40px; border-radius: 99px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center">
             <i data-lucide="x" style="width: 18px; height: 18px"></i>
           </button>
         </div>
@@ -1188,9 +1201,9 @@ const getWorkloadColor = (hours) => {
 
           <!-- Actions -->
           <div style="display: flex; gap: 12px; margin-top: 8px">
-            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" class="scope-btn-pill btn btn-danger" style="flex: 1; justify-content: center; background: #fef2f2; color: #ef4444; border: 1.5px solid #fee2e2;">Delete</button>
-            <button onclick="document.getElementById('addScopeModal').remove()" class="scope-btn-pill btn btn-outline" style="flex: 1; justify-content: center; background: white; color: #64748b; border: 1.5px solid #e2e8f0;">Cancel</button>
-            <button onclick="saveNewWorkshipScope(true)" class="scope-btn-pill btn btn-primary" style="flex: 2; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">Update Scope</button>
+            <button onclick="deleteWorkshipScope('${acc.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}')" class="scope-btn-pill btn btn-danger" style="flex: 1; justify-content: center; border-radius: 99px; background: #fef2f2; color: #ef4444; border: 1.5px solid #fee2e2;">Delete</button>
+            <button onclick="document.getElementById('addScopeModal').remove()" class="scope-btn-pill btn btn-outline" style="flex: 1; justify-content: center; border-radius: 99px; background: white; color: #64748b; border: 1.5px solid #e2e8f0;">Cancel</button>
+            <button onclick="saveNewWorkshipScope(true)" class="scope-btn-pill btn btn-primary" style="flex: 2; justify-content: center; border-radius: 99px; box-shadow: 0 4px 12px rgba(99,102,241,0.2);">Update Scope</button>
           </div>
         </div>
       </div>
@@ -1204,6 +1217,24 @@ const getWorkloadColor = (hours) => {
   window.isScopeBulkMode = false;
   window.toggleScopeBulkMode = function() {
     window.isScopeBulkMode = !window.isScopeBulkMode;
+    
+    // Update button text and style dynamically
+    const toggleBtn = document.getElementById('toggleScopeBulkModeBtn');
+    const toggleText = document.getElementById('toggleScopeBulkModeText');
+    if (toggleBtn && toggleText) {
+      if (window.isScopeBulkMode) {
+        toggleBtn.style.background = '#fef2f2';
+        toggleBtn.style.color = '#ef4444';
+        toggleBtn.style.borderColor = '#fecaca';
+        toggleText.textContent = 'Cancel Selection';
+      } else {
+        toggleBtn.style.background = '#fff';
+        toggleBtn.style.color = 'var(--text-2)';
+        toggleBtn.style.borderColor = 'var(--border)';
+        toggleText.textContent = 'Select Multiple';
+      }
+    }
+
     if (typeof applyScopeDashboardFilters === 'function') {
       applyScopeDashboardFilters();
     }
@@ -1214,18 +1245,17 @@ const getWorkloadColor = (hours) => {
     const checked = document.querySelectorAll('.scope-checkbox:checked');
     const btn = document.getElementById('bulkDeleteScopeBtn');
     const deselectBtn = document.getElementById('bulkDeselectScopeBtn');
+    const countSpan = document.getElementById('bulkDeleteScopeCount');
     if (btn) {
       if (window.isScopeBulkMode) {
-        btn.style.display = 'inline-flex';
-        btn.innerHTML = `<i data-lucide="trash-2" style="width: 14px; height: 14px"></i> Delete Selected (${checked.length})`;
-        if (deselectBtn) deselectBtn.style.display = 'inline-flex';
-        if (window.lucide) {
-          lucide.createIcons({ root: btn });
-          if (deselectBtn) lucide.createIcons({ root: deselectBtn });
+        btn.style.setProperty('display', 'inline-flex', 'important');
+        if (countSpan) {
+          countSpan.textContent = `Delete Selected (${checked.length})`;
         }
+        if (deselectBtn) deselectBtn.style.setProperty('display', 'inline-flex', 'important');
       } else {
-        btn.style.display = 'none';
-        if (deselectBtn) deselectBtn.style.display = 'none';
+        btn.style.setProperty('display', 'none', 'important');
+        if (deselectBtn) deselectBtn.style.setProperty('display', 'none', 'important');
       }
     }
     const checkAll = document.getElementById('selectAllScopes');
@@ -1940,6 +1970,24 @@ const getWorkloadColor = (hours) => {
       });
     }
 
+    // Self-contained inline custom select (pill shape, no external dependency)
+    function makeSelect(id, value, opts, onChange, height) {
+      height = height || '36px';
+      var sel = opts.find(function(o){ return String(o.value)===String(value); }) || opts[0] || {label:'เลือก...',value:''};
+      var items = opts.map(function(o){
+        var isSel = String(o.value)===String(value);
+        return '<div onclick="(function(el){var w=el.closest(\'.csd-w\');w.querySelector(\'input\').value=el.dataset.v;w.querySelector(\'.csd-lbl\').textContent=el.dataset.lbl;w.querySelector(\'.csd-m\').style.display=\'none\';w.style.zIndex=\'90\';'+onChange+'})(this)" data-v="'+o.value+'" data-lbl="'+String(o.label).replace(/"/g,'&quot;')+'" style="padding:10px 14px;font-size:12px;cursor:pointer;border-radius:8px;font-family:Kanit,sans-serif;background:'+(isSel?'#f0efff':'transparent')+';color:'+(isSel?'#4f46e5':'#374151')+';font-weight:'+(isSel?'600':'500')+';" onmouseover="if(this.style.background!==\'#f0efff\')this.style.background=\'#f8fafc\'" onmouseout="if(this.style.background===\'#f8fafc\')this.style.background=\'transparent\'">'+o.label+'</div>';
+      }).join('');
+      return '<div class="csd-w" style="position:relative;width:100%;display:inline-block;z-index:90;">'+
+        '<input type="hidden" id="'+id+'" value="'+value+'">'+
+        '<button type="button" onclick="(function(b){var m=b.closest(\'.csd-w\').querySelector(\'.csd-m\');document.querySelectorAll(\'.csd-m\').forEach(function(x){if(x!==m)x.style.display=\'none\';});m.style.display=m.style.display===\'block\'?\'none\':\'block\';b.closest(\'.csd-w\').style.zIndex=m.style.display===\'block\'?\'10000\':\'90\';})(this)" style="width:100%;height:'+height+';display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border:1px solid #e2e8f0;border-radius:9999px;background:#fff;cursor:pointer;font-family:Kanit,sans-serif;font-size:12px;font-weight:500;color:#24204D;box-shadow:0 1px 2px rgba(0,0,0,0.04);outline:none;box-sizing:border-box;transition:border-color .2s;" onmouseover="this.style.borderColor=\'#cbd5e1\'" onmouseout="this.style.borderColor=\'#e2e8f0\'">'+
+          '<span class="csd-lbl" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left;">'+sel.label+'</span>'+
+          '<svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-left:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>'+
+        '</button>'+
+        '<div class="csd-m" style="display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:220px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.08);z-index:9999;padding:4px;max-height:240px;overflow-y:auto;">'+items+'</div>'+
+      '</div>';
+    }
+
     return `
     <div id="taskSidebar" style="display:flex; flex-direction:column; height:100%; background: var(--surface); font-family:'Kanit', sans-serif">
       <!-- Sidebar Header -->
@@ -1957,27 +2005,13 @@ const getWorkloadColor = (hours) => {
         <!-- Filters -->
         <div style="display:flex; flex-direction:column; gap:8px">
           <div style="position:relative">
-            <i data-lucide="search" style="width:16px; height:16px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8"></i>
+            <i data-lucide="search" style="width:14px; height:14px; position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
             <input type="text" id="sidebarSearch" placeholder="Search tasks or projects..." onkeyup="filterSidebarTasks()" value="${window._sidebarSearch}"
-                   style="width:100%; height:44px; padding:0 12px 0 42px; border-radius: var(--radius); border:1.5px solid #f1f5f9; font-size:0.85rem; outline:none; background:#f8fafc; font-family:inherit; transition:all 0.2s; color:#1e293b">
+                   style="width:100%; height:38px; padding:0 16px 0 38px; border-radius:9999px; border:1px solid #e2e8f0; font-size:0.8rem; outline:none; background:#fff; font-family:inherit; transition:border-color 0.2s; color:#1e293b; box-shadow:0 1px 2px rgba(15,23,42,0.04); box-sizing:border-box;">
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-            <div style="position:relative">
-              <select id="sidebarProjectFilter" onchange="filterSidebarTasks()" 
-                      style="width:100%; height:40px; padding:0 12px; border-radius: var(--radius); border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
-                <option value="all">All Projects</option>
-                ${projects.map(p => `<option value="${p}" ${window._sidebarProjectFilter === p ? 'selected' : ''}>${p}</option>`).join('')}
-              </select>
-              <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
-            </div>
-            <div style="position:relative">
-              <select id="sidebarNodeFilter" onchange="filterSidebarTasks()" 
-                      style="width:100%; height:40px; padding:0 12px; border-radius: var(--radius); border:1.5px solid #f1f5f9; font-size:0.75rem; font-weight:600; outline:none; background:#f8fafc; cursor:pointer; appearance:none; color:#475569">
-                <option value="all">All Nodes</option>
-                ${nodes.map(n => `<option value="${n}" ${window._sidebarNodeFilter === n ? 'selected' : ''}>${n}</option>`).join('')}
-              </select>
-              <i data-lucide="chevron-down" style="width:14px; height:14px; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#94a3b8; pointer-events:none"></i>
-            </div>
+            ${makeSelect('sidebarProjectFilter', window._sidebarProjectFilter||'all', [{value:'all',label:'All Projects'}].concat(projects.map(p=>({value:p,label:p}))), 'filterSidebarTasks()', '36px')}
+            ${makeSelect('sidebarNodeFilter', window._sidebarNodeFilter||'all', [{value:'all',label:'All Nodes'}].concat(nodes.map(n=>({value:n,label:n}))), 'filterSidebarTasks()', '36px')}
           </div>
           <button id="clearSidebarFiltersBtn" onclick="clearSidebarFilters()" style="display:none; background:none; border:none; color:#ef4444; cursor:pointer; align-items:center; gap:4px; align-self:flex-end; border-radius:6px; font-size:12px; font-weight:600; padding:4px 16px;">
             <span style="font-weight:bold;font-size:13px">✕</span> Clear
@@ -1992,12 +2026,9 @@ const getWorkloadColor = (hours) => {
       
       <style>
         #sidebarSearch:focus {
-          border-color: #6366f1 !important;
-          background: var(--surface) !important;
-          box-shadow: var(--shadow);
-        }
-        #sidebarProjectFilter:hover, #sidebarNodeFilter:hover {
-          border-color: #cbd5e1;
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
         }
       </style>
     </div>`;
@@ -2054,4 +2085,4 @@ const getWorkloadColor = (hours) => {
     console.log("Edit task:", taskId);
     if (typeof showToast === 'function') showToast('Task Editor for: ' + taskId, 'info');
   };
-
+

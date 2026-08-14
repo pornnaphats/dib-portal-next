@@ -15,6 +15,14 @@ export default function StructureView() {
     if (initRef.current) return;
     initRef.current = true;
 
+    // Pass current user email to window for auto-scroll
+    try {
+      const userInfo = JSON.parse(sessionStorage.getItem("dib_user_info") || "{}");
+      window.currentUserEmail = userInfo.email || null;
+    } catch (e) {
+      window.currentUserEmail = null;
+    }
+
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
       window.DATA = { employees: [] };
@@ -50,6 +58,7 @@ export default function StructureView() {
             if (containerRef.current && typeof window.pageStructureTeam === "function") {
               containerRef.current.innerHTML = window.pageStructureTeam();
               window.lucide.createIcons();
+              // Auto-scroll will be triggered by the zoom-wrapped orgRenderTree
             }
           }).catch(() => {});
         }

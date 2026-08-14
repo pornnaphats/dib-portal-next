@@ -93,13 +93,12 @@ export default function ScopePage() {
           </div>
         </div>
         {/* Search */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #eef0f6", borderRadius: "9999px", padding: "8px 16px", width: "260px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-          <Search size={14} color="#b0b8cc" />
+        <div className="search-box" style={{ width: "260px" }}>
+          <Search size={14} style={{ color: "#b0b8cc", flexShrink: 0 }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหา Account / งาน..."
-            style={{ border: "none", outline: "none", background: "transparent", fontSize: "0.82rem", color: "#24204D", width: "100%" }}
           />
         </div>
       </div>

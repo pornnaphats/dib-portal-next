@@ -35,7 +35,7 @@ export default function PublicHolidayPage() {
     fetchHolidays();
   }, []);
 
-// --- ฟังก์ชันบันทึกวันหยุดลง Supabase (แก้ไขโดยการสร้าง id ส่งไปด้วย) ---
+  // --- ฟังก์ชันบันทึกวันหยุดลง Supabase ---
   const handleAddHoliday = async (e) => {
     e.preventDefault();
     if (!newDate || !newName.trim()) return alert("กรุณากรอกวันที่และชื่อวันหยุด");
@@ -43,9 +43,6 @@ export default function PublicHolidayPage() {
     setSubmitting(true);
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    // 🔑 สร้าง id สุ่มขึ้นมาสำหรับ varchar Primary Key
-    const generatedId = `hol_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
     try {
       const res = await fetch(`${supabaseUrl}/rest/v1/public_holidays`, {
@@ -57,25 +54,21 @@ export default function PublicHolidayPage() {
           Prefer: "return=representation"
         },
         body: JSON.stringify({
-          id: generatedId, // ➕ ส่ง id ตัวใหม่ไปด้วย
           date: newDate,
           name: newName.trim()
         })
       });
 
-      const result = await res.json();
-
       if (res.ok) {
-        alert("บันทึกสำเร็จ!");
         setShowModal(false);
         setNewDate("");
         setNewName("");
-        fetchHolidays();
+        fetchHolidays(); // โหลดข้อมูลใหม่
       } else {
-        alert(`บันทึกไม่สำเร็จ: ${result.message || JSON.stringify(result)}`);
+        alert("เกิดข้อผิดพลาดในการบันทึกวันหยุด");
       }
     } catch (err) {
-      alert(`ไม่สามารถเชื่อมต่อได้: ${err.message}`);
+      alert("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
     } finally {
       setSubmitting(false);
     }

@@ -400,16 +400,20 @@ export async function fetchAndSetLegacyData() {
           };
           return nodeColors[node] || nodeColors['Other'];
         };
-        window.SCHEDULE_TASKS = rawTasks.map(t => ({
-          id: t.id,
-          date: t.date,
-          person: t.person_id,
-          acc: t.project || '',
-          node: t.node || 'Other',
-          title: t.work_detail || '',
-          hours: parseInt(t.percentage) || 0,
-          color: colorForNode(t.node)
-        }));
+        window.SCHEDULE_TASKS = rawTasks.map(t => {
+          const parts = (t.work_detail || '').split(' ||| ');
+          return {
+            id: t.id,
+            date: t.date,
+            person: t.person_id,
+            acc: t.project || '',
+            node: t.node || 'Other',
+            title: parts[0] || '',
+            hours: parseInt(t.percentage) || 0,
+            color: colorForNode(t.node),
+            note: parts[1] || ''
+          };
+        });
       }
     }
   } catch (err) {

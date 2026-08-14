@@ -109,6 +109,89 @@ export default function HolidayView() {
 
   return (
     <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        /* Premium Purple Theme Select Inputs */
+        .select-input {
+          height: 34px !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 99px !important;
+          padding: 0 16px !important;
+          font-family: 'Kanit', sans-serif !important;
+          font-size: 13px !important;
+          color: #24204D !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+          outline: none !important;
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+          appearance: none !important;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 14px center !important;
+          background-size: 14px !important;
+          padding-right: 36px !important;
+        }
+        .select-input:hover {
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+          border-color: #cbd5e1 !important;
+        }
+        .select-input:focus {
+          border-color: #cbd5e1 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+        button.select-input:focus {
+          border-color: #e2e8f0 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+        button.select-input:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        /* Search Box styling */
+        .search-box {
+          height: 34px !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 99px !important;
+          padding: 0 16px !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+          transition: all 0.2s ease !important;
+        }
+        .search-box:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+        }
+        .search-box:focus-within {
+          border-color: #cbd5e1 !important;
+          box-shadow: none !important;
+        }
+        .search-box input {
+          font-family: 'Kanit', sans-serif !important;
+          font-size: 13px !important;
+          color: #24204D !important;
+        }
+
+        /* Premium Buttons */
+        .btn-primary {
+          background: #635BFF !important;
+          color: #ffffff !important;
+          font-family: 'Kanit', sans-serif !important;
+          font-weight: 600 !important;
+          border-radius: 99px !important;
+          height: 34px !important;
+          padding: 0 20px !important;
+          font-size: 13px !important;
+          box-shadow: 0 4px 12px rgba(99, 91, 255, 0.2) !important;
+          transition: all 0.2s ease !important;
+        }
+        .btn-primary:hover {
+          background: #5048E5 !important;
+          box-shadow: 0 6px 16px rgba(99, 91, 255, 0.3) !important;
+        }
+      `}} />
       <div id="pageContent" ref={containerRef} className="w-full" data-page="public-holiday"></div>
     </div>
   );

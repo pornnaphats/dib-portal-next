@@ -480,18 +480,22 @@ window.pagePublicHoliday = function() {
     })));
   }
 
-  const stats = {
-    total: holidays.length,
-    finished: holidays.filter(h => h.status === 'finished').length,
-    upcoming: holidays.filter(h => h.status === 'upcoming').length,
-    not_scheduled: holidays.filter(h => h.status === 'not_scheduled').length
-  };
-
-  const finishedPct = stats.total > 0 ? ((stats.finished / stats.total) * 100).toFixed(2) : '0.00';
-  const upcomingPct = stats.total > 0 ? ((stats.upcoming / stats.total) * 100).toFixed(2) : '0.00';
-  const notScheduledPct = stats.total > 0 ? ((stats.not_scheduled / stats.total) * 100).toFixed(2) : '0.00';
+  if (typeof window.selectedHolidayYear === 'undefined') {
+    window.selectedHolidayYear = String(new Date().getFullYear());
+  }
+  if (typeof window.selectedHolidayProject === 'undefined') {
+    window.selectedHolidayProject = '';
+  }
 
   const yearsSet = new Set();
+  const projectsSet = new Set();
+
+  if (window.PREMIUM_SCOPE_DATA) {
+    window.PREMIUM_SCOPE_DATA.forEach(group => {
+      if (group.account) projectsSet.add(group.account);
+    });
+  }
+
   holidays.forEach(h => {
     const match = h.date?.match(/\d{4}/);
     if (match) {
@@ -503,9 +507,47 @@ window.pagePublicHoliday = function() {
         yearsSet.add(lastPart);
       }
     }
+
+    h.tasks?.forEach(t => {
+      t.assignments?.forEach(a => {
+        if (a.project && a.project !== '-') projectsSet.add(a.project);
+      });
+      if (t.project && t.project !== '-') projectsSet.add(t.project);
+    });
   });
+
   const uniqueYears = Array.from(yearsSet).sort((a,b) => b.localeCompare(a));
-  const yearOptions = uniqueYears.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+  const uniqueProjects = Array.from(projectsSet).sort((a,b) => a.localeCompare(b));
+
+  let filteredHolidays = holidays;
+
+  if (window.selectedHolidayYear) {
+    filteredHolidays = filteredHolidays.filter(h => {
+      return h.date && h.date.includes(window.selectedHolidayYear);
+    });
+  }
+
+  if (window.selectedHolidayProject) {
+    filteredHolidays = filteredHolidays.filter(h => {
+      return h.tasks && h.tasks.some(t => {
+        const list = t.assignments || [];
+        const hasProjInAssignment = list.some(a => a.project === window.selectedHolidayProject);
+        const hasProjInTask = t.project === window.selectedHolidayProject;
+        return hasProjInAssignment || hasProjInTask;
+      });
+    });
+  }
+
+  const stats = {
+    total: filteredHolidays.length,
+    finished: filteredHolidays.filter(h => h.status === 'finished').length,
+    upcoming: filteredHolidays.filter(h => h.status === 'upcoming').length,
+    not_scheduled: filteredHolidays.filter(h => h.status === 'not_scheduled').length
+  };
+
+  const finishedPct = stats.total > 0 ? ((stats.finished / stats.total) * 100).toFixed(2) : '0.00';
+  const upcomingPct = stats.total > 0 ? ((stats.upcoming / stats.total) * 100).toFixed(2) : '0.00';
+  const notScheduledPct = stats.total > 0 ? ((stats.not_scheduled / stats.total) * 100).toFixed(2) : '0.00';
 
   window.changeHolidayPage = function(p) {
     window.holidayCurrentPage = p;
@@ -514,50 +556,76 @@ window.pagePublicHoliday = function() {
     }
   };
 
-  window.filterHolidaysByYear = function(year) {
-    const rows = document.querySelectorAll('#holidayTable tbody tr');
-    let visibleCount = 0;
-    rows.forEach(row => {
-      const dateCell = row.querySelector('td[rowspan]');
-      if (dateCell) {
-        const text = dateCell.textContent;
-        if (!year || text.includes(year)) {
-          row.style.display = '';
-          visibleCount++;
-          let next = row.nextElementSibling;
-          while (next && !next.querySelector('td[rowspan]')) {
-            next.style.display = '';
-            next = next.nextElementSibling;
-          }
-        } else {
-          row.style.display = 'none';
-          let next = row.nextElementSibling;
-          while (next && !next.querySelector('td[rowspan]')) {
-            next.style.display = 'none';
-            next = next.nextElementSibling;
-          }
-        }
-      }
-    });
-    
-    const countEl = document.getElementById('holidayDisplayRange');
-    if (countEl) {
-      countEl.textContent = `แสดงทั้งหมด ${visibleCount} รายการ`;
+  window.changeHolidayYearFilter = function(year) {
+    window.selectedHolidayYear = year;
+    window.holidayCurrentPage = 1;
+    if (typeof window.navigate === 'function') {
+      window.navigate('public-holiday');
+    }
+  };
+
+  window.changeHolidayProjectFilter = function(proj) {
+    window.selectedHolidayProject = proj;
+    window.holidayCurrentPage = 1;
+    if (typeof window.navigate === 'function') {
+      window.navigate('public-holiday');
+    }
+  };
+
+  window.updateHolidayClearButtonVisibility = function() {
+    const clearBtn = document.getElementById('clearHolidayFiltersBtn');
+    if (!clearBtn) return;
+    const searchVal = document.getElementById('holidaySearch') ? document.getElementById('holidaySearch').value : '';
+    const hasYearFilter = window.selectedHolidayYear && window.selectedHolidayYear !== '';
+    const hasProjectFilter = window.selectedHolidayProject && window.selectedHolidayProject !== '';
+    if (searchVal || hasProjectFilter || (hasYearFilter && window.selectedHolidayYear !== String(new Date().getFullYear()))) {
+      clearBtn.style.display = 'inline-flex';
+    } else {
+      clearBtn.style.display = 'none';
+    }
+  };
+
+  window.clearHolidayFilters = function() {
+    window.selectedHolidayYear = String(new Date().getFullYear());
+    window.selectedHolidayProject = '';
+    const searchInput = document.getElementById('holidaySearch');
+    if (searchInput) searchInput.value = '';
+    window.holidayCurrentPage = 1;
+    if (typeof window.navigate === 'function') {
+      window.navigate('public-holiday');
     }
   };
 
   const searchHtml = `
-    <div class="search-box" style="width: 200px; background: #fff; height: 34px; display: flex; align-items: center; position: relative; border: 1px solid #e4e8ef; border-radius: 99px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04)">
-      <i data-lucide="search" style="width: 14px; height: 14px; position: absolute; left: 14px; color: var(--text-3)"></i>
-      <input type="text" id="holidaySearch" placeholder="Search..." style="padding: 0 14px 0 32px; height: 100%; width: 100%; border: none; outline: none; background: transparent; font-size: 0.8rem" onkeyup="filterTable('holidayTable', 'holidaySearch')">
+    <div class="search-box" style="width: 220px; flex-shrink: 0; border-radius: 9999px !important;">
+      <i data-lucide="search" style="width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0;"></i>
+      <input type="text" id="holidaySearch" placeholder="Search Holiday..." style="padding: 0; border: none; outline: none; background: transparent;" onkeyup="filterTable('holidayTable', 'holidaySearch'); window.updateHolidayClearButtonVisibility();">
     </div>
   `;
 
-  // Set up pagination
+  const yearSelectHtml = `
+    <select id="holidayYearFilter" class="select-input" onchange="window.changeHolidayYearFilter(this.value)" style="width: 120px; flex-shrink: 0; border-radius: 9999px !important;">
+      <option value="">All Years</option>
+      ${uniqueYears.map(y => `<option value="${y}" ${window.selectedHolidayYear === y ? 'selected' : ''}>Year ${y}</option>`).join('')}
+    </select>
+  `;
+
+  const projectSelectHtml = `
+    <select id="holidayProjectFilter" class="select-input" onchange="window.changeHolidayProjectFilter(this.value)" style="width: 180px; flex-shrink: 0; border-radius: 9999px !important;">
+      <option value="">All Projects</option>
+      ${uniqueProjects.map(p => `<option value="${p}" ${window.selectedHolidayProject === p ? 'selected' : ''}>${p}</option>`).join('')}
+    </select>
+  `;
+
+  const showClearStyle = (
+    (window.selectedHolidayYear && window.selectedHolidayYear !== String(new Date().getFullYear())) ||
+    (window.selectedHolidayProject)
+  ) ? 'display: inline-flex;' : 'display: none;';
+
   if (typeof window.holidayCurrentPage === 'undefined') window.holidayCurrentPage = 1;
   window.holidayPageSize = 10;
   
-  const totalFiltered = holidays.length;
+  const totalFiltered = filteredHolidays.length;
   const totalPages = Math.ceil(totalFiltered / window.holidayPageSize);
   
   if (window.holidayCurrentPage > totalPages && totalPages > 0) {
@@ -566,7 +634,7 @@ window.pagePublicHoliday = function() {
   if (window.holidayCurrentPage < 1) window.holidayCurrentPage = 1;
   
   const startIndex = (window.holidayCurrentPage - 1) * window.holidayPageSize;
-  const paginatedHolidays = holidays.slice(startIndex, startIndex + window.holidayPageSize);
+  const paginatedHolidays = filteredHolidays.slice(startIndex, startIndex + window.holidayPageSize);
 
   const pageStart = totalFiltered > 0 ? startIndex + 1 : 0;
   const pageEnd = Math.min(window.holidayCurrentPage * window.holidayPageSize, totalFiltered);
@@ -652,8 +720,8 @@ window.pagePublicHoliday = function() {
         
         if (idx === 0) {
           rowHtml += `
-            <td rowspan="${tasks.length}" style="padding: 16px 24px; font-size: .85rem; color: #1e293b; font-weight: 500; border-bottom: 1px solid #e2e8f0; vertical-align: top; position: sticky; top: 50px; background: var(--surface); z-index: 2; transition: background 0.2s;">${h.date}</td>
-            <td rowspan="${tasks.length}" style="padding: 16px 24px; font-size: .85rem; color: #4f46e5; font-weight: 600; width: 200px; max-width: 200px; white-space: normal; line-height: 1.5; border-bottom: 1px solid #e2e8f0; vertical-align: top; position: sticky; top: 50px; background: var(--surface); z-index: 2; transition: background 0.2s;">${h.name}</td>
+            <td rowspan="${tasks.length}" style="padding: 16px 24px; font-size: .85rem; color: #1e293b; font-weight: 500; border-bottom: 1px solid #e2e8f0; vertical-align: top; background: var(--surface); transition: background 0.2s;">${h.date}</td>
+            <td rowspan="${tasks.length}" style="padding: 16px 24px; font-size: .85rem; color: #4f46e5; font-weight: 600; width: 200px; max-width: 200px; white-space: normal; line-height: 1.5; border-bottom: 1px solid #e2e8f0; vertical-align: top; background: var(--surface); transition: background 0.2s;">${h.name}</td>
           `;
         }
         
@@ -784,10 +852,10 @@ window.pagePublicHoliday = function() {
           }
           
           rowHtml += `
-            <td rowspan="${tasks.length}" style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0; vertical-align: top; position: sticky; top: 50px; background: var(--surface); z-index: 2; transition: background 0.2s;">
+            <td rowspan="${tasks.length}" style="padding: 16px 24px; border-bottom: 1px solid #e2e8f0; vertical-align: top; background: var(--surface); transition: background 0.2s;">
               ${statusHtml}
             </td>
-            <td rowspan="${tasks.length}" style="padding: 16px 24px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: top; position: sticky; top: 50px; background: var(--surface); z-index: 2; transition: background 0.2s;">
+            <td rowspan="${tasks.length}" style="padding: 16px 24px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: top; background: var(--surface); transition: background 0.2s;">
               <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
                 <button class="btn-icon" onclick="toggleHolidayDropdown(event, ${groupIdx}, '${h.name.replace(/'/g, "\\'")}', '${h.date}', '${h.id || ''}')" style="background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
                   <i data-lucide="more-horizontal" style="width: 18px; height: 18px"></i>
@@ -807,19 +875,23 @@ window.pagePublicHoliday = function() {
   return `
   <div class="fade-in">
     <!-- HEADER ACTION BAR -->
-    <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
-      <div style="height:38px; display:flex; align-items:center">
-        ${typeof renderDateFilter === 'function' ? renderDateFilter("navigate('public-holiday')", 'auto', null, true, searchHtml) : ''}
-      </div>
+    <div class="toolbar" style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:24px; gap:8px">
+      ${searchHtml}
+      ${yearSelectHtml}
+      ${projectSelectHtml}
+
+      <button id="clearHolidayFiltersBtn" onclick="window.clearHolidayFilters()" style="${showClearStyle} background:none; border:none; color:#ef4444; font-family:Kanit; font-size:.75rem; font-weight:700; cursor:pointer; align-items:center; gap:4px; padding:0 12px; height:34px; white-space:nowrap;">
+        ✕ Clear
+      </button>
       
       <div style="width: 1px; height: 18px; background: #e4e8ef; margin: 0 4px; flex-shrink: 0;"></div>
 
       <button onclick="openAddHolidayModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:10px; font-size:.75rem; font-weight:700; flex-shrink:0; background:#635bff; color:#fff; border:1px solid transparent; cursor:pointer; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.3); transition: background 0.2s;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#635bff'">
-        <i data-lucide="plus" style="width:14px; height:14px"></i> เพิ่มวันหยุด
+        <i data-lucide="plus" style="width:14px; height:14px"></i> Add Holiday
       </button>
 
       <button onclick="window.openManageTemplatesModal()" class="btn" style="display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:10px; font-size:.75rem; font-weight:700; flex-shrink:0; background:#ffffff; color:#635bff; border:1px solid #635bff; cursor:pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.08);" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background='#ffffff'">
-        <i data-lucide="settings" style="width:14px; height:14px"></i> จัดการชุดงาน (Templates)
+        <i data-lucide="settings" style="width:14px; height:14px"></i> Manage Templates
       </button>
     </div>
 
@@ -830,11 +902,11 @@ window.pagePublicHoliday = function() {
           <i data-lucide="calendar" style="width: 20px; height: 20px"></i>
         </div>
         <div>
-          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดทั้งหมด</div>
+          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Total Holidays</div>
           <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-            ${stats.total} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+            ${stats.total} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">days</span>
           </div>
-          <div style="font-size: .65rem; color: #6366f1; font-weight: 600; margin-top: 4px">ข้อมูลทั้งหมด</div>
+          <div style="font-size: .65rem; color: #6366f1; font-weight: 600; margin-top: 4px">Total</div>
         </div>
       </div>
       <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -842,11 +914,11 @@ window.pagePublicHoliday = function() {
           <i data-lucide="check-circle" style="width: 20px; height: 20px"></i>
         </div>
         <div>
-          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดเสร็จสิ้นแล้ว</div>
+          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Finished Holidays</div>
           <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-            ${stats.finished} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+            ${stats.finished} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">days</span>
           </div>
-          <div style="font-size: .65rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}% ของทั้งหมด</div>
+          <div style="font-size: .65rem; color: #10b981; font-weight: 600; margin-top: 4px">${finishedPct}% of total</div>
         </div>
       </div>
       <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -854,11 +926,11 @@ window.pagePublicHoliday = function() {
           <i data-lucide="clock" style="width: 20px; height: 20px"></i>
         </div>
         <div>
-          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">วันหยุดกำลังจะถึง</div>
+          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Upcoming Holidays</div>
           <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-            ${stats.upcoming} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+            ${stats.upcoming} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">days</span>
           </div>
-          <div style="font-size: .65rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}% ของทั้งหมด</div>
+          <div style="font-size: .65rem; color: #f59e0b; font-weight: 600; margin-top: 4px">${upcomingPct}% of total</div>
         </div>
       </div>
       <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
@@ -866,11 +938,11 @@ window.pagePublicHoliday = function() {
           <i data-lucide="calendar-plus" style="width: 20px; height: 20px"></i>
         </div>
         <div>
-          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">ยังไม่ได้จัดแผน</div>
+          <div style="font-size: .7rem; color: var(--text-3); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em">Not Scheduled</div>
           <div style="font-size: 1.25rem; font-weight: 700; color: var(--text)">
-            ${stats.not_scheduled} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">วัน</span>
+            ${stats.not_scheduled} <span style="font-size: .75rem; font-weight: 400; color: var(--text-3)">days</span>
           </div>
-          <div style="font-size: .65rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}% ของทั้งหมด</div>
+          <div style="font-size: .65rem; color: #818cf8; font-weight: 600; margin-top: 4px">${notScheduledPct}% of total</div>
         </div>
       </div>
     </div>
@@ -878,7 +950,7 @@ window.pagePublicHoliday = function() {
     <!-- TABLE CARD -->
     <div class="card" style="padding: 0; border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 8px 30px rgba(0,0,0,0.03)">
       <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center">
-        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">รายการวันหยุดนักขัตฤกษ์</h3>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b">Public Holiday List</h3>
       </div>
       <div style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 260px);">
         <table id="holidayTable" style="width: 100%; border-collapse: collapse; text-align: left">

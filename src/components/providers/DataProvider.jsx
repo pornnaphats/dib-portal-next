@@ -9,7 +9,7 @@ export const useData = () => useContext(DataContext);
 
 export default function DataProvider({ children }) {
   const { user } = useAuth();
-  const [data, setData] = useState({ employees: [], permissions: {} });
+  const [data, setData] = useState({ employees: [], pagePermissions: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,83 +17,48 @@ export default function DataProvider({ children }) {
 
     const fetchData = async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        let employees = [];
+        let pagePermissions = [];
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        // 1. Fetch Employees
-        const empUrl = "https://docs.google.com/spreadsheets/d/1a5nLyclYZwFUlauF4lXNwv9X2i_6xQQSFJCnOXuyJVE/export?format=csv&gid=0";
-        const empRes = await fetch(empUrl, { signal: controller.signal }).catch(() => ({ text: () => "" }));
-        clearTimeout(timeoutId);
-        
-        const empText = await empRes.text();
-        const empLines = empText.split("\n");
-        const employees = [];
-        
-        if (empLines.length > 1) {
-          const headers = empLines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
-          for (let i = 1; i < empLines.length; i++) {
-            if (!empLines[i].trim()) continue;
-            let rowData = [];
-            let inQuotes = false;
-            let current = "";
-            for (let char of empLines[i]) {
-              if (char === '"') inQuotes = !inQuotes;
-              else if (char === "," && !inQuotes) { rowData.push(current.trim()); current = ""; }
-              else current += char;
-            }
-            rowData.push(current.trim());
-            rowData = rowData.map(c => c.replace(/^"|"$/g, ""));
-            let emp = {};
-            headers.forEach((h, idx) => { emp[h] = rowData[idx] || ""; });
-            
-            const lowerEmp = {};
-            Object.keys(emp).forEach(k => { lowerEmp[k.toLowerCase()] = emp[k]; });
-            emp.name = lowerEmp["name"] || lowerEmp["ชื่อ-นามสกุล"] || lowerEmp["ชื่อ-สกุล"] || lowerEmp["ชื่อ"] || emp[Object.keys(emp)[0]] || "Unknown";
-            emp.pos = lowerEmp["position"] || lowerEmp["ตำแหน่ง"] || lowerEmp["pos"] || lowerEmp["job title"] || "";
-            emp.dept = lowerEmp["department"] || lowerEmp["แผนก"] || lowerEmp["สังกัด"] || lowerEmp["dept"] || lowerEmp["team"] || "";
-            emp.nickname = lowerEmp["nickname"] || lowerEmp["ชื่อเล่น"] || "";
-            emp.nameEn = lowerEmp["name (eng)"] || lowerEmp["name_en"] || lowerEmp["english name"] || lowerEmp["nameen"] || "";
-            employees.push(emp);
+        if (supabaseUrl && supabaseKey) {
+          const [resEmp, resPerms] = await Promise.all([
+            fetch(`${supabaseUrl}/rest/v1/employees?select=*&limit=1000`, {
+              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            }),
+            fetch(`${supabaseUrl}/rest/v1/page_permissions?select=*`, {
+              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            }).catch(() => null)
+          ]);
+
+          if (resEmp && resEmp.ok) {
+            const rawEmployees = await resEmp.json();
+            employees = rawEmployees.map(row => ({
+              id: row.id,
+              name: row.name || 'No Name',
+              nameEn: row.name_en || '',
+              nickname: row.nickname || '-',
+              pos: row.position || '-',
+              dept: row.team || '-',
+              team: row.team || '-',
+              position: row.position || '-',
+              email: row.email || '-',
+              shift: row.shift || '-',
+              offdays: row.offdays || row.dayoff || '-',
+              dayoff: row.offdays || row.dayoff || '-',
+              birthdate: row.birthdate || '-',
+              empType: row.emp_type || '-',
+              status: row.status || 'active'
+            }));
+          }
+
+          if (resPerms && resPerms.ok) {
+            pagePermissions = await resPerms.json();
           }
         }
 
-        // 2. Fetch Permissions
-        const permUrl = "https://docs.google.com/spreadsheets/d/1a5nLyclYZwFUlauF4lXNwv9X2i_6xQQSFJCnOXuyJVE/export?format=csv&gid=1248107333";
-        const permRes = await fetch(permUrl, { signal: controller.signal }).catch(() => ({ text: () => "" }));
-        const permText = await permRes.text();
-        const permLines = permText.split("\n");
-        const permissions = {};
-        
-        if (permLines.length > 1) {
-          const headers = permLines[0].split(",").map(h => h.trim().replace(/^"|"$/g, "").toLowerCase());
-          for (let i = 1; i < permLines.length; i++) {
-            if (!permLines[i].trim()) continue;
-            let rowData = [];
-            let inQuotes = false;
-            let current = "";
-            for (let char of permLines[i]) {
-              if (char === '"') inQuotes = !inQuotes;
-              else if (char === "," && !inQuotes) { rowData.push(current); current = ""; }
-              else current += char;
-            }
-            rowData.push(current);
-            rowData = rowData.map(c => c.trim().replace(/^"|"$/g, ""));
-            
-            const role = (rowData[0] || "").toLowerCase();
-            if (!role) continue;
-            
-            permissions[role] = {};
-            for (let j = 1; j < headers.length; j++) {
-              const pageKey = headers[j];
-              const val = (rowData[j] || "").toUpperCase();
-              if (["TRUE", "YES", "1", "Y", "OK", "T", "✓", "X", "TRUE\r"].includes(val.replace(/\r$/, ""))) {
-                permissions[role][pageKey.replace(/\r$/, "")] = true;
-              }
-            }
-          }
-        }
-
-        setData({ employees, permissions });
+        setData({ employees, pagePermissions });
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

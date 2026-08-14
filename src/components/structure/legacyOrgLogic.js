@@ -527,8 +527,8 @@ window.showOrgEmployeeDetails = function(nodeId) {
          const dept = node.dept || (emp ? emp.dept : '-');
          const totalPeople = countPeople(node);
          
-         const branchColors = ['#3b82f6', '#10b981', '#a855f7', '#f59e0b', '#ec4899', '#ef4444'];
-         const bColor = level === 0 ? '#3b82f6' : branchColors[branchIndex % branchColors.length];
+         const branchColors = ['#635BFF', '#7c3aed', '#9333ea', '#a855f7', '#c084fc', '#818cf8'];
+         const bColor = level === 0 ? '#635BFF' : branchColors[branchIndex % branchColors.length];
          
          let editControls = '';
          if (window.orgIsEditMode) {
@@ -765,8 +765,77 @@ window.showOrgEmployeeDetails = function(nodeId) {
      }, 100);
   };
 
+  // ---- Auto-scroll to current user's card ----
+  window.orgScrollToCurrentUser = function() {
+    const email = window.currentUserEmail;
+    if (!email) return;
+
+    const employees = (window.DATA && window.DATA.employees) || [];
+    const me = employees.find(e => e.email && e.email.toLowerCase() === email.toLowerCase());
+    if (!me) return;
+
+    // Find the node element that contains this employee
+    let structure = null;
+    try { structure = JSON.parse(localStorage.getItem('org_structure')); } catch(e) {}
+    if (!structure) return;
+
+    function findNodeForEmp(node, empId) {
+      if (node.empId) {
+        const ids = node.empId.split(',');
+        if (ids.includes(empId)) return node.id;
+      }
+      if (node.children) {
+        for (let c of node.children) {
+          const found = findNodeForEmp(c, empId);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    const nodeId = findNodeForEmp(structure, me.id);
+    if (!nodeId) return;
+
+    const scrollWrap = document.getElementById('orgScrollWrapper');
+    const nodeContainer = document.getElementById('node-' + nodeId);
+    if (!scrollWrap || !nodeContainer) return;
+
+    // Find the actual card element inside the node container
+    const card = nodeContainer.querySelector('.org-card');
+    if (!card) return;
+
+    // Highlight animation
+    const originalBorder = card.style.border;
+    const originalBoxShadow = card.style.boxShadow;
+    const originalTransform = card.style.transform;
+    card.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    card.style.border = '2px solid #635BFF';
+    card.style.boxShadow = '0 0 0 4px rgba(99,91,255,0.15), 0 12px 32px -8px rgba(99,91,255,0.35)';
+    card.style.transform = 'scale(1.05)';
+
+    // Restore after 3 seconds
+    setTimeout(() => {
+      card.style.border = originalBorder;
+      card.style.boxShadow = originalBoxShadow;
+      card.style.transform = originalTransform;
+    }, 3000);
+
+    // Scroll the card into view inside the scroll wrapper
+    const zoom = window.orgCurrentZoom || 1;
+    const wrapperRect = scrollWrap.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+
+    // Calculate position relative to scrollWrapper content
+    const scrollLeft = scrollWrap.scrollLeft + (cardRect.left - wrapperRect.left) - (wrapperRect.width / 2) + (cardRect.width * zoom / 2);
+    const scrollTop = scrollWrap.scrollTop + (cardRect.top - wrapperRect.top) - (wrapperRect.height / 2) + (cardRect.height * zoom / 2);
+
+    scrollWrap.scrollTo({ left: scrollLeft, top: scrollTop, behavior: 'smooth' });
+  };
+
   window.pageStructureTeam = function() {
     window.currentPage = 'structure-team';
+    // Reset initial zoom flag so that auto-scroll runs every page load
+    window._orgInitialZoomDone = false;
     
     // CSS to attach directly
     const styleId = 'org-tree-style';
@@ -976,7 +1045,16 @@ window.showOrgEmployeeDetails = function(nodeId) {
                   setTimeout(() => {
                       const scrollWrap = document.getElementById('orgScrollWrapper');
                       if (scrollWrap) {
-                          if (!window._orgInitialZoomDone) { window.orgZoomFit(); window._orgInitialZoomDone = true; scrollWrap.scrollTop = 0; } else { scrollWrap.scrollLeft = scrollX; scrollWrap.scrollTop = scrollY; }
+                          if (!window._orgInitialZoomDone) {
+                              window.orgZoomReset(); // zoom 100%
+                              window._orgInitialZoomDone = true;
+                              scrollWrap.scrollTop = 0;
+                              // Auto-scroll to current user at 100% zoom
+                              setTimeout(() => window.orgScrollToCurrentUser && window.orgScrollToCurrentUser(), 300);
+                          } else {
+                              scrollWrap.scrollLeft = scrollX;
+                              scrollWrap.scrollTop = scrollY;
+                          }
                       }
                   }, 50);
 

@@ -1,5 +1,11 @@
+"use client";
+
 import Topbar from "@/components/layout/Topbar";
-import HolidayView from "@/components/legacy-pages/HolidayView";
+import dynamic from "next/dynamic";
+
+const HolidayView = dynamic(() => import("@/components/legacy-pages/HolidayView"), {
+  ssr: false,
+});
 
 export default function Page() {
   return (
@@ -11,3 +17,4 @@ export default function Page() {
     </>
   );
 }
+

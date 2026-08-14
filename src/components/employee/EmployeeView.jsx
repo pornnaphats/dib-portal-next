@@ -88,7 +88,8 @@ export default function EmployeeView() {
           border-radius: 99px !important;
           padding: 0 16px !important;
           font-family: 'Kanit', sans-serif !important;
-          font-size: 13px !important;
+          font-size: 12px !important;
+          font-weight: 500 !important;
           color: #24204D !important;
           background-color: #ffffff !important;
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
@@ -101,9 +102,10 @@ export default function EmployeeView() {
           background-position: right 14px center !important;
           background-size: 14px !important;
           padding-right: 36px !important;
+          text-align: left !important;
         }
         .select-input:hover {
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
           border-color: #cbd5e1 !important;
         }
         .select-input:focus {
@@ -118,7 +120,7 @@ export default function EmployeeView() {
         }
         button.select-input:hover {
           border-color: #cbd5e1 !important;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
         }
 
         /* Search Box styling */
@@ -130,10 +132,13 @@ export default function EmployeeView() {
           background-color: #ffffff !important;
           box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
           transition: all 0.2s ease !important;
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
         }
         .search-box:hover {
           border-color: #cbd5e1 !important;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+          box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
         }
         .search-box:focus-within {
           border-color: #cbd5e1 !important;
@@ -143,6 +148,10 @@ export default function EmployeeView() {
           font-family: 'Kanit', sans-serif !important;
           font-size: 13px !important;
           color: #24204D !important;
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          width: 100% !important;
         }
 
         /* Premium Buttons */
@@ -159,8 +168,12 @@ export default function EmployeeView() {
           transition: all 0.2s ease !important;
         }
         .btn-primary:hover {
-          background: #5048E5 !important;
-          box-shadow: 0 6px 16px rgba(99, 91, 255, 0.3) !important;
+          background: #635BFF !important;
+          transform: none !important;
+          box-shadow: 0 4px 12px rgba(99, 91, 255, 0.2) !important;
+        }
+        .btn-primary:active {
+          transform: none !important;
         }
 
       `}} />
