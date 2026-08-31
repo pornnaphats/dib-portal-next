@@ -199,7 +199,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
 
   return `
   <!-- FILTERS -->
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:relative; z-index:100" class="fade-in">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:relative; z-index:100">
     <div style="display:flex; flex-direction:column; gap:4px">
       <h2 style="font-size:1.4rem; font-weight:700; color:var(--text); letter-spacing:-0.02em">Manpower Overview</h2>
       <p style="font-size:.82rem; color:var(--text-3)">Tracking team utilization and resource distribution</p>
@@ -211,7 +211,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
 
   <!-- STAT ROW (3 cards) -->
   <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px">
-    <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
         <i data-lucide="users" style="width: 20px; height: 20px"></i>
       </div>
@@ -223,7 +223,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
         <div style="font-size: .65rem; color: var(--primary); font-weight: 600; margin-top: 4px">Active Members</div>
       </div>
     </div>
-    <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4)">
         <i data-lucide="briefcase" style="width: 20px; height: 20px"></i>
       </div>
@@ -235,7 +235,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
         <div style="font-size: .65rem; color: var(--warn); font-weight: 600; margin-top: 4px">Managed Accounts</div>
       </div>
     </div>
-    <div class="stat-card fade-in delay-3" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
         <i data-lucide="trending-up" style="width: 20px; height: 20px"></i>
       </div>
@@ -249,7 +249,7 @@ function wsPageOverview(dateFrom = '', dateTo = '', rerender) {
     </div>
   </div>
 
-  <div class="grid-2 fade-in" style="animation-delay:0.4s">
+  <div class="grid-2">
     <!-- Donut by node -->
     <div class="card" style="border-radius:20px; box-shadow: var(--shadow)">
       <div class="card-title" style="margin-bottom:20px; font-weight:700">Manpower Distribution by Node</div>
@@ -369,7 +369,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
 
   return `
   <!-- FILTERS -->
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:relative; z-index:100" class="fade-in">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; position:relative; z-index:100">
     <div style="display:flex; flex-direction:column; gap:4px">
       <h2 style="font-size:1.4rem; font-weight:700; color:var(--text); letter-spacing:-0.02em">Detailed Analytics</h2>
       <p style="font-size:.82rem; color:var(--text-3)">Drill down into project and position specific data</p>
@@ -385,7 +385,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
 
   <!-- STATS -->
   <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px">
-    <div class="stat-card fade-in" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4)">
         <i data-lucide="users" style="width: 20px; height: 20px"></i>
       </div>
@@ -397,7 +397,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
         <div style="font-size: .65rem; color: var(--primary); font-weight: 600; margin-top: 4px">Team Members</div>
       </div>
     </div>
-    <div class="stat-card fade-in delay-1" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--warn); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4)">
         <i data-lucide="briefcase" style="width: 20px; height: 20px"></i>
       </div>
@@ -409,7 +409,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
         <div style="font-size: .65rem; color: var(--warn); font-weight: 600; margin-top: 4px">Current Project Set</div>
       </div>
     </div>
-    <div class="stat-card fade-in delay-2" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
+    <div class="stat-card" style="padding: 14px 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px">
       <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4)">
         <i data-lucide="trending-up" style="width: 20px; height: 20px"></i>
       </div>
@@ -423,7 +423,7 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
     </div>
   </div>
 
-  <div class="grid-2 fade-in" style="animation-delay:0.3s">
+  <div class="grid-2">
     <!-- Manpower by level -->
     <div class="card" style="border-radius:20px; box-shadow: var(--shadow)">
       <div class="card-title" style="margin-bottom:20px; font-weight:700">Manpower by Position</div>
@@ -454,14 +454,14 @@ function wsPageDetail(dateFrom = '', dateTo = '', accFilter = 'all', rerender) {
     </div>
   </div>
 
-  <div class="stat-card fade-in" style="margin-top:24px; margin-bottom:24px; background:var(--surface); border:none; display:flex; flex-direction:column; align-items:flex-start; gap:8px">
+  <div class="stat-card" style="margin-top:24px; margin-bottom:24px; background:var(--surface); border:none; display:flex; flex-direction:column; align-items:flex-start; gap:8px">
     <div class="stat-label" style="font-size: .7rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em">Total Task Records</div>
     <div class="stat-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text)">${tasks.length.toLocaleString()}</div>
     <div class="stat-sub" style="font-size: .65rem; color: var(--text-3)">Found in selected range</div>
   </div>
 
   <!-- Task log table — Account = Project -->
-  <div class="card fade-in" style="border-radius:20px; box-shadow: var(--shadow); animation-delay:0.5s">
+  <div class="card" style="border-radius:20px; box-shadow: var(--shadow)">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
       <div class="card-title" style="margin-bottom:0; font-weight:700">Recent Task Log List</div>
       <div style="font-size:.75rem; color:var(--text-3)">Showing top ${displayTasks.length} of ${tasks.length} items</div>

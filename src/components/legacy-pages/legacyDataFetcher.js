@@ -43,6 +43,44 @@ export async function fetchAndSetLegacyData() {
     return '';
   };
 
+  if (typeof window !== 'undefined') {
+    if (!window.HOLIDAY_TEMPLATES) {
+      try {
+        const cached = localStorage.getItem('holiday_templates');
+        if (cached) window.HOLIDAY_TEMPLATES = JSON.parse(cached);
+      } catch (e) {}
+    }
+    if (!window.DATA) {
+      window.DATA = { employees: [], scheduleTasks: [], leaveRequests: [], public_holidays: [] };
+    }
+    if (window.DATA && (!window.DATA.employees || window.DATA.employees.length === 0)) {
+      try {
+        const cached = localStorage.getItem('cached_employees');
+        if (cached) window.DATA.employees = JSON.parse(cached);
+      } catch (e) {}
+    }
+    if (window.DATA && (!window.DATA.public_holidays || window.DATA.public_holidays.length === 0)) {
+      try {
+        const cached = localStorage.getItem('cached_public_holidays');
+        if (cached) {
+          window.DATA.public_holidays = JSON.parse(cached);
+          window.HOLIDAY_LIST = window.DATA.public_holidays;
+          
+          const holidayMap = {};
+          window.HOLIDAY_LIST.forEach(row => {
+            if (row.date && row.name) {
+              const parts = row.date.split('/');
+              if (parts.length === 3) {
+                holidayMap[`${parseInt(parts[1])}-${parseInt(parts[0])}`] = row.name;
+              }
+            }
+          });
+          window.HOLIDAYS = holidayMap;
+        }
+      } catch (e) {}
+    }
+  }
+
   const promises = [];
 
   promises.push((async () => {
@@ -192,6 +230,7 @@ export async function fetchAndSetLegacyData() {
           });
           window.HOLIDAY_LIST = holidayList;
           window.HOLIDAYS = holidayMap;
+          localStorage.setItem('cached_public_holidays', JSON.stringify(holidayList));
         }
       }
     } catch (err) {
@@ -200,57 +239,56 @@ export async function fetchAndSetLegacyData() {
   }
 
   // 4. Fetch Holiday Shifts & Templates from Supabase
-  if (!window.HOLIDAY_TEMPLATES) {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (supabaseUrl && supabaseKey) {
-        const res = await fetch(`${supabaseUrl}/rest/v1/holiday_shifts?select=*&limit=2000`, {
-          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseKey) {
+      const res = await fetch(`${supabaseUrl}/rest/v1/holiday_shifts?select=*&limit=2000`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      });
+      if (res.ok) {
+        const shifts = await res.json();
+        window.HOLIDAY_TEMPLATES = [];
+        const groupedShifts = {};
+
+        shifts.forEach(row => {
+          const id = row.id;
+          const date = row.date || '';
+          const holidayName = row.holiday_name || '';
+          const status = row.status || 'upcoming';
+          const section = row.section || '';
+          const person = row.person || '';
+          const time = row.time_shift || '';
+          let assignments = row.assignments;
+          if (typeof assignments === 'string') {
+            try { assignments = JSON.parse(assignments); } catch(e) { assignments = []; }
+          }
+          if (!Array.isArray(assignments)) assignments = [];
+
+          if (date === 'TEMPLATE' || holidayName === 'TEMPLATE') {
+            window.HOLIDAY_TEMPLATES.push({ id, name: (holidayName && holidayName !== 'TEMPLATE') ? holidayName : '', section, time, assignments });
+          } else {
+            const key = `${date}_${holidayName}`;
+            if (!groupedShifts[key]) {
+              groupedShifts[key] = { date, name: holidayName, status, tasks: [] };
+            }
+            groupedShifts[key].tasks.push({
+              id, section, person, time, assignments,
+              dept: assignments.map(a => `${a.project} - ${a.job}`).join(', '),
+              project: assignments[0]?.project || '-',
+              job: assignments[0]?.job || '-'
+            });
+            if (status) groupedShifts[key].status = status;
+          }
         });
-        if (res.ok) {
-          const shifts = await res.json();
-          window.HOLIDAY_TEMPLATES = [];
-          const groupedShifts = {};
 
-          shifts.forEach(row => {
-            const id = row.id;
-            const date = row.date || '';
-            const holidayName = row.holiday_name || '';
-            const status = row.status || 'upcoming';
-            const section = row.section || '';
-            const person = row.person || '';
-            const time = row.time_shift || '';
-            let assignments = row.assignments;
-            if (typeof assignments === 'string') {
-              try { assignments = JSON.parse(assignments); } catch(e) { assignments = []; }
-            }
-            if (!Array.isArray(assignments)) assignments = [];
-
-            if (date === 'TEMPLATE' || holidayName === 'TEMPLATE') {
-              window.HOLIDAY_TEMPLATES.push({ id, section, time, assignments });
-            } else {
-              const key = `${date}_${holidayName}`;
-              if (!groupedShifts[key]) {
-                groupedShifts[key] = { date, name: holidayName, status, tasks: [] };
-              }
-              groupedShifts[key].tasks.push({
-                id, section, person, time, assignments,
-                dept: assignments.map(a => `${a.project} - ${a.job}`).join(', '),
-                project: assignments[0]?.project || '-',
-                job: assignments[0]?.job || '-'
-              });
-              if (status) groupedShifts[key].status = status;
-            }
-          });
-
-          localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
-          localStorage.setItem('holiday_shifts', JSON.stringify(Object.values(groupedShifts)));
-        }
+        window.HOLIDAY_TEMPLATES.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+        localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
+        localStorage.setItem('holiday_shifts', JSON.stringify(Object.values(groupedShifts)));
       }
-    } catch (err) {
-      console.warn('Error fetching holiday shifts from Supabase:', err.message || err);
     }
+  } catch (err) {
+    console.warn('Error fetching holiday shifts from Supabase:', err.message || err);
   }
 
   // 5. Sync WS_DATA.accounts
@@ -291,6 +329,7 @@ export async function fetchAndSetLegacyData() {
         }));
         if (newEmployees.length > 0) {
           window.DATA.employees = newEmployees;
+          localStorage.setItem('cached_employees', JSON.stringify(newEmployees));
         }
       }
     }
@@ -451,3 +490,8 @@ export async function fetchAndSetLegacyData() {
 
   await Promise.all(promises);
 }
+
+if (typeof window !== 'undefined') {
+  window.fetchAndSetLegacyData = fetchAndSetLegacyData;
+}
+

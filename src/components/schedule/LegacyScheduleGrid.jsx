@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { Users } from "lucide-react";
 
 // Helpers
-const dayNamesFull = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const dayNamesFull = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const getWorkloadColor = (hours) => {
@@ -289,6 +289,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
               {days.map((d, i) => {
                 const isWeekend = d.dayIdx === 0 || d.dayIdx === 6;
                 const isToday = d.dateIso === todayStr;
+                const holidayName = typeof window !== 'undefined' && typeof window.isThaiHoliday === 'function' ? window.isThaiHoliday(d.dateObj) : null;
+                const isHoliday = !!holidayName;
 
                 return (
                   <th key={i} style={{
@@ -296,18 +298,20 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                     textAlign: 'center',
                     width: '150px', minWidth: '150px',
                     position: 'sticky', top: 0, zIndex: 10,
-                    background: isToday ? '#faf8ff' : isWeekend ? '#f8fafc' : '#ffffff',
+                    background: isToday ? '#faf8ff' : isHoliday ? '#fff1f2' : isWeekend ? '#f8fafc' : '#ffffff',
                     borderRight: '1px solid rgba(0,0,0,0.04)',
                     boxShadow: isToday 
                       ? '0 4px 0 rgba(0,0,0,0.02), inset 0 -2px 0 #635BFF' 
                       : '0 4px 0 rgba(0,0,0,0.02), inset 0 -1px 0 rgba(0,0,0,0.05)',
                     verticalAlign: 'middle',
-                  }}>
+                  }}
+                  title={holidayName || undefined}
+                  >
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                       <span style={{
                         fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em',
                         textTransform: 'uppercase',
-                        color: isToday ? '#635BFF' : isWeekend ? '#94a3b8' : '#94a3b8',
+                        color: isToday ? '#635BFF' : isHoliday ? '#e11d48' : isWeekend ? '#94a3b8' : '#94a3b8',
                       }}>{d.day}</span>
                       {isToday ? (
                         <div style={{
@@ -324,8 +328,22 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                       ) : (
                         <span style={{
                           fontSize: '0.82rem', fontWeight: 700,
-                          color: isWeekend ? '#475569' : '#1e293b',
+                          color: isHoliday ? '#e11d48' : isWeekend ? '#475569' : '#1e293b',
                         }}>{d.date}</span>
+                      )}
+                      {isHoliday && (
+                        <div style={{
+                          fontSize: '0.62rem',
+                          color: '#be123c',
+                          fontWeight: 600,
+                          marginTop: '4px',
+                          lineHeight: 1.2,
+                          width: '100%',
+                          wordBreak: 'break-word',
+                          textAlign: 'center'
+                        }}>
+                          {holidayName}
+                        </div>
                       )}
                     </div>
                   </th>

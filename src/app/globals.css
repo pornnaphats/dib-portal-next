@@ -543,8 +543,8 @@ button.select-input:hover {
 .form-group { margin-bottom: 14px; }
 .form-label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
 .form-input {
-  width: 100%; height: 42px; padding: 0 13px;
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  width: 100%; height: 34px; padding: 0 13px;
+  border: 1px solid var(--border); border-radius: 99px;
   font-family: 'Kanit', 'Prompt', sans-serif; font-size: .88rem; color: var(--text);
   background: var(--surface); outline: none; transition: border var(--transition);
   display: flex; align-items: center;
@@ -737,6 +737,10 @@ textarea.form-input, textarea.select-input {
   padding: 10px !important;
   color: #cbd5e0 !important;
   fill: #cbd5e0 !important;
+}
+.flatpickr-prev-month svg, .flatpickr-next-month svg {
+  width: 14px !important;
+  height: 14px !important;
 }
 .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: #a0aec0 !important; }
 

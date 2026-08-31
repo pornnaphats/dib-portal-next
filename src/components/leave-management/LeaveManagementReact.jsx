@@ -1037,7 +1037,7 @@ export default function LeaveManagementReact() {
                                                             typeof window.editLeaveRequest === 'function' && window.editLeaveRequest(r.id);
                                                         }} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', borderRadius: '6px', display: 'flex', alignItems: 'center', flexDirection: 'row', gap: '6px', fontSize: '12px', padding: '6px 12px', fontWeight: '500' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f4f7fe'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                                                             <svg className="w-[12px] h-[12px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                            แก้ไข
+                                                            Edit
                                                         </button>
                                                         <button onClick={() => {
                                                             const menu = document.getElementById(`react_actionMenu_leave_${r.id}`);

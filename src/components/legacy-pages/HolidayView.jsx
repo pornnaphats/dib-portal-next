@@ -32,6 +32,40 @@ export default function HolidayView() {
         accounts: []
       };
     }
+
+    // Load cached values immediately for instant rendering on refresh
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedHolidays = localStorage.getItem('cached_public_holidays');
+        if (cachedHolidays) {
+          window.HOLIDAY_LIST = JSON.parse(cachedHolidays);
+          window.DATA.public_holidays = window.HOLIDAY_LIST;
+          
+          const holidayMap = {};
+          window.HOLIDAY_LIST.forEach(row => {
+            if (row.date && row.name) {
+              const parts = row.date.split('/');
+              if (parts.length === 3) {
+                holidayMap[`${parseInt(parts[1])}-${parseInt(parts[0])}`] = row.name;
+              }
+            }
+          });
+          window.HOLIDAYS = holidayMap;
+        }
+        
+        const cachedTemplates = localStorage.getItem('holiday_templates');
+        if (cachedTemplates) {
+          window.HOLIDAY_TEMPLATES = JSON.parse(cachedTemplates);
+        }
+        
+        const cachedEmployees = localStorage.getItem('cached_employees');
+        if (cachedEmployees) {
+          window.DATA.employees = JSON.parse(cachedEmployees);
+        }
+      } catch (e) {
+        console.warn("Failed to load cached data:", e);
+      }
+    }
     
     // Attach lucide immediately
     window.lucide = {
@@ -39,17 +73,43 @@ export default function HolidayView() {
       createIcons: (params) => (params && params.root === null) ? null : lucide.createIcons({ icons: lucide.icons, ...params })
     };
 
-    window.navigate = (page) => {
+    window.navigate = (page, options = {}) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('holiday_current_view', page);
+      }
       if (page === 'public-holiday' && containerRef.current) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
         const doRender = () => {
           if (containerRef.current && typeof window.pagePublicHoliday === "function") {
+            const gridScroll = document.getElementById('holidayGridScroll');
+            const scrollLeft = gridScroll ? gridScroll.scrollLeft : 0;
+            const scrollTop = gridScroll ? gridScroll.scrollTop : 0;
+            const winScrollTop = window.scrollY || document.documentElement.scrollTop;
+
             containerRef.current.innerHTML = window.pagePublicHoliday();
             window.lucide.createIcons();
+
+            const newGrid = document.getElementById('holidayGridScroll');
+            if (newGrid) {
+              newGrid.scrollLeft = scrollLeft;
+              newGrid.scrollTop = scrollTop;
+            }
+            window.scrollTo(0, winScrollTop);
           }
         };
+
+        const gridScroll = document.getElementById('holidayGridScroll');
+        const scrollLeft = gridScroll ? gridScroll.scrollLeft : 0;
+        const scrollTop = gridScroll ? gridScroll.scrollTop : 0;
+        const winScrollTop = window.scrollY || document.documentElement.scrollTop;
+
+        // Bypassing API fetch on simple filters/keystrokes to avoid network delay and input focus loss
+        if (options && options.bypassFetch) {
+          doRender();
+          return;
+        }
 
         // Always fetch fresh data directly — bypass any cache guards
         if (supabaseUrl && supabaseKey) {
@@ -73,12 +133,35 @@ export default function HolidayView() {
         } else {
           doRender();
         }
+      } else if (page === 'holiday-summary' && containerRef.current) {
+        if (typeof window.pageHolidaySummary === 'function') {
+          containerRef.current.innerHTML = window.pageHolidaySummary();
+          window.lucide.createIcons();
+        } else {
+          window.navigate('public-holiday');
+        }
+      } else if (page === 'manage-holiday-tasks' && containerRef.current) {
+        const { name, date } = window.currentManageHoliday || {};
+        if (name && date && typeof window.pageManageHolidayTasks === 'function') {
+          containerRef.current.innerHTML = window.pageManageHolidayTasks(name, date);
+          window.lucide.createIcons();
+        } else {
+          window.navigate('public-holiday');
+        }
       }
     };
 
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
-    if (containerRef.current && typeof window.pagePublicHoliday === "function") {
-      containerRef.current.innerHTML = window.pagePublicHoliday();
+    if (containerRef.current) {
+      const savedView = typeof window !== 'undefined' ? localStorage.getItem('holiday_current_view') : null;
+      const { name, date } = window.currentManageHoliday || {};
+      if (savedView === 'holiday-summary' && typeof window.pageHolidaySummary === "function") {
+        containerRef.current.innerHTML = window.pageHolidaySummary();
+      } else if (savedView === 'manage-holiday-tasks' && name && date && typeof window.pageManageHolidayTasks === "function") {
+        containerRef.current.innerHTML = window.pageManageHolidayTasks(name, date);
+      } else if (typeof window.pagePublicHoliday === "function") {
+        containerRef.current.innerHTML = window.pagePublicHoliday();
+      }
       window.lucide.createIcons();
     }
 
@@ -92,23 +175,60 @@ export default function HolidayView() {
         window.flatpickr = flatpickrModule.default;
       });
 
-      // Background data refresh
+      // Background data refresh to populate employees, holidays, and project scopes
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.pagePublicHoliday === "function") {
-              containerRef.current.innerHTML = window.pagePublicHoliday();
+            if (containerRef.current) {
+              const savedView = localStorage.getItem('holiday_current_view');
+              const { name, date } = window.currentManageHoliday || {};
+              if (savedView === 'holiday-summary' && typeof window.pageHolidaySummary === "function") {
+                containerRef.current.innerHTML = window.pageHolidaySummary();
+              } else if (savedView === 'manage-holiday-tasks' && name && date && typeof window.pageManageHolidayTasks === "function") {
+                containerRef.current.innerHTML = window.pageManageHolidayTasks(name, date);
+              } else if (typeof window.pagePublicHoliday === "function") {
+                containerRef.current.innerHTML = window.pagePublicHoliday();
+              }
               window.lucide.createIcons();
             }
           }).catch(() => {});
         }
       }).catch(() => {});
-    }, { timeout: 100 });
+
+      // Sync existing localStorage assignments to Supabase
+      try {
+        const localShifts = JSON.parse(localStorage.getItem('holiday_shifts') || '[]');
+        if (localShifts.length > 0 && typeof window.apiSaveHolidayShift === 'function') {
+          console.log("Auto-syncing localStorage shifts to Supabase...");
+          localShifts.forEach(shift => {
+            if (shift.tasks && Array.isArray(shift.tasks)) {
+              shift.tasks.forEach(t => {
+                if (t.person && t.person !== '-') {
+                  window.apiSaveHolidayShift({
+                    action: 'edit',
+                    id: t.id,
+                    date: shift.date,
+                    holidayName: shift.name,
+                    status: shift.status || 'upcoming',
+                    section: t.section,
+                    person: t.person,
+                    time: t.time,
+                    assignments: JSON.stringify(t.assignments || [])
+                  }).catch(() => {});
+                }
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Failed to auto-sync local shifts:", err);
+      }
+    }, { timeout: 150 });
 
   }, []);
 
   return (
-    <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
+    <div className="w-full h-full bg-transparent overflow-y-hidden flex flex-col" style={{ padding: '20px' }}>
       <style dangerouslySetInnerHTML={{__html: `
         /* Premium Purple Theme Select Inputs */
         .select-input {

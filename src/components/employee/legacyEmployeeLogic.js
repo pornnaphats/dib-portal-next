@@ -32,7 +32,15 @@ window.pageEmployee = function() {
   }
 
   window._renderEmployeeContent = function() {
-    const employees = DATA.employees || [];
+    const employees = [...(DATA.employees || [])];
+    employees.sort((a, b) => {
+      const idA = String(a.id || '');
+      const idB = String(b.id || '');
+      const numA = parseInt(idA.replace(/^RS/i, '')) || 0;
+      const numB = parseInt(idB.replace(/^RS/i, '')) || 0;
+      if (numA !== numB) return numA - numB;
+      return idA.localeCompare(idB);
+    });
     const totalEmployees = employees.length;
 
     // Helper to check if today is employee's day off
@@ -166,11 +174,11 @@ window.pageEmployee = function() {
           <div id="actionMenu_${e.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); z-index:100; min-width:110px; padding:6px; flex-direction:column; gap:2px">
             <button onclick="editEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#475569; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">
               <i data-lucide="edit-3" style="width:14px; height:14px; color:#64748b; display:inline-block; vertical-align:middle"></i>
-              <span>แก้ไข</span>
+              <span>Edit</span>
             </button>
             <button onclick="deleteEmployee('${e.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#ef4444; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
               <i data-lucide="trash-2" style="width:14px; height:14px; color:#ef4444; display:inline-block; vertical-align:middle"></i>
-              <span>ลบ</span>
+              <span>Delete</span>
             </button>
           </div>
         </td>
@@ -179,7 +187,7 @@ window.pageEmployee = function() {
       <tr>
         <td colspan="9" style="text-align:center; padding:40px; color:var(--text-3); font-size:.8rem;">
           <i data-lucide="users" style="width:32px; height:32px; margin-bottom:8px; color:#cbd5e1; display:block; margin:0 auto"></i>
-          ไม่พบข้อมูลที่ตรงกับการค้นหา
+          No data found matching your search criteria
         </td>
       </tr>
     `;
@@ -264,7 +272,15 @@ window.pageEmployee = function() {
     };
 
     window.applyEmployeeFilters = () => {
-      const allEmps = DATA.employees || [];
+      const allEmps = [...(DATA.employees || [])];
+      allEmps.sort((a, b) => {
+        const idA = String(a.id || '');
+        const idB = String(b.id || '');
+        const numA = parseInt(idA.replace(/^RS/i, '')) || 0;
+        const numB = parseInt(idB.replace(/^RS/i, '')) || 0;
+        if (numA !== numB) return numA - numB;
+        return idA.localeCompare(idB);
+      });
       const totalEmps = allEmps.length;
 
       const posEl = document.getElementById('filterPos');
@@ -524,7 +540,7 @@ window.pageEmployee = function() {
           <i data-lucide="search" style="width:14px; height:14px; color:#94a3b8"></i>
           <input type="text" id="filterSearch" oninput="applyEmployeeFilters()" placeholder="Search..." style="border:none; outline:none; background:transparent; width:100%">
         </div>
-        <select id="filterPos" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
+        <select id="filterPos" data-no-search="true" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
           <option value="">All Positions</option>
           ${(() => {
             const uniqPos = [...new Set(employees.map(e => (e.pos || e.position || '').trim()).filter(Boolean))];
@@ -541,7 +557,7 @@ window.pageEmployee = function() {
             }).map(p => `<option value="${p}">${p}</option>`).join('');
           })()}
         </select>
-        <select id="filterTeam" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
+        <select id="filterTeam" data-no-search="true" onchange="applyEmployeeFilters()" class="select-input" style="width:150px; flex-shrink:0">
           <option value="">All Teams</option>
           ${[...new Set(employees.map(e => (e.team || e.dept || '').trim()).filter(t => t && t !== '-'))].sort().map(t => `<option value="${t}">${t}</option>`).join('')}
         </select>
@@ -623,6 +639,12 @@ window.pageEmployee = function() {
   }
 
   window.initEmployeeCharts = function() {
+    if (typeof window === 'undefined' || !window.Chart) {
+      console.warn('Chart.js is not loaded yet.');
+      return;
+    }
+    const Chart = window.Chart;
+
     const commonOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -3183,11 +3205,11 @@ window.pageEmployee = function() {
                   <div id="actionMenu_leave_${r.id}" style="display:none; position:absolute; right:100%; top:50%; transform:translateY(-50%); background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); z-index:100; min-width:110px; padding:6px; flex-direction:column; gap:2px">
                     <button onclick="editLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#475569; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">
                       <i data-lucide="edit-3" style="width:14px; height:14px; color:#64748b; display:inline-block; vertical-align:middle"></i>
-                      <span>แก้ไข</span>
+                      <span>Edit</span>
                     </button>
                     <button onclick="deleteLeaveRequest('${r.id}')" style="width:100%; text-align:left; padding:8px 12px; background:none; border:none; font-family:'Kanit', sans-serif; font-size:0.8rem; font-weight:500; cursor:pointer; color:#ef4444; border-radius:8px; display:flex; align-items:center; gap:8px; transition: background 0.15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
                       <i data-lucide="trash-2" style="width:14px; height:14px; color:#ef4444; display:inline-block; vertical-align:middle"></i>
-                      <span>ลบ</span>
+                      <span>Delete</span>
                     </button>
                   </div>
                 </td>
@@ -4393,7 +4415,7 @@ window.pageEmployee = function() {
     `;
   }
 
-  window.pagePublicHoliday = function() {
+  window.pagePublicHoliday_disabled = function() {
     window.currentPage = 'public-holiday';
 
     // Load local shifts
@@ -5158,12 +5180,13 @@ window.pageEmployee = function() {
 
   // Manage Holiday Tasks modal
   window.openManageHolidayModal = function(holidayName, holidayDate) {
-    const dropdown = document.getElementById('holiday-action-dropdown');
-    if (dropdown) dropdown.remove();
-
-    const modalId = 'manageHolidayModal';
-    const existingModal = document.getElementById(modalId);
-    if (existingModal) existingModal.remove();
+    window.currentManageHoliday = { name: holidayName, date: holidayDate };
+    if (typeof navigate === 'function') {
+      navigate('public-holiday');
+    } else {
+      window.location.href = '/public-holiday';
+    }
+    return;
 
     let localShifts = [];
     try {
@@ -5567,11 +5590,10 @@ window.pageEmployee = function() {
 
           <div style="margin-bottom:16px;">
             <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">แผนก (Section)</label>
-            <select id="htSection" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-              <option value="" disabled ${!matchedTask ? 'selected' : ''}>-- Select Section --</option>
-              <option value="Operation" ${matchedTask && matchedTask.section === 'Operation' ? 'selected' : ''}>Operation</option>
-              <option value="Content & Graphics" ${matchedTask && matchedTask.section === 'Content & Graphics' ? 'selected' : ''}>Content & Graphics</option>
-              <option value="Call Center" ${matchedTask && matchedTask.section === 'Call Center' ? 'selected' : ''}>Call Center</option>
+            <select id="htSection" class="section-select" data-prev-value="${matchedTask ? matchedTask.section || '' : ''}"
+              onchange="window.onSectionSelectChange(this); this.dataset.prevValue = this.value !== '_add_new_section_' ? this.value : this.dataset.prevValue;"
+              style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-size:.8rem; outline:none; background:#fff">
+              ${(window.buildSectionOptions || function(v){ return `<option value="${v}" selected>${v}</option>`; })(matchedTask ? matchedTask.section || '' : '', 'Select Section')}
             </select>
           </div>
 
@@ -5621,8 +5643,8 @@ window.pageEmployee = function() {
           </div>
 
           <div style="display:flex; justify-content:flex-end; gap:8px">
-            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:12px; font-weight:600; cursor:pointer">Cancel</button>
-            <button type="submit" class="btn btn-primary" style="background:var(--primary); color:#fff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; cursor:pointer">${isEditMode ? 'Save Changes' : 'Next: Select Holidays ➔'}</button>
+            <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn" style="background:#f1f5f9; color:#475569; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:500; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;"><i data-lucide="x" style="width:14px;height:14px"></i>Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background:var(--primary); color:#fff; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;">${isEditMode ? '<i data-lucide="save" style="width:14px;height:14px"></i>Save Changes' : '<i data-lucide="arrow-right" style="width:14px;height:14px"></i>Next: Select Holidays'}</button>
           </div>
         </form>
       </div>
@@ -8881,8 +8903,12 @@ window.pageSchedule = function() {
       return;
     }
 
-    const posOrder = ['director', 'manager', 'assistant manager', 'senior', 'junior'];
-    const uniquePositions = [...new Set((dataObj.employees || []).map(e => (e.pos || '').trim()).filter(Boolean))].sort((a, b) => {
+    const posOrder = ['director', 'manager', 'assistant manager', 'senior', 'junior', 'probation'];
+    const uniquePositions = [...new Set((dataObj.employees || []).map(e => (e.pos || '').trim()).filter(Boolean))];
+    if (uniquePositions.indexOf('Probation') === -1) {
+      uniquePositions.push('Probation');
+    }
+    uniquePositions.sort((a, b) => {
         const ai = posOrder.findIndex(o => a.toLowerCase().includes(o));
         const bi = posOrder.findIndex(o => b.toLowerCase().includes(o));
         if (ai !== -1 && bi !== -1) return ai - bi;
@@ -8904,14 +8930,14 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">รหัสพนักงาน</label>
-              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:42px">
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:34px">
                 <span style="padding:0 14px; font-family:Kanit; font-weight:700; color:var(--text-3); background:#f1f5f9; border-right:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.75rem">RS</span>
                 <input type="text" id="empIdDigits" class="form-input" style="border:none; border-radius:0; flex:1; padding:0 10px; height:100%; background:transparent" placeholder="000" value="${isEdit ? emp.id.replace('RS', '') : ''}">
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">ชื่อเล่น</label>
-              <input type="text" id="empNick" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? emp.nickname : ''}" placeholder="ชื่อเล่น">
+              <input type="text" id="empNick" class="form-input" style="height:34px; border-radius:99px" value="${isEdit ? emp.nickname : ''}" placeholder="ชื่อเล่น">
             </div>
           </div>
           
@@ -8919,11 +8945,11 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">ชื่อ-นามสกุล (ไทย)</label>
-              <input type="text" id="empName" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? emp.name : ''}" placeholder="ระบุชื่อภาษาไทย">
+              <input type="text" id="empName" class="form-input" style="height:34px; border-radius:99px" value="${isEdit ? emp.name : ''}" placeholder="ระบุชื่อภาษาไทย">
             </div>
             <div class="form-group">
               <label class="form-label">ชื่อ-นามสกุล (อังกฤษ)</label>
-              <input type="text" id="empNameEn" class="form-input" style="height:42px; border-radius:99px" value="${isEdit ? (emp.nameEn || '') : ''}" placeholder="Name in English">
+              <input type="text" id="empNameEn" class="form-input" style="height:34px; border-radius:99px" value="${isEdit ? (emp.nameEn || '') : ''}" placeholder="Name in English">
             </div>
           </div>
 
@@ -8931,25 +8957,25 @@ window.pageSchedule = function() {
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px">
             <div class="form-group">
               <label class="form-label">E-mail</label>
-              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:42px">
+              <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid var(--border); border-radius:99px; overflow:hidden; height:34px">
                 <input type="text" id="empEmailUser" class="form-input" style="border:none; border-radius:0; flex:1; padding:0 14px; height:100%; background:transparent" placeholder="username" value="${isEdit ? (emp.email || '').split('@')[0] : ''}">
                 <span style="padding:0 14px; font-family:Kanit; font-weight:600; color:var(--text-3); background:#f1f5f9; border-left:1px solid var(--border); height:100%; display:flex; align-items:center; font-size:.7rem">@realsmart.co.th</span>
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">Birthday</label>
-              <div style="display:flex; gap:4px; height:42px">
-                <select id="empBirthDay" class="form-input" style="flex:1; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
-                  <option value="" disabled selected>วัน</option>
-                  ${Array.from({ length: 31 }, (_, i) => i + 1).map(d => `<option value="${d}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[0] == d ? 'selected' : ''}>${d}</option>`).join('')}
+              <div style="display:flex; gap:4px; height:34px">
+                <select id="empBirthDay" data-no-search="true" class="form-input" style="flex:1; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
+                  <option value="" disabled>วัน</option>
+                  ${Array.from({ length: 31 }, (_, i) => i + 1).map(d => `<option value="${d}">${d}</option>`).join('')}
                 </select>
-                <select id="empBirthMonth" class="form-input" style="flex:1.5; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
-                  <option value="" disabled selected>เดือน</option>
-                  ${['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, i) => `<option value="${i + 1}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[1] == i + 1 ? 'selected' : ''}>${m}</option>`).join('')}
+                <select id="empBirthMonth" data-no-search="true" class="form-input" style="flex:1.5; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
+                  <option value="" disabled>เดือน</option>
+                  ${['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, i) => `<option value="${i + 1}">${m}</option>`).join('')}
                 </select>
-                <select id="empBirthYear" class="form-input" style="flex:1.2; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
-                  <option value="" disabled selected>พ.ศ.</option>
-                  ${Array.from({ length: 80 }, (_, i) => 2567 - i).map(y => `<option value="${y}" ${isEdit && emp.birthdate && emp.birthdate.split('/')[2] == y ? 'selected' : ''}>${y}</option>`).join('')}
+                <select id="empBirthYear" data-no-search="true" class="form-input" style="flex:1.2; appearance:auto; padding:0 4px; font-size:.7rem; height:100%; border-radius:99px">
+                  <option value="" disabled>พ.ศ.</option>
+                  ${Array.from({ length: 80 }, (_, i) => 2567 - i).map(y => `<option value="${y}">${y}</option>`).join('')}
                 </select>
               </div>
             </div>
@@ -8965,7 +8991,7 @@ window.pageSchedule = function() {
                 <option value="__NEW_POS__">+ เพิ่มตำแหน่งใหม่...</option>
               </select>
               <div id="newPosInputWrapper" style="display:none; margin-top:8px">
-                <input type="text" id="newPosInput" class="form-input" placeholder="ระบุตำแหน่งใหม่..." style="height:42px; border-radius:99px" />
+                <input type="text" id="newPosInput" class="form-input" placeholder="ระบุตำแหน่งใหม่..." style="height:34px; border-radius:99px" />
               </div>
             </div>
             <div class="form-group">
@@ -8976,7 +9002,7 @@ window.pageSchedule = function() {
                 <option value="__NEW_TEAM__">+ เพิ่มทีมใหม่...</option>
               </select>
               <div id="newTeamInputWrapper" style="display:none; margin-top:8px">
-                <input type="text" id="newTeamInput" class="form-input" placeholder="ระบุชื่อทีมใหม่..." style="height:42px; border-radius:99px" />
+                <input type="text" id="newTeamInput" class="form-input" placeholder="ระบุชื่อทีมใหม่..." style="height:34px; border-radius:99px" />
               </div>
             </div>
           </div>
@@ -9044,13 +9070,16 @@ window.pageSchedule = function() {
     // Pre-select birthday dropdowns if editing
     if (isEdit && emp.birthdate) {
       const parts = emp.birthdate.split('/');
-      if (parts.length === 3) {
-        document.getElementById('empBirthDay').value = parseInt(parts[0]);
-        document.getElementById('empBirthMonth').value = parseInt(parts[1]);
+      if (parts.length >= 2) {
+        const dayEl = document.getElementById('empBirthDay');
+        const monthEl = document.getElementById('empBirthMonth');
+        const yearEl = document.getElementById('empBirthYear');
+        if (dayEl) dayEl.value = parseInt(parts[0]);
+        if (monthEl) monthEl.value = parseInt(parts[1]);
+        if (yearEl && parts[2] && parts[2] !== '-') yearEl.value = parseInt(parts[2]);
       }
     }
 
-    // Handle position/team/type changes to disable/enable fields
     window.handlePosChange = function () {
       const posSelect = document.getElementById('empPos');
       const pos = posSelect.value;
@@ -9058,6 +9087,17 @@ window.pageSchedule = function() {
       const shiftSelect = document.getElementById('empShift');
       const offSelect = document.getElementById('empOff');
       const type = document.getElementById('empType').value;
+
+      // Director: No team
+      if (pos === 'Director') {
+        teamSelect.value = "";
+        teamSelect.disabled = true;
+        teamSelect.style.background = "#f1f5f9";
+      } else {
+        teamSelect.disabled = false;
+        teamSelect.style.background = "#fff";
+      }
+
       const team = teamSelect.value;
 
       // Handle custom input visibility
@@ -9068,16 +9108,6 @@ window.pageSchedule = function() {
       const newTeamWrapper = document.getElementById('newTeamInputWrapper');
       if (newTeamWrapper) {
         newTeamWrapper.style.display = team === '__NEW_TEAM__' ? 'block' : 'none';
-      }
-
-      // Director or Contract: No team
-      if (pos === 'Director' || type === 'พนักงานสัญญาจ้าง') {
-        teamSelect.value = "";
-        teamSelect.disabled = true;
-        teamSelect.style.background = "#f1f5f9";
-      } else {
-        teamSelect.disabled = false;
-        teamSelect.style.background = "#fff";
       }
 
       // Team Call Center: No shift, no offdays
@@ -9152,7 +9182,7 @@ window.pageSchedule = function() {
     }
     if (!pos) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกตำแหน่งของพนักงาน', 'warning'); return; }
 
-    if (pos !== 'Director' && empType !== 'พนักงานสัญญาจ้าง' && !team) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกทีมที่พนักงานสังกัด', 'warning'); return; }
+    if (pos !== 'Director' && !team) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกทีมที่พนักงานสังกัด', 'warning'); return; }
     if (team !== 'Call Center' && !shift) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกกะเวลาทำงาน', 'warning'); return; }
     if (team !== 'Call Center' && !off) { alertFn('ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกวันหยุดพนักงาน', 'warning'); return; }
 

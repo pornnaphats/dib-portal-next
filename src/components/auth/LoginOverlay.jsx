@@ -40,6 +40,7 @@ export default function LoginOverlay({ onLogin }) {
       window.google.accounts.id.initialize({
         client_id: "620760567653-qmb5vintk2a14sgluvl2lc6bhe5qhsub.apps.googleusercontent.com",
         callback: window.handleCredentialResponse,
+        use_fedcm_for_prompt: false,
       });
       // Hidden SDK button for callback wiring
       window.google.accounts.id.renderButton(
@@ -50,8 +51,19 @@ export default function LoginOverlay({ onLogin }) {
   }, [onLogin]);
 
   const handleGoogleClick = () => {
-    if (window.google && window.google.accounts) {
-      window.google.accounts.id.prompt();
+    const hiddenButton = document.getElementById("g_id_signin_hidden");
+    if (hiddenButton) {
+      // Find the actual button inside the wrapper and click it
+      const actualBtn = hiddenButton.querySelector('[role="button"]') || hiddenButton.querySelector('iframe') || hiddenButton;
+      if (actualBtn) {
+        // Trigger a click or dispatch click event
+        const clickEvent = new MouseEvent("click", {
+          view: window,
+          bubbles: true,
+          cancelable: true,
+        });
+        actualBtn.dispatchEvent(clickEvent);
+      }
     }
   };
 

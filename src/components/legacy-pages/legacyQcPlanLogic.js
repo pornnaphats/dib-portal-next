@@ -685,7 +685,7 @@ window.renderQCWorkPlanDashboard = function() {
     `;
   });
 
-  const fadeClass = 'fade-in';
+  const fadeClass = '';
 
   return `
     <style>
@@ -1608,7 +1608,7 @@ window.qcShowAutoPlanModal = function() {
               </button>
               <span style="font-size: 0.82rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; padding: 5px 14px; border-radius: 20px; display:inline-flex; align-items:center; gap:5px; font-weight:700; box-shadow:0 2px 6px rgba(79,70,229,0.3);">
                 <i data-lucide="hash" style="width:13px; height:13px;"></i>
-                รวม: <strong id="qcAutoPlanTotalCases" style="font-size:1rem;">0</strong> เคส
+                Total: <strong id="qcAutoPlanTotalCases" style="font-size:1rem;">0</strong> เคส
               </span>
             </div>
           </div>
@@ -1625,7 +1625,7 @@ window.qcShowAutoPlanModal = function() {
           </div>
 
           <div class="qc-modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(1)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> ย้อนกลับ</button>
+            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(1)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Back</button>
             <button class="btn-modal-save" onclick="qcAutoPlanGoToStep(3)" style="padding:10px 24px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; font-weight:600; box-shadow: 0 2px 8px rgba(139,92,246,0.3); display:flex; align-items:center; gap:6px;">วิเคราะห์และจัดสรร <i data-lucide="wand-2" style="width:14px; height:14px;"></i></button>
           </div>
         </div>
@@ -1671,7 +1671,7 @@ window.qcShowAutoPlanModal = function() {
           </div>
 
           <div class="qc-modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(2)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> ย้อนกลับ</button>
+            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(2)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Back</button>
             <button class="btn-modal-save" onclick="qcSaveAutoPlan()" style="padding:10px 24px; background: linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; font-weight:600; box-shadow: 0 2px 8px rgba(16,185,129,0.3); display:flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:14px; height:14px;"></i> ยืนยันสร้างแผนงาน</button>
           </div>
         </div>

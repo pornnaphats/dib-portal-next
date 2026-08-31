@@ -398,7 +398,7 @@ export default function PublicHolidayPage() {
                     opacity: submitting ? 0.7 : 1
                   }}
                 >
-                  {submitting ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
+                  {submitting ? "Saving..." : "Save Data"}
                 </button>
               </div>
             </form>

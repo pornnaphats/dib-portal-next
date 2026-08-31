@@ -195,7 +195,7 @@ if (typeof window !== 'undefined') {
   window._datePickerCounter = 0;
 
   window.monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  window.dayNamesFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  window.dayNamesFull = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
   window.thaiHolidays = {
     '1-1': 'วันขึ้นปีใหม่', '2-10': 'วันมาฆบูชา', '4-6': 'วันจักรี', '4-13': 'วันสงกรานต์', '4-14': 'วันสงกรานต์', '4-15': 'วันสงกรานต์',
     '5-1': 'วันแรงงานแห่งชาติ', '5-4': 'วันฉัตรมงคล', '5-12': 'วันวิสาขบูชา', '6-3': 'วันเฉลิมพระชนมพรรษา สมเด็จพระราชินี',
@@ -606,10 +606,21 @@ if (typeof window !== 'undefined') {
       defaultValue: oldTeamName.trim(),
       placeholder: 'พิมพ์ชื่อทีมใหม่...',
       onConfirm: async (newTeamName) => {
-        if (!newTeamName || newTeamName.trim() === '' || newTeamName.trim() === oldTeamName.trim()) return;
+        if (!newTeamName || newTeamName.trim() === '') {
+          const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
+          alertFn('คำเตือน', 'กรุณาระบุชื่อทีมใหม่', 'warning');
+          return;
+        }
+        if (newTeamName.trim().toLowerCase() === oldTeamName.trim().toLowerCase()) {
+          const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
+          alertFn('คำเตือน', 'ชื่อทีมใหม่ซ้ำกับชื่อทีมเดิม', 'warning');
+          return;
+        }
         
         const trimmedOldName = oldTeamName.trim();
         const trimmedNewName = newTeamName.trim();
+        
+        const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
         if (typeof showToast === 'function') {
           showToast(`กำลังเปลี่ยนชื่อทีม "${trimmedOldName}" เป็น "${trimmedNewName}"...`, 'info');
         }
@@ -618,35 +629,37 @@ if (typeof window !== 'undefined') {
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jfxesvvswpgeaxhhnnyt.supabase.co';
           const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E';
           
-          const affectedEmps = (window.DATA && window.DATA.employees || []).filter(e => e.dept && e.dept.trim() === trimmedOldName);
-          if (affectedEmps.length === 0) {
-            if (typeof showToast === 'function') showToast(`ไม่พบพนักงานในทีม "${trimmedOldName}"`, 'warning');
-            return;
-          }
-          
-          const promises = affectedEmps.map(async (emp) => {
-            const response = await fetch(`${supabaseUrl}/rest/v1/employees?id=eq.${emp.id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Prefer': 'return=representation'
-              },
-              body: JSON.stringify({ team: trimmedNewName })
-            });
-            if (!response.ok) {
-              throw new Error(`Failed to update employee ${emp.id}`);
-            }
+          // 1. Update Supabase
+          const response = await fetch(`${supabaseUrl}/rest/v1/employees?team=eq.${encodeURIComponent(trimmedOldName)}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({ 
+              team: trimmedNewName
+            })
           });
-          
-          await Promise.all(promises);
+          if (!response.ok) {
+            const errBody = await response.text();
+            console.error(`Supabase employee update error:`, errBody);
+            const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
+            alertFn('Error', `Failed to update team: ${errBody}`, 'danger');
+            throw new Error(`Failed to update team: ${errBody}`);
+          }
           
           // ---- อัปเดต window.DATA.employees ในหน่วยความจำทันที ----
           if (window.DATA && window.DATA.employees) {
             window.DATA.employees = window.DATA.employees.map(e => {
-              if (e.dept && e.dept.trim() === trimmedOldName) {
-                return { ...e, dept: trimmedNewName };
+              const matchesDept = e.dept && e.dept.trim().toLowerCase() === trimmedOldName.toLowerCase();
+              const matchesTeam = e.team && e.team.trim().toLowerCase() === trimmedOldName.toLowerCase();
+              if (matchesDept || matchesTeam) {
+                return { 
+                  ...e, 
+                  dept: trimmedNewName,
+                  team: trimmedNewName 
+                };
               }
               return e;
             });
@@ -659,8 +672,11 @@ if (typeof window !== 'undefined') {
               const struct = JSON.parse(structStr);
               let changed = false;
               function updateDept(node) {
-                if (node.dept && node.dept.trim() === trimmedOldName) {
-                  node.dept = trimmedNewName;
+                const matchesTitle = node.title && node.title.trim().toLowerCase() === trimmedOldName.toLowerCase();
+                const matchesDept = node.dept && node.dept.trim().toLowerCase() === trimmedOldName.toLowerCase();
+                if (matchesTitle || matchesDept) {
+                  if (matchesTitle) node.title = trimmedNewName;
+                  if (matchesDept) node.dept = trimmedNewName;
                   changed = true;
                 }
                 if (node.children) {
@@ -685,38 +701,50 @@ if (typeof window !== 'undefined') {
             }
           }
           
+          // Refetch all data using the background logic helper if it exists
+          if (window.fetchAndSetLegacyData) {
+            await window.fetchAndSetLegacyData();
+          } else {
+            const fetchMod = await import('./legacyDataFetcher.js');
+            if (fetchMod && fetchMod.fetchAndSetLegacyData) {
+              await fetchMod.fetchAndSetLegacyData();
+            }
+          }
+
+          // Dynamically update any select options on the page containing the old team name
+          const isModalOpen = !!document.getElementById('addEmployeeModal');
+          document.querySelectorAll('select').forEach(select => {
+            let optionsChanged = false;
+            Array.from(select.options).forEach(opt => {
+              if (opt.value && opt.value.trim().toLowerCase() === trimmedOldName.toLowerCase()) {
+                opt.value = trimmedNewName;
+                opt.text = trimmedNewName;
+                optionsChanged = true;
+              }
+            });
+            if (optionsChanged) {
+              select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          });
+
+          const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
           if (typeof showToast === 'function') {
             showToast(`เปลี่ยนชื่อทีมเป็น "${trimmedNewName}" สำเร็จแล้ว!`, 'success');
-          }
-          
-          // Refetch all data using the background logic helper if it exists
-          const fetchMod = await import('./legacyDataFetcher.js');
-          if (fetchMod && fetchMod.fetchAndSetLegacyData) {
-            await fetchMod.fetchAndSetLegacyData();
-          }
-          
-          // Force UI updates - directly re-render the page container HTML
-          const contentEl = document.getElementById('employeeMainContent') || document.getElementById('pageContent') || document.querySelector('.page-content');
-          if (contentEl) {
-            if (window.currentPage === 'employee' && typeof window.pageEmployee === 'function') {
-              contentEl.innerHTML = window.pageEmployee();
-            } else if (window.currentPage === 'schedule' && typeof window.pageSchedule === 'function') {
-              contentEl.innerHTML = window.pageSchedule();
-            } else if (window.currentPage === 'structure-team' && typeof window.pageStructureTeam === 'function') {
-              contentEl.innerHTML = window.pageStructureTeam();
-            } else if (window.currentPage === 'qc-realcyber-plan' && typeof window.renderQCWorkPlanDashboard === 'function') {
-              contentEl.innerHTML = window.renderQCWorkPlanDashboard();
-            }
-            if (window.lucide) window.lucide.createIcons({ root: contentEl });
           } else {
-            window.location.reload();
+            alertFn('สำเร็จ', `เปลี่ยนชื่อทีมเป็น "${trimmedNewName}" สำเร็จแล้ว!`, 'success');
+          }
+
+          if (!isModalOpen) {
+            // Force page reload to ensure React component state and active filters are re-rendered correctly
+            setTimeout(() => {
+              window.location.reload();
+            }, 800);
           }
           
         } catch (err) {
           console.error(err);
-          if (typeof showToast === 'function') {
-            showToast(`เกิดข้อผิดพลาด: ${err.message}`, 'error');
-          }
+          const alertFn = window.showAlert || (typeof showAlert === 'function' ? showAlert : alert);
+          alertFn('เกิดข้อผิดพลาด', `เกิดข้อผิดพลาดในการยิงข้อมูล: ${err.message}`, 'danger');
         }
       }
     });
@@ -786,8 +814,26 @@ if (typeof window !== 'undefined') {
 
       // Create trigger button replicating select-input class
       const trigger = document.createElement('button');
+      trigger.type = 'button';
       trigger.className = 'select-input';
-      trigger.style.cssText = `width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: 'Kanit', 'Prompt', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; background-image: none !important; padding-right: 14px !important; padding-left: 16px !important; border-radius: 9999px !important; box-sizing: border-box;`;
+      trigger.disabled = select.disabled;
+      const updateTriggerStyle = () => {
+        if (select.disabled) {
+          trigger.style.backgroundColor = '#f8fafc';
+          trigger.style.color = '#cbd5e1';
+          trigger.style.cursor = 'not-allowed';
+          trigger.style.borderColor = '#e2e8f0';
+          trigger.style.opacity = '0.7';
+        } else {
+          trigger.style.backgroundColor = '';
+          trigger.style.color = '';
+          trigger.style.cursor = 'pointer';
+          trigger.style.borderColor = '';
+          trigger.style.opacity = '';
+        }
+      };
+      updateTriggerStyle();
+      trigger.style.cssText += ` width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; font-family: 'Kanit', 'Prompt', sans-serif; font-size: 12px; font-weight: 500; background-image: none !important; padding-right: 14px !important; padding-left: 16px !important; border-radius: 9999px !important; box-sizing: border-box;`;
       if (originalHeight) {
         trigger.style.height = originalHeight;
         trigger.style.setProperty('height', originalHeight, 'important');
@@ -811,9 +857,44 @@ if (typeof window !== 'undefined') {
       dropdown.style.cssText = `display: none; position: absolute; top: 100%; right: 0; margin-top: 6px; width: 100%; min-width: 160px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 9999; padding: 4px; max-height: 240px; overflow-x: hidden; overflow-y: auto;`;
 
       // Helper function to update dropdown items based on select options
-      const populateOptions = () => {
+      const populateOptions = (filterText = '') => {
         dropdown.innerHTML = '';
+
+        // Add search input if options count > 5 and not disabled via data-no-search
+        if (select.options.length > 5 && select.getAttribute('data-no-search') !== 'true') {
+          const searchInput = document.createElement('input');
+          searchInput.type = 'text';
+          searchInput.placeholder = 'ค้นหา...';
+          searchInput.className = 'custom-select-search-input';
+          searchInput.value = filterText;
+          searchInput.style.cssText = `width: calc(100% - 16px); height: 28px; margin: 4px 8px 8px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 9999px; font-size: 11px; outline: none; font-family: 'Kanit', 'Prompt', sans-serif; box-sizing: border-box;`;
+          
+          searchInput.onclick = (e) => {
+            e.stopPropagation(); // Prevent dropdown from closing when clicking search
+          };
+          
+          searchInput.oninput = (e) => {
+            const val = e.target.value;
+            // Re-populate passing filter text to keep focus and input value
+            populateOptions(val);
+            // Refocus the newly created search input and put cursor at end
+            const newSearchInput = dropdown.querySelector('.custom-select-search-input');
+            if (newSearchInput) {
+              newSearchInput.focus();
+              newSearchInput.setSelectionRange(newSearchInput.value.length, newSearchInput.value.length);
+            }
+          };
+          dropdown.appendChild(searchInput);
+        }
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.style.cssText = `max-height: 180px; overflow-y: auto;`;
+
         Array.from(select.options).forEach((opt, idx) => {
+          if (filterText && !opt.text.toLowerCase().includes(filterText.toLowerCase().trim())) {
+            return;
+          }
+          
           const optionDiv = document.createElement('div');
           optionDiv.className = 'custom-select-option';
           
@@ -827,22 +908,6 @@ if (typeof window !== 'undefined') {
           textSpan.textContent = opt.text;
           optionDiv.appendChild(textSpan);
 
-          // Add edit icon if it's a team selection and a real team name
-          const isTeamSelect = select.id && select.id.toLowerCase().includes('team');
-          const isRealTeam = opt.value && opt.value !== '' && !opt.value.includes('--') && !opt.value.includes('ทุก') && !opt.text.includes('เลือก') && !opt.text.includes('ทุก');
-          
-          if (isTeamSelect && isRealTeam) {
-            const editBtn = document.createElement('span');
-            editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8; transition: color 0.15s;" onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#94a3b8'"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-            editBtn.style.cssText = `display: inline-flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; cursor: pointer; margin-left: auto;`;
-            editBtn.onclick = (e) => {
-              e.stopPropagation();
-              if (window.renameTeamName) {
-                window.renameTeamName(opt.value);
-              }
-            };
-            optionDiv.appendChild(editBtn);
-          }
 
           optionDiv.onclick = (e) => {
             e.stopPropagation();
@@ -858,8 +923,9 @@ if (typeof window !== 'undefined') {
             // Re-populate to update checked states
             populateOptions();
           };
-          dropdown.appendChild(optionDiv);
+          optionsContainer.appendChild(optionDiv);
         });
+        dropdown.appendChild(optionsContainer);
       };
 
       populateOptions();
@@ -891,6 +957,8 @@ if (typeof window !== 'undefined') {
 
       // Watch for changes in native select options (e.g. dynamic years or filter loading)
       const selectObserver = new MutationObserver(() => {
+        trigger.disabled = select.disabled;
+        updateTriggerStyle();
         triggerText.textContent = select.options[select.selectedIndex]?.text || '';
         populateOptions();
       });
@@ -898,6 +966,8 @@ if (typeof window !== 'undefined') {
 
       // Listen for native select change events (e.g. programmatically dispatched changes) to sync trigger text
       select.addEventListener('change', () => {
+        trigger.disabled = select.disabled;
+        updateTriggerStyle();
         triggerText.textContent = select.options[select.selectedIndex]?.text || '';
         populateOptions();
       });
@@ -993,7 +1063,7 @@ if (typeof window !== 'undefined') {
         </div>
         <h3 style="margin:0 0 10px; font-size:1.15rem; font-weight:700; color:#1e293b; font-family:Kanit">${title}</h3>
         <p style="margin:0 0 24px; font-size:.85rem; color:#64748b; line-height:1.5; font-family:Kanit">${message}</p>
-        <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-primary" style="display:inline-flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; width:100%; background:${color}; color:#fff; border:none; height:34px; border-radius:99px !important; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.78rem; box-shadow: 0 2px 8px ${color}20">ตกลง</button>
+        <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-primary" style="display:inline-flex !important; align-items:center !important; justify-content:center !important; text-align:center !important; width:100%; background:${color}; color:#fff; border:none; height:34px; border-radius:99px !important; font-weight:600; font-family:Kanit; cursor:pointer; font-size:.78rem; box-shadow: 0 2px 8px ${color}20">OK</button>
       </div>
     </div>
     <style>
@@ -1032,12 +1102,12 @@ if (typeof window !== 'undefined') {
         </div>
         
         <div>
-          <input type="text" id="promptModalInput" class="form-input" value="${defaultValue}" placeholder="${placeholder}" style="width:100%; height:42px !important; border-radius:10px !important; font-family:'Kanit', 'Prompt', sans-serif; font-size:.88rem; outline:none; padding:0 14px; border:1px solid #e2e8f0;" autocomplete="off">
+          <input type="text" id="promptModalInput" class="form-input" value="${defaultValue}" placeholder="" style="width:100%; height:34px !important; border-radius:9999px !important; font-family:'Kanit', 'Prompt', sans-serif; font-size:.88rem; outline:none; padding:0 16px; border:1px solid #e2e8f0; box-sizing:border-box;" autocomplete="off">
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-          <button onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; font-family:Kanit; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:16px; height:16px"></i>ยกเลิก</button>
-          <button id="promptModalConfirmBtn" class="btn btn-primary" style="border-radius:99px !important; height:34px !important; font-size:.82rem !important; padding:0 20px !important; font-family:Kanit; background:${color} !important; color:#fff; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:16px; height:16px"></i>บันทึกข้อมูล</button>
+          <button type="button" onclick="document.getElementById('${modalId}').remove()" class="btn btn-outline" style="border-radius:99px !important; height:32px !important; font-size:0.75rem !important; padding:0 16px !important; font-family:Kanit; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="x" style="width:14px; height:14px"></i>Cancel</button>
+          <button type="button" id="promptModalConfirmBtn" class="btn btn-primary" style="border-radius:99px !important; height:32px !important; font-size:0.75rem !important; padding:0 16px !important; font-family:Kanit; background:${color} !important; color:#fff; display:inline-flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:14px; height:14px"></i>Save</button>
         </div>
       </div>
     </div>
@@ -1062,7 +1132,11 @@ if (typeof window !== 'undefined') {
 
     const confirmBtn = document.getElementById('promptModalConfirmBtn');
     
-    function confirmAction() {
+    function confirmAction(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       const val = input.value;
       document.getElementById(modalId).remove();
       if (typeof onConfirm === 'function') {
@@ -1189,14 +1263,17 @@ if (typeof window !== 'undefined') {
           })
         });
       } else if (action === 'edit') {
-        await fetch(`${supabaseUrl}/rest/v1/holiday_shifts?id=eq.${id}`, {
-          method: 'PATCH',
+        // Use Supabase UPSERT (POST with Prefer: resolution=merge) to handle both insert and update
+        await fetch(`${supabaseUrl}/rest/v1/holiday_shifts`, {
+          method: 'POST',
           headers: {
             apikey: supabaseKey,
             Authorization: `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge'
           },
           body: JSON.stringify({
+            id,
             date,
             holiday_name: holidayName,
             status,
@@ -1209,8 +1286,156 @@ if (typeof window !== 'undefined') {
       }
     } catch (err) {
       console.error('Error in apiSaveHolidayShift:', err);
+      throw err;
     }
   };
+
+  // ─── Section Management Helpers ────────────────────────────────────────────
+  const DEFAULT_SECTIONS = ['Operation', 'Content', 'Graphics', 'ETDA Call Center', 'OR Call Center'];
+
+  window.getHolidaySections = function() {
+    try {
+      let custom = JSON.parse(localStorage.getItem('custom_holiday_sections') || '[]');
+      // Automatically clean up 'test' (case-insensitive) from localStorage if found
+      if (custom.some(s => s && s.toLowerCase() === 'test')) {
+        custom = custom.filter(s => !s || s.toLowerCase() !== 'test');
+        localStorage.setItem('custom_holiday_sections', JSON.stringify(custom));
+      }
+      const all = [...DEFAULT_SECTIONS];
+      custom.forEach(s => { if (s && !all.includes(s)) all.push(s); });
+      return all;
+    } catch(e) { return [...DEFAULT_SECTIONS]; }
+  };
+
+  window.addHolidaySection = function(name) {
+    name = (name || '').trim();
+    if (!name || name.toLowerCase() === 'test') return false;
+    const sections = window.getHolidaySections();
+    if (sections.includes(name)) return false;
+    try {
+      const custom = JSON.parse(localStorage.getItem('custom_holiday_sections') || '[]');
+      custom.push(name);
+      localStorage.setItem('custom_holiday_sections', JSON.stringify(custom));
+    } catch(e) {}
+    return true;
+  };
+
+  window.removeHolidaySection = function(name) {
+    if (DEFAULT_SECTIONS.includes(name)) return; // cannot remove defaults
+    try {
+      let custom = JSON.parse(localStorage.getItem('custom_holiday_sections') || '[]');
+      custom = custom.filter(s => s !== name);
+      localStorage.setItem('custom_holiday_sections', JSON.stringify(custom));
+    } catch(e) {}
+  };
+
+  /** Build <option> HTML for a section select. Pass currentValue to pre-select. */
+  window.buildSectionOptions = function(currentValue, placeholderText) {
+    placeholderText = placeholderText || '-- เลือก Section --';
+    const sections = window.getHolidaySections();
+    const isSelected = v => v === currentValue ? 'selected' : '';
+    let html = `<option value="" disabled ${!currentValue ? 'selected' : ''}>${placeholderText}</option>`;
+    sections.forEach(s => {
+      html += `<option value="${s}" ${isSelected(s)}>${s}</option>`;
+    });
+    html += `<option value="_add_new_section_">＋ Add New Section...</option>`;
+    return html;
+  };
+
+  /** Call this via onchange on any section <select>. Handles the "+ Add new" option. */
+  window.onSectionSelectChange = function(selectEl) {
+    if (!selectEl || selectEl.value !== '_add_new_section_') return;
+    // Reset select to previous value while prompting
+    const prev = selectEl.dataset.prevValue || '';
+    selectEl.value = prev;
+    window.showPromptModal({
+      title: 'เพิ่ม Section ใหม่',
+      message: 'กรอกชื่อ Section ที่ต้องการเพิ่ม',
+      placeholder: '',
+      onConfirm: function(name) {
+        name = (name || '').trim();
+        if (!name) return;
+        const added = window.addHolidaySection(name);
+        if (!added) {
+          window.showAlert('Notice', `Section "${name}" already exists`, 'warning');
+          return;
+        }
+        // Re-populate all open section selects
+        document.querySelectorAll('select.section-select').forEach(sel => {
+          const cur = sel.value;
+          sel.innerHTML = window.buildSectionOptions(cur);
+          sel.value = cur;
+          sel.dataset.prevValue = cur;
+        });
+        // Select the new section in the triggering element
+        selectEl.innerHTML = window.buildSectionOptions(name);
+        selectEl.value = name;
+        selectEl.dataset.prevValue = name;
+        window.showAlert('Done', `Section "${name}" has been added`, 'success');
+      }
+    });
+  };
+
+  /** Open the Section Manager panel */
+  window.openManageSectionsPanel = function() {
+    const existing = document.getElementById('manageSectionsPanel');
+    if (existing) { existing.remove(); return; }
+
+    const render = () => {
+      const sections = window.getHolidaySections();
+      let rows = sections.map(s => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; border-radius:8px; background:#f8fafc; border:1px solid #e2e8f0;">
+          <span style="font-size:.82rem; font-weight:600; color:#1e293b;">${s}</span>
+          ${DEFAULT_SECTIONS.includes(s)
+            ? `<span style="font-size:.7rem; color:#94a3b8; font-style:italic;">ค่าเริ่มต้น</span>`
+            : `<button onclick="window.removeHolidaySection('${s}'); window._rerenderSectionsPanel();" style="background:#fee2e2; color:#ef4444; border:none; padding:3px 8px; border-radius:6px; font-size:.7rem; font-weight:700; cursor:pointer;">ลบ</button>`
+          }
+        </div>
+      `).join('');
+      return rows;
+    };
+
+    window._rerenderSectionsPanel = function() {
+      const list = document.getElementById('sectionPanelList');
+      if (list) list.innerHTML = render();
+      // Refresh all open section selects
+      document.querySelectorAll('select.section-select').forEach(sel => {
+        const cur = sel.value;
+        sel.innerHTML = window.buildSectionOptions(cur);
+        sel.value = cur;
+      });
+    };
+
+    const panelHtml = `
+      <div id="manageSectionsPanel" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.4); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:200000; animation:fadeIn 0.2s ease-out; font-family:Prompt,sans-serif;">
+        <div style="background:#fff; width:420px; border-radius:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.2); overflow:hidden;">
+          <div style="padding:20px 24px 14px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:1rem; font-weight:700; color:#1e293b;">⚙️ จัดการ Section</div>
+              <div style="font-size:.72rem; color:#64748b; margin-top:2px;">เพิ่มหรือลบ Section สำหรับใช้ใน Template</div>
+            </div>
+            <button onclick="document.getElementById('manageSectionsPanel').remove()" style="background:none; border:none; cursor:pointer; color:#94a3b8; font-size:1.2rem;">✕</button>
+          </div>
+          <div style="padding:16px 24px; max-height:50vh; overflow-y:auto;">
+            <div id="sectionPanelList" style="display:flex; flex-direction:column; gap:8px;">${render()}</div>
+          </div>
+          <div style="padding:14px 24px; border-top:1px solid #e2e8f0; display:flex; gap:8px;">
+            <input id="newSectionInput" type="text" placeholder="ชื่อ Section ใหม่..." style="flex:1; height:36px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:.82rem; outline:none; font-family:Prompt,sans-serif;" />
+            <button onclick="
+              const v = document.getElementById('newSectionInput').value.trim();
+              if(!v) return;
+              const ok = window.addHolidaySection(v);
+              if(ok){ document.getElementById('newSectionInput').value=''; window._rerenderSectionsPanel(); }
+              else window.showAlert('แจ้งเตือน','Section นี้มีอยู่แล้ว','warning');
+            " style="background:#635bff; color:#fff; border:none; padding:0 16px; border-radius:8px; font-size:.8rem; font-weight:700; cursor:pointer; white-space:nowrap;">+ เพิ่ม</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', panelHtml);
+    setTimeout(() => document.getElementById('newSectionInput')?.focus(), 100);
+  };
+  // ────────────────────────────────────────────────────────────────────────────
 
   window.openManageTemplatesModal = function() {
     const modalId = 'manageTemplatesModal';
@@ -1249,9 +1474,26 @@ if (typeof window !== 'undefined') {
     const templates = window.HOLIDAY_TEMPLATES || [];
     
     let listHtml = `
+      <style>
+        .template-card:hover {
+          background-color: #f8fafc !important;
+        }
+        .template-card .template-actions {
+          display: none !important;
+        }
+        .template-card:hover .template-actions {
+          display: flex !important;
+        }
+        .template-card .right-column {
+          width: 80px !important;
+        }
+        .template-card:hover .right-column {
+          width: 220px !important;
+        }
+      </style>
       <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
         <button onclick="window.renderTemplateForm()" style="background:#635bff; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-size:.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(99,91,255,0.3);">
-          + เพิ่มเทมเพลตใหม่
+          + Add New Templetes
         </button>
       </div>
     `;
@@ -1266,26 +1508,41 @@ if (typeof window !== 'undefined') {
       listHtml += `<div style="display:flex; flex-direction:column; gap:12px;">`;
       templates.forEach((tpl, idx) => {
         const assignmentsStr = (tpl.assignments || []).map(a => `${a.project} - ${a.job} (${a.percent}%)`).join(', ') || '-';
+        const totalPct = (tpl.assignments || []).reduce((sum, a) => sum + (parseInt(a.percent) || 0), 0);
         listHtml += `
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);">
+          <div class="template-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02); transition: background-color 0.2s;">
             <div style="min-width:0; flex:1; padding-right:16px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-weight:700; font-size:0.9rem; color:#1e293b;">${tpl.section || '-'}</span>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#635bff; color:#ffffff; font-size:0.75rem; font-weight:700; flex-shrink:0;">${idx + 1}</span>
+                <span style="font-weight:700; font-size:0.9rem; color:#1e293b;">${tpl.name || tpl.section || '-'}</span>
+                ${tpl.name ? `<span style="background:#f1e9ff; color:#635bff; padding:2px 8px; border-radius:99px; font-size:0.65rem; font-weight:700;">${tpl.section || '-'}</span>` : ''}
                 <span style="background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:99px; font-size:0.65rem; font-weight:700;">
                   ${tpl.time || '-'}
                 </span>
               </div>
-              <div style="font-size:0.75rem; color:#64748b; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${assignmentsStr}">
-                งาน: ${assignmentsStr}
+              <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                ${(tpl.assignments || []).map(a => `
+                  <div style="display:flex; align-items:center; gap:8px; font-size:0.75rem; color:#475569;">
+                    <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:#818cf8; flex-shrink:0;"></span>
+                    <span style="font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;" title="${a.project}">${a.project}</span>
+                    <span style="color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;" title="${a.job || '-'}">- ${a.job || '-'}</span>
+                    <span style="background:#f1f5f9; color:#635bff; padding:1px 6px; border-radius:99px; font-size:0.65rem; font-weight:700; margin-left:auto; flex-shrink:0;">${a.percent}%</span>
+                  </div>
+                `).join('')}
               </div>
             </div>
-            <div style="display:flex; gap:8px; flex-shrink:0;">
-              <button onclick="window.renderTemplateForm('${tpl.id}')" style="background:#e0e7ff; color:#4f46e5; border:none; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-                แก้ไข
-              </button>
-              <button onclick="window.deleteTemplate('${tpl.id}')" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">
-                ลบ
-              </button>
+            <div class="right-column" style="display:flex; align-items:center; justify-content:flex-end; gap:16px; flex-shrink:0; transition: width 0.2s ease;">
+              <span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:99px; font-size:0.7rem; font-weight:700; white-space:nowrap;">
+                รวม ${totalPct}%
+              </span>
+              <div class="template-actions" style="display:none; gap:8px;">
+                <button onclick="window.renderTemplateForm('${tpl.id}')" style="background:#e0e7ff; color:#4f46e5; border:none; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                  Edit
+                </button>
+                <button onclick="window.deleteTemplate('${tpl.id}')" style="background:#fee2e2; color:#ef4444; border:none; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1294,11 +1551,18 @@ if (typeof window !== 'undefined') {
     }
 
     body.innerHTML = listHtml;
+    // Restore scroll position saved before switching to form view
+    if (window._tplListScrollTop != null) {
+      body.scrollTop = window._tplListScrollTop;
+      window._tplListScrollTop = null;
+    }
   };
 
   window.renderTemplateForm = function(templateId = '') {
     const body = document.getElementById('templatesModalBody');
     if (!body) return;
+    // Save current scroll position so we can restore it when returning to list
+    window._tplListScrollTop = body.scrollTop;
 
     const isEdit = !!templateId;
     const tpl = isEdit ? (window.HOLIDAY_TEMPLATES || []).find(t => t.id === templateId) : null;
@@ -1308,33 +1572,39 @@ if (typeof window !== 'undefined') {
 
     let projectRowsHtml = '';
     if (tpl && tpl.assignments && tpl.assignments.length > 0) {
-      projectRowsHtml = tpl.assignments.map((a, idx) => `
+      projectRowsHtml = tpl.assignments.map((a, idx) => {
+        // Ensure the saved project is always available as an option even if scope hasn't loaded
+        const projectsForRow = (a.project && !uniqueProjects.includes(a.project))
+          ? [a.project, ...uniqueProjects]
+          : uniqueProjects;
+        return `
         <div class="tpl-project-row" style="display:grid; grid-template-columns:1fr 1fr 80px auto; gap:12px; margin-bottom:12px; align-items:center;">
-          <select class="tplProject" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; background:#fff">
+          <select class="tplProject" style="width:100%; height:34px; padding:0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; background:#fff; box-sizing:border-box;">
             <option value="">-- เลือกโครงการ --</option>
-            ${uniqueProjects.map(proj => `<option value="${proj}" ${proj === a.project ? 'selected' : ''}>${proj}</option>`).join('')}
+            ${projectsForRow.map(proj => `<option value="${proj}" ${proj === a.project ? 'selected' : ''}>${proj}</option>`).join('')}
           </select>
-          <input type="text" class="tplJob" placeholder="ชื่องาน" value="${a.job || ''}" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none">
+          <input type="text" class="tplJob" placeholder="ชื่องาน" value="${a.job || ''}" style="width:100%; height:34px; padding:0 16px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; box-sizing:border-box;">
           <div style="position:relative;">
-            <input type="number" class="tplPercent" value="${a.percent || 100}" min="0" max="100" style="width:100%; padding:10px 24px 10px 10px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; text-align:center;" oninput="window.calcTemplateTotalPercent()">
-            <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
+            <input type="number" class="tplPercent" value="${a.percent ?? ''}" min="0" style="width:100%; height:34px; padding:0 28px 0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; text-align:center; box-sizing:border-box;" oninput="window.calcTemplateTotalPercent()">
+            <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
           </div>
           <button type="button" onclick="if(document.querySelectorAll('.tpl-project-row').length > 1) { this.parentElement.remove(); window.calcTemplateTotalPercent(); }" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; padding:8px;">
             ✕
           </button>
         </div>
-      `).join('');
+      `;
+      }).join('');
     } else {
       projectRowsHtml = `
         <div class="tpl-project-row" style="display:grid; grid-template-columns:1fr 1fr 80px auto; gap:12px; margin-bottom:12px; align-items:center;">
-          <select class="tplProject" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; background:#fff">
+          <select class="tplProject" style="width:100%; height:34px; padding:0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; background:#fff; box-sizing:border-box;">
             <option value="">-- เลือกโครงการ --</option>
             ${uniqueProjects.map(proj => `<option value="${proj}">${proj}</option>`).join('')}
           </select>
-          <input type="text" class="tplJob" placeholder="ชื่องาน" value="" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none">
+          <input type="text" class="tplJob" placeholder="ชื่องาน" value="" style="width:100%; height:34px; padding:0 16px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; box-sizing:border-box;">
           <div style="position:relative;">
-            <input type="number" class="tplPercent" value="100" min="0" max="100" style="width:100%; padding:10px 24px 10px 10px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; text-align:center;" oninput="window.calcTemplateTotalPercent()">
-            <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
+            <input type="number" class="tplPercent" value="" min="0" style="width:100%; height:34px; padding:0 28px 0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; text-align:center; box-sizing:border-box;" oninput="window.calcTemplateTotalPercent()">
+            <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
           </div>
           <button type="button" onclick="if(document.querySelectorAll('.tpl-project-row').length > 1) { this.parentElement.remove(); window.calcTemplateTotalPercent(); }" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; padding:8px; display:none;">
             ✕
@@ -1344,24 +1614,32 @@ if (typeof window !== 'undefined') {
     }
 
     body.innerHTML = `
-      <form id="tplForm" onsubmit="event.preventDefault(); window.submitTemplateForm('${templateId}');" style="display:flex; flex-direction:column; gap:16px">
+      <form id="tplForm" onsubmit="event.preventDefault();" style="display:flex; flex-direction:column; gap:16px">
         <div>
-          <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">แผนก (Section)</label>
-          <select id="tplSection" required style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; background:#fff">
-            <option value="" disabled selected>-- เลือก Section --</option>
-            <option value="Operation" ${tpl && tpl.section === 'Operation' ? 'selected' : ''}>Operation</option>
-            <option value="Content & Graphics" ${tpl && tpl.section === 'Content & Graphics' ? 'selected' : ''}>Content & Graphics</option>
-            <option value="Call Center" ${tpl && tpl.section === 'Call Center' ? 'selected' : ''}>Call Center</option>
+          <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">ชื่อ Template (Template Name)</label>
+          <input type="text" id="tplName" placeholder="ระบุชื่อชุดงานมาตรฐาน" value="${tpl && tpl.name ? tpl.name : ''}" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:9999px !important; font-size:.8rem; outline:none; font-family:'Kanit', sans-serif; box-sizing:border-box;">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">ส่วนงาน (Section)</label>
+          <select id="tplSection" required class="section-select" data-prev-value="${tpl && tpl.section ? tpl.section : ''}"
+            onchange="window.onSectionSelectChange(this); this.dataset.prevValue = this.value !== '_add_new_section_' ? this.value : this.dataset.prevValue;"
+            style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; background:#fff">
+            ${window.buildSectionOptions(tpl && tpl.section ? tpl.section : '')}
           </select>
         </div>
 
         <div>
-          <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">กะเวลาปฏิบัติงาน</label>
-          <select id="tplTime" required style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; background:#fff">
+          <label style="display:block; font-size:.8rem; font-weight:600; color:#475569; margin-bottom:6px">กะเวลาปฏิบัติงาน (Work Shift)</label>
+          <select id="tplTime" required data-no-search="true" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; background:#fff">
             <option value="" disabled selected>-- เลือกกะเวลา --</option>
             <option value="เช้าตรู่ 06.00-15.00 น." ${tpl && tpl.time === 'เช้าตรู่ 06.00-15.00 น.' ? 'selected' : ''}>เช้าตรู่ 06.00-15.00 น.</option>
+            <option value="เช้า 07.00-16.00 น." ${tpl && tpl.time === 'เช้า 07.00-16.00 น.' ? 'selected' : ''}>เช้า 07.00-16.00 น.</option>
+            <option value="เช้า 08.00-17.00 น." ${tpl && tpl.time === 'เช้า 08.00-17.00 น.' ? 'selected' : ''}>เช้า 08.00-17.00 น.</option>
             <option value="เช้า 09.00-18.00 น." ${tpl && tpl.time === 'เช้า 09.00-18.00 น.' ? 'selected' : ''}>เช้า 09.00-18.00 น.</option>
+            <option value="สาย 10.00-19.00 น." ${tpl && tpl.time === 'สาย 10.00-19.00 น.' ? 'selected' : ''}>สาย 10.00-19.00 น.</option>
             <option value="สาย 12.00-21.00 น." ${tpl && tpl.time === 'สาย 12.00-21.00 น.' ? 'selected' : ''}>สาย 12.00-21.00 น.</option>
+            <option value="บ่าย 13.00-22.00 น." ${tpl && tpl.time === 'บ่าย 13.00-22.00 น.' ? 'selected' : ''}>บ่าย 13.00-22.00 น.</option>
             <option value="บ่าย 15.00-00.00 น." ${tpl && tpl.time === 'บ่าย 15.00-00.00 น.' ? 'selected' : ''}>บ่าย 15.00-00.00 น.</option>
             <option value="ดึก 00.00-09.00 น." ${tpl && tpl.time === 'ดึก 00.00-09.00 น.' ? 'selected' : ''}>ดึก 00.00-09.00 น.</option>
           </select>
@@ -1374,23 +1652,24 @@ if (typeof window !== 'undefined') {
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
             <button type="button" onclick="window.addTemplateProjectRow()" style="background:none; border:none; color:#635bff; font-size:.75rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px; padding:0;">
-              + เพิ่มงานในกะนี้
+              + Add task
             </button>
-            <div id="tplTotalPercent" style="font-size:.8rem; font-weight:700; color:#10b981;">รวม: 100%</div>
+            <div id="tplTotalPercent" style="font-size:.8rem; font-weight:700; color:#10b981;">Total: 100%</div>
           </div>
         </div>
 
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-          <button type="button" onclick="window.renderTemplatesList()" style="background:#f1f5f9; color:#475569; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:500; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
-            ย้อนกลับ
+          <button type="button" onclick="window.renderTemplatesList()" style="background:#f1f5f9; color:#475569; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:500; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Back
           </button>
-          <button type="submit" id="btnSubmitTpl" style="background:#635bff; color:#fff; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
-            บันทึก
+          <button type="button" onclick="window.submitTemplateForm('${templateId}');" id="btnSubmitTpl" style="background:#635bff; color:#fff; border:none; height:32px; padding:0 16px; border-radius:99px; font-weight:600; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i data-lucide="save" style="width:14px; height:14px;"></i> Save
           </button>
         </div>
       </form>
     `;
     window.calcTemplateTotalPercent();
+    if (window.lucide) window.lucide.createIcons({ root: document.getElementById('tplForm') });
   };
 
   window.addTemplateProjectRow = function() {
@@ -1404,14 +1683,14 @@ if (typeof window !== 'undefined') {
     row.className = 'tpl-project-row';
     row.style.cssText = 'display:grid; grid-template-columns:1fr 1fr 80px auto; gap:12px; margin-bottom:12px; align-items:center;';
     row.innerHTML = `
-      <select class="tplProject" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; background:#fff">
+      <select class="tplProject" style="width:100%; height:34px; padding:0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; background:#fff; box-sizing:border-box;">
         <option value="">-- เลือกโครงการ --</option>
         ${uniqueProjects.map(proj => `<option value="${proj}">${proj}</option>`).join('')}
       </select>
-      <input type="text" class="tplJob" placeholder="ชื่องาน" value="" style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none">
+      <input type="text" class="tplJob" placeholder="ชื่องาน" value="" style="width:100%; height:34px; padding:0 16px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; box-sizing:border-box;">
       <div style="position:relative;">
-        <input type="number" class="tplPercent" value="100" min="0" max="100" style="width:100%; padding:10px 24px 10px 10px; border:1px solid #cbd5e1; border-radius:10px; font-size:.8rem; outline:none; text-align:center;" oninput="window.calcTemplateTotalPercent()">
-        <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
+        <input type="number" class="tplPercent" value="" min="0" style="width:100%; height:34px; padding:0 28px 0 14px; border:1px solid #cbd5e1; border-radius:9999px; font-size:.8rem; outline:none; text-align:center; box-sizing:border-box;" oninput="window.calcTemplateTotalPercent()">
+        <span style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#64748b;">%</span>
       </div>
       <button type="button" onclick="this.parentElement.remove(); window.calcTemplateTotalPercent();" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; padding:8px;">
         ✕
@@ -1429,17 +1708,14 @@ if (typeof window !== 'undefined') {
     });
     const label = document.getElementById('tplTotalPercent');
     if (label) {
-      label.textContent = `รวม: ${total}%`;
-      if (total === 100) {
-        label.style.color = '#10b981';
-      } else {
-        label.style.color = '#ef4444';
-      }
+      label.textContent = `Total: ${total}%`;
+      label.style.color = '#635bff';
     }
   };
 
   window.submitTemplateForm = async function(templateId = '') {
     const isEdit = !!templateId;
+    const name = document.getElementById('tplName')?.value?.trim() || '';
     const section = document.getElementById('tplSection').value;
     const time = document.getElementById('tplTime').value;
 
@@ -1454,28 +1730,25 @@ if (typeof window !== 'undefined') {
       const percent = parseInt(row.querySelector('.tplPercent').value) || 0;
 
       if (!project) {
-        window.showAlert('เกิดข้อผิดพลาด', 'กรุณาเลือกโครงการ', 'danger');
+        window.showAlert('Error', 'Please select a project', 'danger');
         return;
       }
       assignments.push({ project, job: job || '-', percent });
       totalPercent += percent;
     }
 
-    if (totalPercent !== 100) {
-      window.showAlert('เกิดข้อผิดพลาด', `สัดส่วนงานรวมต้องเท่ากับ 100% (ปัจจุบัน ${totalPercent}%)`, 'danger');
-      return;
-    }
+    // No strict 100% total check anymore - can be less or more
 
     const btnSubmit = document.getElementById('btnSubmitTpl');
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'กำลังบันทึก...';
+    btnSubmit.textContent = 'saving...';
 
     const id = isEdit ? templateId : 'tpl_' + Date.now();
     const payload = {
       action: isEdit ? 'edit' : 'add',
       id,
       date: 'TEMPLATE',
-      holidayName: 'TEMPLATE',
+      holidayName: name || 'TEMPLATE',
       status: 'upcoming',
       section,
       person: '',
@@ -1483,26 +1756,33 @@ if (typeof window !== 'undefined') {
       assignments: JSON.stringify(assignments)
     };
 
-    await window.apiSaveHolidayShift(payload);
+    try {
+      await window.apiSaveHolidayShift(payload);
 
-    if (!window.HOLIDAY_TEMPLATES) window.HOLIDAY_TEMPLATES = [];
-    const tplIndex = window.HOLIDAY_TEMPLATES.findIndex(t => t.id === id);
+      if (!window.HOLIDAY_TEMPLATES) window.HOLIDAY_TEMPLATES = [];
+      const tplIndex = window.HOLIDAY_TEMPLATES.findIndex(t => t.id === id);
 
-    const updatedTemplate = { id, section, time, assignments };
-    if (tplIndex !== -1) {
-      window.HOLIDAY_TEMPLATES[tplIndex] = updatedTemplate;
-    } else {
-      window.HOLIDAY_TEMPLATES.push(updatedTemplate);
+      const updatedTemplate = { id, name, section, time, assignments };
+      if (tplIndex !== -1) {
+        window.HOLIDAY_TEMPLATES[tplIndex] = updatedTemplate;
+      } else {
+        window.HOLIDAY_TEMPLATES.push(updatedTemplate);
+      }
+
+      localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
+
+      window.showAlert('Success', 'Template saved successfully', 'success');
+      window.renderTemplatesList();
+    } catch (err) {
+      window.showAlert('Error', 'Failed to save template: ' + (err.message || err), 'danger');
+    } finally {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Save';
     }
-
-    localStorage.setItem('holiday_templates', JSON.stringify(window.HOLIDAY_TEMPLATES));
-
-    window.showAlert('สำเร็จ', 'บันทึกชุดงานมาตรฐานสำเร็จ', 'success');
-    window.renderTemplatesList();
   };
 
   window.deleteTemplate = function(templateId) {
-    window.showConfirmDelete('ยืนยันการลบเทมเพลต', 'คุณต้องการลบชุดงานมาตรฐานนี้ใช่หรือไม่? การลบนี้จะลบงานจริงทั้งหมดในตารางที่ใช้ชุดงานนี้ออกด้วย', async () => {
+    window.showConfirmDelete('Confirm Delete Template', 'Are you sure you want to delete this template? This will also remove all applied tasks in the calendar using this template.', async () => {
       const tpl = (window.HOLIDAY_TEMPLATES || []).find(t => t.id === templateId);
       
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -1541,18 +1821,18 @@ if (typeof window !== 'undefined') {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            window.showAlert('สำเร็จ', 'ลบชุดงานมาตรฐานและลบงานในตารางเรียบร้อยแล้ว', 'success');
+            window.showAlert('Success', 'Template and applied tasks deleted successfully', 'success');
             window.renderTemplatesList();
             if (typeof window.navigate === 'function') {
               window.navigate('public-holiday');
             }
           });
         } else {
-          window.showAlert('สำเร็จ', 'ลบชุดงานมาตรฐานเรียบร้อยแล้ว', 'success');
+          window.showAlert('Success', 'Template deleted successfully', 'success');
           window.renderTemplatesList();
         }
       }).catch(() => {
-        window.showAlert('สำเร็จ', 'ลบชุดงานมาตรฐานเรียบร้อยแล้ว', 'success');
+        window.showAlert('Success', 'Template deleted successfully', 'success');
         window.renderTemplatesList();
       });
     });
@@ -1563,4 +1843,4 @@ if (typeof window !== 'undefined') {
 
 
 
-
+
