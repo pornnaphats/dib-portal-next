@@ -50,11 +50,48 @@ export default function QcImportView() {
     }
   }, []);
 
-  const syncToSupabase = (summaries) => {
+  const syncToSupabase = async (summaries) => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jfxesvvswpgeaxhhnnyt.supabase.co";
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E";
 
-    if (supabaseUrl && supabaseKey) {
+    if (!supabaseUrl || !supabaseKey) return;
+
+    // 1. Try syncing to dedicated table `qc_imported_summaries`
+    try {
+      const payload = summaries.map(item => ({
+        id: item.id,
+        file_name: item.fileName || item.file_name,
+        imported_at: item.importedAt || item.imported_at,
+        website_sheet: item.websiteSheet || item.website_sheet,
+        social_sheet: item.socialSheet || item.social_sheet,
+        total_cases: item.totalCases !== undefined ? item.totalCases : item.total_cases,
+        website_cases: item.websiteCases !== undefined ? item.websiteCases : item.website_cases,
+        social_cases: item.socialCases !== undefined ? item.socialCases : item.social_cases,
+        date_range: item.dateRange || item.date_range,
+        category_breakdown: item.categoryBreakdown || item.category_breakdown,
+        daily_breakdown: item.dailyBreakdown || item.daily_breakdown
+      }));
+
+      const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?on_conflict=id`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        return; // Dedicated table sync succeeded!
+      }
+    } catch (e) {
+      console.warn("Dedicated table sync error, trying org_structure fallback...", e);
+    }
+
+    // 2. Fallback: Save to `org_structure` table row `qc_imported_summaries`
+    try {
       fetch(`${supabaseUrl}/rest/v1/org_structure?on_conflict=id`, {
         method: "POST",
         headers: {
@@ -68,7 +105,7 @@ export default function QcImportView() {
           structure: summaries
         })
       }).catch(err => console.warn("Supabase summary sync notice:", err));
-    }
+    } catch (e) {}
   };
 
   const loadSavedSummaries = async () => {
@@ -86,36 +123,76 @@ export default function QcImportView() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jfxesvvswpgeaxhhnnyt.supabase.co";
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E";
 
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_imported_summaries`, {
-          headers: {
-            "apikey": supabaseKey,
-            "Authorization": `Bearer ${supabaseKey}`
-          }
-        });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].structure)) {
-            const remoteData = rows[0].structure;
-            const map = new Map();
-            [...remoteData, ...localData].forEach(item => {
-              if (item && item.id) map.set(item.id, item);
-            });
-            const merged = Array.from(map.values());
-            setSavedSummaries(merged);
-            localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+    if (!supabaseUrl || !supabaseKey) return;
 
-            if (localData.length > 0 && merged.length > remoteData.length) {
-              syncToSupabase(merged);
-            }
-          } else if (localData.length > 0) {
-            syncToSupabase(localData);
-          }
+    // 1. Try reading from dedicated table `qc_imported_summaries`
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?select=*&order=imported_at.desc`, {
+        headers: {
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`
         }
-      } catch (err) {
-        console.warn("Supabase fetch summaries error:", err);
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          const remoteData = rows.map(r => ({
+            id: r.id,
+            fileName: r.file_name || r.fileName,
+            importedAt: r.imported_at || r.importedAt,
+            websiteSheet: r.website_sheet || r.websiteSheet,
+            socialSheet: r.social_sheet || r.socialSheet,
+            totalCases: r.total_cases !== undefined ? r.total_cases : r.totalCases,
+            websiteCases: r.website_cases !== undefined ? r.website_cases : r.websiteCases,
+            socialCases: r.social_cases !== undefined ? r.social_cases : r.socialCases,
+            dateRange: r.date_range || r.dateRange,
+            categoryBreakdown: r.category_breakdown || r.categoryBreakdown,
+            dailyBreakdown: r.daily_breakdown || r.dailyBreakdown
+          }));
+
+          const map = new Map();
+          [...remoteData, ...localData].forEach(item => {
+            if (item && item.id) map.set(item.id, item);
+          });
+          const merged = Array.from(map.values());
+          setSavedSummaries(merged);
+          localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+          return;
+        }
       }
+    } catch (e) {
+      console.warn("Dedicated table read error, trying org_structure fallback...", e);
+    }
+
+    // 2. Fallback: Read from `org_structure` table row `qc_imported_summaries`
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_imported_summaries`, {
+        headers: {
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`
+        }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].structure)) {
+          const remoteData = rows[0].structure;
+          const map = new Map();
+          [...remoteData, ...localData].forEach(item => {
+            if (item && item.id) map.set(item.id, item);
+          });
+          const merged = Array.from(map.values());
+          setSavedSummaries(merged);
+          localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+
+          if (localData.length > 0 && merged.length > remoteData.length) {
+            syncToSupabase(merged);
+          }
+        } else if (localData.length > 0) {
+          syncToSupabase(localData);
+        }
+      }
+    } catch (err) {
+      console.warn("Supabase fetch summaries error:", err);
     }
   };
 
