@@ -50,14 +50,72 @@ export default function QcImportView() {
     }
   }, []);
 
-  const loadSavedSummaries = () => {
+  const syncToSupabase = (summaries) => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jfxesvvswpgeaxhhnnyt.supabase.co";
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E";
+
+    if (supabaseUrl && supabaseKey) {
+      fetch(`${supabaseUrl}/rest/v1/org_structure?on_conflict=id`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify({
+          id: "qc_imported_summaries",
+          structure: summaries
+        })
+      }).catch(err => console.warn("Supabase summary sync notice:", err));
+    }
+  };
+
+  const loadSavedSummaries = async () => {
+    let localData = [];
     try {
       const stored = localStorage.getItem("qc_imported_summaries");
       if (stored) {
-        setSavedSummaries(JSON.parse(stored));
+        localData = JSON.parse(stored);
+        setSavedSummaries(localData);
       }
     } catch (e) {
-      console.error("Failed to load saved summaries:", e);
+      console.error("Failed to load local summaries:", e);
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jfxesvvswpgeaxhhnnyt.supabase.co";
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E";
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_imported_summaries`, {
+          headers: {
+            "apikey": supabaseKey,
+            "Authorization": `Bearer ${supabaseKey}`
+          }
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].structure)) {
+            const remoteData = rows[0].structure;
+            const map = new Map();
+            [...remoteData, ...localData].forEach(item => {
+              if (item && item.id) map.set(item.id, item);
+            });
+            const merged = Array.from(map.values());
+            setSavedSummaries(merged);
+            localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+
+            if (localData.length > 0 && merged.length > remoteData.length) {
+              syncToSupabase(merged);
+            }
+          } else if (localData.length > 0) {
+            syncToSupabase(localData);
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase fetch summaries error:", err);
+      }
     }
   };
 
@@ -600,24 +658,11 @@ export default function QcImportView() {
 
     try {
       const existing = JSON.parse(localStorage.getItem("qc_imported_summaries") || "[]");
-      const updated = [parsedSummary, ...existing];
+      const updated = [parsedSummary, ...existing.filter(i => i.id !== parsedSummary.id)];
       localStorage.setItem("qc_imported_summaries", JSON.stringify(updated));
       setSavedSummaries(updated);
       
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (supabaseUrl && supabaseKey) {
-        fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": supabaseKey,
-            "Authorization": `Bearer ${supabaseKey}`,
-            "Prefer": "resolution=merge-duplicates"
-          },
-          body: JSON.stringify(parsedSummary)
-        }).catch(err => console.warn("Supabase summary sync notice:", err));
-      }
+      syncToSupabase(updated);
 
       showToast("Saved Successfully!", "Summary totals have been saved to the system (raw file data not stored).", "success");
       setActiveTab("history");
@@ -637,6 +682,9 @@ export default function QcImportView() {
         setSelectedSummaryDetail(null);
       }
       setDeleteConfirmId(null);
+
+      syncToSupabase(updated);
+
       showToast("Deleted Successfully", "Import summary record has been deleted successfully.", "success");
     } catch (e) {
       console.error("Delete error:", e);
