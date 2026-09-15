@@ -15,8 +15,8 @@ export default function QcPlanView() {
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
-    document.body.dataset.page = "qc-realcyber-plan";
-    window.currentPage = "qc-realcyber-plan";
+    document.body.dataset.page = "realcyber-plan";
+    window.currentPage = "realcyber-plan";
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -41,7 +41,7 @@ export default function QcPlanView() {
     };
 
     window.navigate = (page) => {
-      if (page === 'qc-realcyber-plan' && containerRef.current) {
+      if ((page === 'realcyber-plan' || page === 'qc-realcyber-plan') && containerRef.current) {
         containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
         window.lucide.createIcons();
       }
@@ -80,7 +80,7 @@ export default function QcPlanView() {
 
   return (
     <div className="w-full h-full bg-transparent overflow-y-auto" style={{ padding: '20px' }}>
-      <div id="pageContent" ref={containerRef} className="w-full" data-page="qc-realcyber-plan"></div>
+      <div id="pageContent" ref={containerRef} className="w-full" data-page="realcyber-plan"></div>
     </div>
   );
 }

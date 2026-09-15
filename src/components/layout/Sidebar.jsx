@@ -25,7 +25,7 @@ export default function Sidebar() {
     if (!pathname) return;
     if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
       setExpandedGroup("employee");
-    } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/qc-realcyber-plan") || pathname.includes("/qc-realcyber-import") || pathname.includes("/project-scope") || pathname.includes("/public-holiday") || pathname.includes("/my-plan") || pathname.includes("/permission-settings")) {
+    } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/realcyber-plan") || pathname.includes("/realcyber-import") || pathname.includes("/project-scope") || pathname.includes("/public-holiday") || pathname.includes("/my-plan") || pathname.includes("/permission-settings")) {
       setExpandedGroup("workship");
     } else {
       setExpandedGroup("");
@@ -177,15 +177,15 @@ export default function Sidebar() {
                     <span className="nav-text">Workship by Scope</span>
                   </Link>
                 )}
-                {hasPermission("/qc-realcyber-plan") && (
-                  <Link href="/qc-realcyber-plan" className={`nav-item sub ${pathname === "/qc-realcyber-plan" ? "active" : ""}`}>
+                {hasPermission("/realcyber-plan") && (
+                  <Link href="/realcyber-plan" className={`nav-item sub ${pathname === "/realcyber-plan" ? "active" : ""}`}>
                     <span className="nav-subdot"></span>
                     <span className="nav-text">RealCyber Plan</span>
                   </Link>
                 )}
-                {hasPermission("/qc-realcyber-import") && (
-                  <Link href="/qc-realcyber-import" className={`nav-item sub ${pathname === "/qc-realcyber-import" ? "active" : ""}`} style={{ paddingLeft: '58px', fontSize: '0.82rem' }}>
-                    <span className="nav-subdot" style={{ width: '5px', height: '5px', background: pathname === "/qc-realcyber-import" ? "#ffffff" : "rgba(255, 255, 255, 0.35)" }}></span>
+                {hasPermission("/realcyber-import") && (
+                  <Link href="/realcyber-import" className={`nav-item sub ${pathname === "/realcyber-import" ? "active" : ""}`} style={{ paddingLeft: '58px', fontSize: '0.82rem' }}>
+                    <span className="nav-subdot" style={{ width: '5px', height: '5px', background: pathname === "/realcyber-import" ? "#ffffff" : "rgba(255, 255, 255, 0.35)" }}></span>
                     <span className="nav-text">Import File</span>
                   </Link>
                 )}
@@ -216,14 +216,14 @@ export default function Sidebar() {
                     <span className="nav-text">Workship by Scope</span>
                   </Link>
                 )}
-                {hasPermission("/qc-realcyber-plan") && (
-                  <Link href="/qc-realcyber-plan" className={`nav-item ${pathname === "/qc-realcyber-plan" ? "active" : ""}`}>
+                {hasPermission("/realcyber-plan") && (
+                  <Link href="/realcyber-plan" className={`nav-item ${pathname === "/realcyber-plan" ? "active" : ""}`}>
                     <ClipboardList className="nav-icon" />
                     <span className="nav-text">RealCyber Plan</span>
                   </Link>
                 )}
-                {hasPermission("/qc-realcyber-import") && (
-                  <Link href="/qc-realcyber-import" className={`nav-item ${pathname === "/qc-realcyber-import" ? "active" : ""}`}>
+                {hasPermission("/realcyber-import") && (
+                  <Link href="/realcyber-import" className={`nav-item ${pathname === "/realcyber-import" ? "active" : ""}`}>
                     <ClipboardList className="nav-icon" />
                     <span className="nav-text">Import File</span>
                   </Link>
