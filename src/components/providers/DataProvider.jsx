@@ -26,10 +26,16 @@ export default function DataProvider({ children }) {
           const [resEmp, resPerms] = await Promise.all([
             fetch(`${supabaseUrl}/rest/v1/employees?select=*&limit=1000`, {
               headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            }).catch((err) => {
+              console.warn("Failed to fetch employees from Supabase:", err);
+              return null;
             }),
             fetch(`${supabaseUrl}/rest/v1/page_permissions?select=*`, {
               headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-            }).catch(() => null)
+            }).catch((err) => {
+              console.warn("Failed to fetch page permissions from Supabase:", err);
+              return null;
+            })
           ]);
 
           if (resEmp && resEmp.ok) {
@@ -51,10 +57,48 @@ export default function DataProvider({ children }) {
               empType: row.emp_type || '-',
               status: row.status || 'active'
             }));
+            if (typeof window !== 'undefined' && employees.length > 0) {
+              try {
+                localStorage.setItem('cached_employees', JSON.stringify(employees));
+              } catch (e) {}
+            }
           }
 
           if (resPerms && resPerms.ok) {
-            pagePermissions = await resPerms.json();
+            const remotePerms = await resPerms.json();
+            let savedLocalPerms = null;
+            if (typeof window !== 'undefined') {
+              try {
+                const cached = localStorage.getItem('cached_page_permissions');
+                if (cached) savedLocalPerms = JSON.parse(cached);
+              } catch (e) {}
+            }
+
+            if (savedLocalPerms && savedLocalPerms.length > 0) {
+              pagePermissions = savedLocalPerms;
+            } else if (remotePerms && remotePerms.length > 0) {
+              pagePermissions = remotePerms;
+              if (typeof window !== 'undefined') {
+                try {
+                  localStorage.setItem('cached_page_permissions', JSON.stringify(remotePerms));
+                } catch (e) {}
+              }
+            }
+          }
+        }
+
+        if (typeof window !== 'undefined') {
+          if (employees.length === 0) {
+            try {
+              const cached = localStorage.getItem('cached_employees');
+              if (cached) employees = JSON.parse(cached);
+            } catch (e) {}
+          }
+          if (pagePermissions.length === 0) {
+            try {
+              const cachedPerms = localStorage.getItem('cached_page_permissions');
+              if (cachedPerms) pagePermissions = JSON.parse(cachedPerms);
+            } catch (e) {}
           }
         }
 

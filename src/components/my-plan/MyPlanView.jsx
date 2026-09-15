@@ -809,7 +809,7 @@ export default function MyPlanView() {
 
           {/* Tasks list */}
           {selectedDayTasks.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 0", color: "#94a3b8" }}>
               <Clock size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
               <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>ไม่มีงานในวันนี้</div>
             </div>
@@ -891,7 +891,7 @@ export default function MyPlanView() {
           </div>
 
           {weekStats.totalTasks === 0 ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#94a3b8" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 0", color: "#94a3b8" }}>
               <Briefcase size={40} style={{ opacity: 0.2, marginBottom: 10 }} />
               <div style={{ fontSize: "0.88rem", fontWeight: 600 }}>ยังไม่มีงานในสัปดาห์นี้</div>
               <div style={{ fontSize: "0.78rem", marginTop: 4 }}>งานจะปรากฏที่นี่เมื่อมีการกำหนดตารางงาน</div>

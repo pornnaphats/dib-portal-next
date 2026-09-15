@@ -64,33 +64,47 @@ export default function PermissionSettingsView() {
     "/schedule": "Schedule",
     "/project-scope-portal": "Workship by Scope",
     "/qc-realcyber-plan": "RealCyber Plan",
+    "/qc-realcyber-import": "Import File",
     "/public-holiday": "Public Holiday",
     "/my-plan": "My Plan",
     "/permission-settings": "Permission Settings",
   };
 
-  // Sync initial permissions from Provider state
+  // Sync initial permissions from Provider state or localStorage fallback
   useEffect(() => {
-    if (initialPermissions && initialPermissions.length > 0) {
-      const map = new Map(initialPermissions.map((p) => [p.page_path, p]));
+    let sourcePermissions = initialPermissions;
+
+    if ((!sourcePermissions || sourcePermissions.length === 0) && typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('cached_page_permissions');
+        if (cached) sourcePermissions = JSON.parse(cached);
+      } catch (e) {}
+    }
+
+    const defaultPositions = allPositions.length > 0 
+      ? allPositions.join(",") 
+      : "Director,Manager,Assistant Manager,Senior,Junior";
+
+    if (sourcePermissions && sourcePermissions.length > 0) {
+      const map = new Map(sourcePermissions.map((p) => [p.page_path, p]));
       const merged = Object.keys(pageDetails).map((path) => {
         const existing = map.get(path);
         return {
           page_path: path,
-          allowed_positions: existing 
+          allowed_positions: existing && existing.allowed_positions !== undefined
             ? existing.allowed_positions 
-            : (path === "/permission-settings" ? "Manager" : "Manager,Team Lead")
+            : defaultPositions
         };
       });
       setPermissions(merged);
     } else {
       const defaults = Object.keys(pageDetails).map((path) => ({
         page_path: path,
-        allowed_positions: path === "/permission-settings" ? "Manager" : "Manager,Team Lead"
+        allowed_positions: defaultPositions
       }));
       setPermissions(defaults);
     }
-  }, [initialPermissions]);
+  }, [initialPermissions, allPositions]);
 
   // Toggle position selection for a specific page path in local state
   const handleTogglePosition = (pagePath, position) => {
@@ -117,36 +131,46 @@ export default function PermissionSettingsView() {
     });
   };
 
-  // Save all permissions at once using Supabase bulk upsert
+  // Save all permissions at once using Supabase bulk upsert with local fallback
   const handleSaveAll = async () => {
     setIsSaving(true);
     setSaveStatus(null);
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Missing Supabase configuration");
-      }
-
       const payload = permissions.map(p => ({
         page_path: p.page_path,
         allowed_positions: p.allowed_positions
       }));
 
-      const res = await fetch(`${supabaseUrl}/rest/v1/page_permissions?on_conflict=page_path`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": supabaseKey,
-          "Authorization": `Bearer ${supabaseKey}`,
-          "Prefer": "resolution=merge-duplicates"
-        },
-        body: JSON.stringify(payload),
-      });
+      // Always save to localStorage so changes take effect locally immediately
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('cached_page_permissions', JSON.stringify(payload));
+        } catch (e) {}
+      }
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || "Failed to upsert permissions");
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (supabaseUrl && supabaseKey) {
+        try {
+          const res = await fetch(`${supabaseUrl}/rest/v1/page_permissions?on_conflict=page_path`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": supabaseKey,
+              "Authorization": `Bearer ${supabaseKey}`,
+              "Prefer": "resolution=merge-duplicates"
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const errText = await res.text();
+            console.warn("Failed to sync permissions to Supabase:", errText);
+          }
+        } catch (netErr) {
+          console.warn("Supabase endpoint unreachable. Saved permissions locally:", netErr);
+        }
       }
 
       setSaveStatus("success");

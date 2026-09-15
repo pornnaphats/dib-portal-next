@@ -25,7 +25,7 @@ export default function Sidebar() {
     if (!pathname) return;
     if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
       setExpandedGroup("employee");
-    } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/qc-realcyber-plan") || pathname.includes("/project-scope") || pathname.includes("/public-holiday") || pathname.includes("/my-plan") || pathname.includes("/permission-settings")) {
+    } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/qc-realcyber-plan") || pathname.includes("/qc-realcyber-import") || pathname.includes("/project-scope") || pathname.includes("/public-holiday") || pathname.includes("/my-plan") || pathname.includes("/permission-settings")) {
       setExpandedGroup("workship");
     } else {
       setExpandedGroup("");
@@ -69,23 +69,23 @@ export default function Sidebar() {
   // Check permission for a path
   const hasPermission = (path) => {
     if (path === "/my-plan") return true; // Always allow users to see their own plan
-    if (!pagePermissions || pagePermissions.length === 0) return true; // fallback to true while loading
     
-    const rule = pagePermissions.find(p => p.page_path === path);
-    if (!rule) {
-      if (path === "/permission-settings") {
-        const pos = userPosition.toLowerCase();
-        return pos === "manager" || pos === "team lead" || pos === "assistant manager";
-      }
-      return true; // if no rule, allowed by default
+    const rule = (pagePermissions || []).find(p => p.page_path === path);
+    if (rule) {
+      const allowed = rule.allowed_positions
+        .split(",")
+        .map(p => p.trim().toLowerCase())
+        .filter(Boolean);
+
+      return allowed.includes((userPosition || "").toLowerCase());
     }
 
-    const allowed = rule.allowed_positions
-      .split(",")
-      .map(p => p.trim().toLowerCase())
-      .filter(Boolean);
+    if (path === "/permission-settings") {
+      const pos = (userPosition || "").toLowerCase();
+      return pos === "manager" || pos === "team lead" || pos === "assistant manager";
+    }
 
-    return allowed.includes(userPosition.toLowerCase());
+    return true; // if no rule configured, allowed by default
   };
 
   return (
@@ -183,6 +183,12 @@ export default function Sidebar() {
                     <span className="nav-text">RealCyber Plan</span>
                   </Link>
                 )}
+                {hasPermission("/qc-realcyber-import") && (
+                  <Link href="/qc-realcyber-import" className={`nav-item sub ${pathname === "/qc-realcyber-import" ? "active" : ""}`} style={{ paddingLeft: '58px', fontSize: '0.82rem' }}>
+                    <span className="nav-subdot" style={{ width: '5px', height: '5px', background: pathname === "/qc-realcyber-import" ? "#ffffff" : "rgba(255, 255, 255, 0.35)" }}></span>
+                    <span className="nav-text">Import File</span>
+                  </Link>
+                )}
                 {hasPermission("/public-holiday") && (
                   <Link href="/public-holiday" className={`nav-item sub ${pathname === "/public-holiday" ? "active" : ""}`}>
                     <span className="nav-subdot"></span>
@@ -214,6 +220,12 @@ export default function Sidebar() {
                   <Link href="/qc-realcyber-plan" className={`nav-item ${pathname === "/qc-realcyber-plan" ? "active" : ""}`}>
                     <ClipboardList className="nav-icon" />
                     <span className="nav-text">RealCyber Plan</span>
+                  </Link>
+                )}
+                {hasPermission("/qc-realcyber-import") && (
+                  <Link href="/qc-realcyber-import" className={`nav-item ${pathname === "/qc-realcyber-import" ? "active" : ""}`}>
+                    <ClipboardList className="nav-icon" />
+                    <span className="nav-text">Import File</span>
                   </Link>
                 )}
                 {hasPermission("/public-holiday") && (

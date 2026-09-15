@@ -871,18 +871,19 @@ window.renderQCWorkPlanDashboard = function() {
           ` : ''}
           <div style="width:1px; height:20px; background:#e2e8f0; margin:0 2px"></div>
 
-          <button class="btn" onclick="qcShowManageEmployeesModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
+          <button class="btn" onclick="qcShowManageEmployeesModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
              <i data-lucide="users" style="width:14px; height:14px"></i> Manage Employees
           </button>
           
-          <button class="btn" onclick="qcShowSettingsModal()" style="padding:6px 12px; font-size:.7rem; border-radius:10px; background:#fff; color:#475569; border:1px solid #cbd5e1; display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit';">
+          <button class="btn" onclick="qcShowSettingsModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
              <i data-lucide="settings" style="width:14px; height:14px"></i> Workload Settings
           </button>
 
-
-          <button class="btn-auto-plan" onclick="qcShowAutoPlanModal()" style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; padding:6px 12px; font-size:.7rem; font-weight:600; cursor:pointer; font-family:'Kanit'; box-shadow:0 2px 8px rgba(139,92,246,0.2); margin-top:0; transition: all 0.2s;">
+          <button class="btn btn-primary" onclick="qcShowAutoPlanModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 4px 12px rgba(99,102,241,0.25); margin-top:0; transition: all 0.2s;">
             <i data-lucide="zap" style="width:14px; height:14px;"></i> Auto Assign Plan
           </button>
+
+
 
         </div>
       </div>

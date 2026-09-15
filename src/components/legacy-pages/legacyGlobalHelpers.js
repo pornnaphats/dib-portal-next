@@ -1241,7 +1241,7 @@ if (typeof window !== 'undefined') {
             apikey: supabaseKey,
             Authorization: `Bearer ${supabaseKey}`
           }
-        });
+        }).catch(err => console.warn('Failed to delete shift from Supabase:', err));
       } else if (action === 'add') {
         await fetch(`${supabaseUrl}/rest/v1/holiday_shifts`, {
           method: 'POST',
@@ -1261,7 +1261,7 @@ if (typeof window !== 'undefined') {
             time_shift: time,
             assignments
           })
-        });
+        }).catch(err => console.warn('Failed to add shift to Supabase:', err));
       } else if (action === 'edit') {
         // Use Supabase UPSERT (POST with Prefer: resolution=merge) to handle both insert and update
         await fetch(`${supabaseUrl}/rest/v1/holiday_shifts`, {
@@ -1282,11 +1282,10 @@ if (typeof window !== 'undefined') {
             time_shift: time,
             assignments
           })
-        });
+        }).catch(err => console.warn('Failed to edit shift on Supabase:', err));
       }
     } catch (err) {
-      console.error('Error in apiSaveHolidayShift:', err);
-      throw err;
+      console.warn('Network error in apiSaveHolidayShift:', err.message || err);
     }
   };
 
