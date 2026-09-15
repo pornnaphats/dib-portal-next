@@ -3465,6 +3465,55 @@ window.pageEmployee = function() {
      };
   };
 
+  window.orgBuildStructureFromEmployees = function(employees) {
+     const root = {
+        "id": "ceo",
+        "title": "Director",
+        "jobTitle": "Director",
+        "empId": "RS004",
+        "children": []
+     };
+
+     if (!employees || employees.length === 0) return root;
+
+     const teamMap = {};
+     employees.forEach(e => {
+        if (!e) return;
+        if (e.id === 'RS004') return;
+        const team = (e.dept || e.team || 'Unassigned').trim();
+        if (!teamMap[team]) teamMap[team] = [];
+        teamMap[team].push(e);
+     });
+
+     Object.keys(teamMap).sort().forEach((teamName, idx) => {
+        const teamEmps = teamMap[teamName];
+        const lead = teamEmps.find(e => {
+           const p = (e.pos || '').toLowerCase();
+           return p.includes('manager') || p.includes('lead') || p.includes('head');
+        }) || teamEmps[0];
+
+        const members = teamEmps.filter(e => e.id !== lead.id);
+
+        const teamNode = {
+           id: `team_${idx}_${Date.now()}`,
+           title: teamName,
+           dept: teamName,
+           empId: lead ? lead.id : null,
+           children: members.map((m, mIdx) => ({
+              id: `emp_${m.id}_${mIdx}`,
+              title: m.pos || 'Member',
+              dept: teamName,
+              empId: m.id,
+              children: []
+           }))
+        };
+
+        root.children.push(teamNode);
+     });
+
+     return root;
+  };
+
   window.orgLoadStructure = function() {
      let struct = window.orgStructureData;
      if (!struct) {
@@ -3472,9 +3521,16 @@ window.pageEmployee = function() {
            struct = JSON.parse(localStorage.getItem('org_structure'));
         } catch(e) {}
      }
-     if (!struct) {
-        struct = window.orgGetDefaultStructure();
-        window.orgSaveStructure(struct);
+
+     const employees = (typeof window.DATA !== 'undefined' && window.DATA && window.DATA.employees) ? window.DATA.employees : [];
+
+     if (!struct || !struct.children || struct.children.length === 0) {
+        if (employees && employees.length > 0) {
+           struct = window.orgBuildStructureFromEmployees(employees);
+           window.orgSaveStructure(struct);
+        } else {
+           struct = window.orgGetDefaultStructure();
+        }
      }
      
      // Remove hardcoded Pattaphong Thonglamai from root node if it exists in LocalStorage
