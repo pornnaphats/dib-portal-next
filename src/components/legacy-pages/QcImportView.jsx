@@ -56,22 +56,37 @@ export default function QcImportView() {
 
     if (!supabaseUrl || !supabaseKey) return;
 
-    // 1. Try syncing to dedicated table `qc_imported_summaries`
-    try {
-      const payload = summaries.map(item => ({
-        id: item.id,
-        file_name: item.fileName || item.file_name,
-        imported_at: item.importedAt || item.imported_at,
-        website_sheet: item.websiteSheet || item.website_sheet,
-        social_sheet: item.socialSheet || item.social_sheet,
-        total_cases: item.totalCases !== undefined ? item.totalCases : item.total_cases,
-        website_cases: item.websiteCases !== undefined ? item.websiteCases : item.website_cases,
-        social_cases: item.socialCases !== undefined ? item.socialCases : item.social_cases,
-        date_range: item.dateRange || item.date_range,
-        category_breakdown: item.categoryBreakdown || item.category_breakdown,
-        daily_breakdown: item.dailyBreakdown || item.daily_breakdown
-      }));
+    const payload = summaries.map(item => ({
+      id: item.id,
+      file_name: item.fileName || item.file_name,
+      imported_at: item.importedAt || item.imported_at,
+      website_sheet: item.websiteSheet || item.website_sheet,
+      social_sheet: item.socialSheet || item.social_sheet,
+      total_cases: item.totalCases !== undefined ? item.totalCases : item.total_cases,
+      website_cases: item.websiteCases !== undefined ? item.websiteCases : item.website_cases,
+      social_cases: item.socialCases !== undefined ? item.socialCases : item.social_cases,
+      date_range: item.dateRange || item.date_range,
+      category_breakdown: item.categoryBreakdown || item.category_breakdown,
+      daily_breakdown: item.dailyBreakdown || item.daily_breakdown
+    }));
 
+    // 1. Try syncing to `imported_summaries`
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/imported_summaries?on_conflict=id`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) return;
+    } catch (e) {}
+
+    // 2. Try syncing to `qc_imported_summaries`
+    try {
       const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?on_conflict=id`, {
         method: "POST",
         headers: {
@@ -82,15 +97,10 @@ export default function QcImportView() {
         },
         body: JSON.stringify(payload)
       });
+      if (res.ok) return;
+    } catch (e) {}
 
-      if (res.ok) {
-        return; // Dedicated table sync succeeded!
-      }
-    } catch (e) {
-      console.warn("Dedicated table sync error, trying org_structure fallback...", e);
-    }
-
-    // 2. Fallback: Save to `org_structure` table row `qc_imported_summaries`
+    // 3. Fallback: Save to `org_structure` table row `qc_imported_summaries`
     try {
       fetch(`${supabaseUrl}/rest/v1/org_structure?on_conflict=id`, {
         method: "POST",
@@ -125,61 +135,70 @@ export default function QcImportView() {
 
     if (!supabaseUrl || !supabaseKey) return;
 
-    // 1. Try reading from dedicated table `qc_imported_summaries`
+    // Helper to map DB row to summary object
+    const mapRowToObj = (r) => ({
+      id: r.id,
+      fileName: r.file_name || r.fileName,
+      importedAt: r.imported_at || r.importedAt,
+      websiteSheet: r.website_sheet || r.websiteSheet,
+      socialSheet: r.social_sheet || r.socialSheet,
+      totalCases: r.total_cases !== undefined ? r.total_cases : r.totalCases,
+      websiteCases: r.website_cases !== undefined ? r.website_cases : r.websiteCases,
+      socialCases: r.social_cases !== undefined ? r.social_cases : r.socialCases,
+      dateRange: r.date_range || r.dateRange,
+      categoryBreakdown: r.category_breakdown || r.categoryBreakdown,
+      dailyBreakdown: r.daily_breakdown || r.dailyBreakdown
+    });
+
+    // 1. Try reading from `imported_summaries`
     try {
-      const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?select=*&order=imported_at.desc`, {
-        headers: {
-          "apikey": supabaseKey,
-          "Authorization": `Bearer ${supabaseKey}`
-        }
+      const res = await fetch(`${supabaseUrl}/rest/v1/imported_summaries?select=*&order=imported_at.desc`, {
+        headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
       });
       if (res.ok) {
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0) {
-          const remoteData = rows.map(r => ({
-            id: r.id,
-            fileName: r.file_name || r.fileName,
-            importedAt: r.imported_at || r.importedAt,
-            websiteSheet: r.website_sheet || r.websiteSheet,
-            socialSheet: r.social_sheet || r.socialSheet,
-            totalCases: r.total_cases !== undefined ? r.total_cases : r.totalCases,
-            websiteCases: r.website_cases !== undefined ? r.website_cases : r.websiteCases,
-            socialCases: r.social_cases !== undefined ? r.social_cases : r.socialCases,
-            dateRange: r.date_range || r.dateRange,
-            categoryBreakdown: r.category_breakdown || r.categoryBreakdown,
-            dailyBreakdown: r.daily_breakdown || r.dailyBreakdown
-          }));
-
+          const remoteData = rows.map(mapRowToObj);
           const map = new Map();
-          [...remoteData, ...localData].forEach(item => {
-            if (item && item.id) map.set(item.id, item);
-          });
+          [...remoteData, ...localData].forEach(item => { if (item && item.id) map.set(item.id, item); });
           const merged = Array.from(map.values());
           setSavedSummaries(merged);
           localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
           return;
         }
       }
-    } catch (e) {
-      console.warn("Dedicated table read error, trying org_structure fallback...", e);
-    }
+    } catch (e) {}
 
-    // 2. Fallback: Read from `org_structure` table row `qc_imported_summaries`
+    // 2. Try reading from `qc_imported_summaries`
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?select=*&order=imported_at.desc`, {
+        headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          const remoteData = rows.map(mapRowToObj);
+          const map = new Map();
+          [...remoteData, ...localData].forEach(item => { if (item && item.id) map.set(item.id, item); });
+          const merged = Array.from(map.values());
+          setSavedSummaries(merged);
+          localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+          return;
+        }
+      }
+    } catch (e) {}
+
+    // 3. Fallback: Read from `org_structure` table row `qc_imported_summaries`
     try {
       const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_imported_summaries`, {
-        headers: {
-          "apikey": supabaseKey,
-          "Authorization": `Bearer ${supabaseKey}`
-        }
+        headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
       });
       if (res.ok) {
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].structure)) {
           const remoteData = rows[0].structure;
           const map = new Map();
-          [...remoteData, ...localData].forEach(item => {
-            if (item && item.id) map.set(item.id, item);
-          });
+          [...remoteData, ...localData].forEach(item => { if (item && item.id) map.set(item.id, item); });
           const merged = Array.from(map.values());
           setSavedSummaries(merged);
           localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
