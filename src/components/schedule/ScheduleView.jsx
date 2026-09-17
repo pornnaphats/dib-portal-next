@@ -13,7 +13,9 @@ export default function ScheduleView() {
   const [teamFilter, setTeamFilter] = useState("all");
   const [leaveLoaded, setLeaveLoaded] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [settingsVersion, setSettingsVersion] = useState(0);
   const dateInputRef = useRef(null);
+  const dateContainerRef = useRef(null);
   const fpInstance = useRef(null);
 
   // Default: current week Sat–Fri (starts on Saturday)
@@ -35,19 +37,19 @@ export default function ScheduleView() {
     return d;
   });
 
-  // Format date to Thai format: "27 มิถุนายน 2569"
-  const formatThaiDateRange = (start, end) => {
-    const monthsTH = [
-      "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-      "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  // Format date to English format: "12 – 18 September 2026"
+  const formatEnglishDateRange = (start, end) => {
+    const monthsEN = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
     const startDay = start.getDate();
-    const startMonth = monthsTH[start.getMonth()];
-    const startYear = start.getFullYear() + 543;
+    const startMonth = monthsEN[start.getMonth()];
+    const startYear = start.getFullYear();
 
     const endDay = end.getDate();
-    const endMonth = monthsTH[end.getMonth()];
-    const endYear = end.getFullYear() + 543;
+    const endMonth = monthsEN[end.getMonth()];
+    const endYear = end.getFullYear();
 
     if (startYear === endYear) {
       if (start.getMonth() === end.getMonth()) {
@@ -81,13 +83,185 @@ export default function ScheduleView() {
     setWeekEnd(e);
   };
 
+  // Attach custom grid overlay (month/year picker) exactly like Workship by Scope
+  const attachScopeStyleGridOverlay = (instance) => {
+    if (!instance || !instance.calendarContainer) return;
+    const container = instance.calendarContainer;
+
+    // Bind prev/next arrows explicitly
+    const prevBtn = container.querySelector(".flatpickr-prev-month");
+    const nextBtn = container.querySelector(".flatpickr-next-month");
+
+    if (prevBtn && !prevBtn.dataset.scopeBound) {
+      prevBtn.dataset.scopeBound = "true";
+      prevBtn.style.cursor = "pointer";
+      prevBtn.style.pointerEvents = "auto";
+      prevBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector(".custom-grid-overlay");
+        if (grid) {
+          grid.classList.add("hidden");
+          grid.style.display = "none";
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === "function") {
+          instance.changeMonth(-1, true);
+        }
+      };
+    }
+
+    if (nextBtn && !nextBtn.dataset.scopeBound) {
+      nextBtn.dataset.scopeBound = "true";
+      nextBtn.style.cursor = "pointer";
+      nextBtn.style.pointerEvents = "auto";
+      nextBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector(".custom-grid-overlay");
+        if (grid) {
+          grid.classList.add("hidden");
+          grid.style.display = "none";
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === "function") {
+          instance.changeMonth(1, true);
+        }
+      };
+    }
+
+    const createGrid = (type) => {
+      let grid = container.querySelector(".custom-grid-overlay");
+      if (!grid) {
+        grid = document.createElement("div");
+        grid.className = "custom-grid-overlay";
+        container.appendChild(grid);
+      }
+      grid.innerHTML = "";
+      grid.classList.remove("hidden");
+      grid.style.display = "grid";
+
+      if (type === "month") {
+        const months = [
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+        months.forEach((m, i) => {
+          const btn = document.createElement("div");
+          btn.className = "grid-item" + (instance.currentMonth === i ? " active" : "");
+          btn.textContent = m;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const delta = i - instance.currentMonth;
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+            if (delta !== 0 && typeof instance.changeMonth === "function") {
+              instance.changeMonth(delta, true);
+            } else {
+              instance.currentMonth = i;
+              if (typeof instance.redraw === "function") instance.redraw();
+            }
+            setTimeout(() => attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        });
+      } else {
+        const curYear = instance.currentYear;
+        const startYear = Math.min(2022, curYear - 5);
+        const endYear = Math.max(2028, curYear + 5);
+        for (let y = startYear; y <= endYear; y++) {
+          const btn = document.createElement("div");
+          btn.className = "grid-item" + (curYear === y ? " active" : "");
+          btn.textContent = y;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+            if (typeof instance.changeYear === "function") {
+              instance.changeYear(y);
+            } else {
+              instance.currentYear = y;
+              if (typeof instance.redraw === "function") instance.redraw();
+            }
+            setTimeout(() => attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        }
+      }
+    };
+
+    const currentMonthEl = container.querySelector(".flatpickr-current-month");
+    if (currentMonthEl && !currentMonthEl.dataset.scopeGridBound) {
+      currentMonthEl.dataset.scopeGridBound = "true";
+      currentMonthEl.style.cursor = "pointer";
+      currentMonthEl.style.pointerEvents = "auto";
+      currentMonthEl.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.target.classList.contains("cur-year") || e.target.closest(".numInputWrapper")) {
+          createGrid("year");
+        } else {
+          createGrid("month");
+        }
+      };
+    }
+
+    if (!container.dataset.scopeGridDismissBound) {
+      container.dataset.scopeGridDismissBound = "true";
+      container.addEventListener("mousedown", (e) => {
+        if (!e.target.closest(".custom-grid-overlay") && !e.target.closest(".flatpickr-month")) {
+          const grid = container.querySelector(".custom-grid-overlay");
+          if (grid) {
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+          }
+        }
+      });
+    }
+  };
+
   // Initialize Flatpickr for range selection on the date capsule click
   useEffect(() => {
     if (dateInputRef.current) {
       fpInstance.current = flatpickr(dateInputRef.current, {
         mode: "range",
+        appendTo: dateContainerRef.current ? (dateContainerRef.current.closest('.date-picker-container') || dateContainerRef.current.parentNode) : undefined,
         dateFormat: "Y-m-d",
+        defaultDate: [weekStart, weekEnd],
+        locale: {
+          firstDayOfWeek: 0,
+          rangeSeparator: ' to ',
+          weekdays: {
+            shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+          },
+          months: {
+            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          }
+        },
         showMonths: 1,
+        disableMobile: true,
+        static: false,
+        monthSelectorType: "static",
+        yearSelectorType: "static",
+        onReady: (selectedDates, dateStr, instance) => {
+          attachScopeStyleGridOverlay(instance);
+          if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+            window.alignFlatpickrToButton(instance);
+          }
+        },
+        onOpen: (selectedDates, dateStr, instance) => {
+          attachScopeStyleGridOverlay(instance);
+          if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+            window.alignFlatpickrToButton(instance);
+          }
+        },
         onClose: (selectedDates) => {
           if (selectedDates.length === 2) {
             setWeekStart(selectedDates[0]);
@@ -105,7 +279,20 @@ export default function ScheduleView() {
     // Initialize window.DATA if not exists to avoid undefined error
     if (typeof window !== "undefined") {
       window.DATA = window.DATA || {};
-      window.flatpickr = flatpickr;
+      const originalFlatpickr = flatpickr;
+      const wrappedFlatpickr = function(elem, config = {}) {
+        const instance = originalFlatpickr(elem, config);
+        setTimeout(() => {
+          attachScopeStyleGridOverlay(instance);
+          if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+            window.alignFlatpickrToButton(instance);
+          }
+        }, 0);
+        return instance;
+      };
+      Object.assign(wrappedFlatpickr, originalFlatpickr);
+      window.flatpickr = wrappedFlatpickr;
+
       // Ensure window.lucide is bound so legacy HTML templates/modals can render icons
       import("lucide").then(lucide => {
         window.lucide = {
@@ -125,6 +312,13 @@ export default function ScheduleView() {
 
     // Import legacy modal logic so qcShowManageEmployeesModal is available
     import("../legacy-pages/legacyQcPlanLogic.js").catch(() => {});
+
+    const handleSettingsChange = () => {
+      setSettingsVersion(v => v + 1);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("schedule_settings_changed", handleSettingsChange);
+    }
 
     // Import legacy employee & sidebar logic
     import("../employee/legacyEmployeeLogic.js").then(() => {
@@ -150,10 +344,14 @@ export default function ScheduleView() {
       
       window.refreshReactSchedule = () => {
         setTasks([...(window.SCHEDULE_TASKS || [])]);
+        setSettingsVersion(v => v + 1);
       };
     }).catch(() => {});
 
     return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("schedule_settings_changed", handleSettingsChange);
+      }
       if (fpInstance.current) {
         fpInstance.current.destroy();
       }
@@ -178,43 +376,55 @@ export default function ScheduleView() {
   const teams = [...new Set((employees || []).map(e => e.dept || e.team || "").filter(t => t && t !== "-"))].sort();
 
   return (
-    <div id="scheduleMainContent" style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "#f4f5fb", transition: "padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+    <div 
+      id="scheduleMainContent" 
+      className={typeof window !== "undefined" && window.IS_TASK_SIDEBAR_OPEN ? "sidebar-open" : ""}
+      style={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        width: "100%", 
+        height: "100%", 
+        background: "#f4f5fb", 
+        transition: "padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        paddingRight: typeof window !== "undefined" && window.IS_TASK_SIDEBAR_OPEN ? "380px" : "0px",
+        boxSizing: "border-box"
+      }}
+    >
       {/* Top Controls */}
       <div style={{
         padding: "12px 20px 8px 20px",
         background: "transparent",
         display: "flex",
-        flexWrap: "nowrap",
-        gap: "8px",
         alignItems: "center",
         justifyContent: "flex-end",
+        gap: "8px",
+        flexWrap: "wrap",
         position: "sticky",
         top: 0,
         zIndex: 20,
         minWidth: 0
       }}>
-        {/* Left: Date Picker with Arrows */}
+        {/* Week navigator capsule */}
         <div 
           className="date-picker-container"
           style={{ 
+            position: "relative",
             display: "flex", 
             alignItems: "center", 
             background: "#fff", 
             border: "1px solid #e2e8f0", 
-            borderRadius: "9999px", 
-            overflow: "hidden", 
+            borderRadius: "9999px",
+            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
             height: "34px",
             maxHeight: "34px",
-            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
-            transition: "all 0.2s",
-            flexShrink: 0,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            flexShrink: 0
           }}
         >
           <button 
             onClick={handlePrev} 
             style={{ 
-              padding: "0 8px", 
+              padding: "0 10px", 
               border: "none", 
               background: "transparent", 
               cursor: "pointer", 
@@ -226,7 +436,8 @@ export default function ScheduleView() {
               maxHeight: "34px",
               borderRight: "1px solid #e2e8f0",
               transition: "background 0.15s",
-              flexShrink: 0
+              flexShrink: 0,
+              boxSizing: "border-box"
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -236,33 +447,36 @@ export default function ScheduleView() {
           
           {/* Flatpickr trigger wrapper */}
           <div 
+            ref={dateContainerRef}
             onClick={() => fpInstance.current && fpInstance.current.open()}
             style={{ 
               display: "flex", 
               alignItems: "center", 
               gap: "6px", 
-              padding: "0 10px", 
+              padding: "0 14px", 
               fontSize: "12px", 
-              fontWeight: 500, 
+              fontWeight: 600, 
               lineHeight: 1,
               color: "#24204D", 
               cursor: "pointer",
               userSelect: "none",
               height: "34px",
               maxHeight: "34px",
-              overflow: "hidden",
+              overflow: "visible",
               transition: "background 0.15s",
-              fontFamily: "'Kanit', sans-serif"
+              fontFamily: "'Kanit', sans-serif",
+              flexShrink: 0,
+              boxSizing: "border-box"
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
           >
-            <CalendarIcon size={14} color="#635bff" />
-            <span style={{ maxWidth: "120px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1 }}>{formatThaiDateRange(weekStart, weekEnd)}</span>
+            <CalendarIcon size={14} color="#635bff" style={{ flexShrink: 0, minWidth: 14, minHeight: 14 }} />
+            <span style={{ maxWidth: "none", whiteSpace: "nowrap", overflow: "visible", textOverflow: "clip", lineHeight: 1, flexShrink: 0, fontWeight: 600 }}>{formatEnglishDateRange(weekStart, weekEnd)}</span>
             <input 
               ref={dateInputRef} 
               type="text" 
-              style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }} 
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, pointerEvents: "none" }} 
               readOnly 
             />
           </div>
@@ -270,7 +484,7 @@ export default function ScheduleView() {
           <button 
             onClick={handleNext} 
             style={{ 
-              padding: "0 8px", 
+              padding: "0 10px", 
               border: "none", 
               background: "transparent", 
               cursor: "pointer", 
@@ -282,7 +496,8 @@ export default function ScheduleView() {
               maxHeight: "34px",
               borderLeft: "1px solid #e2e8f0",
               transition: "background 0.15s",
-              flexShrink: 0
+              flexShrink: 0,
+              boxSizing: "border-box"
             }}
             onMouseEnter={e => e.currentTarget.style.background = "#f8f9fb"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -291,90 +506,28 @@ export default function ScheduleView() {
           </button>
         </div>
 
-        {/* Right Controls: Search & Team Filters */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", minWidth: 0, overflow: "hidden" }}>
-          <div style={{ position: "relative", flex: 1, minWidth: "100px", maxWidth: "280px" }}>
-            <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#b0b8cc" }} size={14} />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{
-                height: "34px",
-                boxSizing: "border-box",
-                paddingLeft: "30px", paddingRight: "10px",
-                border: "1px solid #e4e8ef", borderRadius: "9999px",
-                fontSize: "0.78rem", outline: "none", width: "100%",
-                background: "#fff", color: "#24204D",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                transition: "all 0.2s"
-              }}
+        {/* Search Input */}
+        <div style={{ position: "relative", width: "200px" }}>
+          <Search style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#b0b8cc" }} size={14} />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              height: "34px",
+              boxSizing: "border-box",
+              paddingLeft: "30px", paddingRight: "10px",
+              border: "1px solid #e4e8ef", borderRadius: "9999px",
+              fontSize: "0.78rem", outline: "none", width: "100%",
+              background: "#fff", color: "#24204D",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              transition: "all 0.2s"
+            }}
             onFocus={e => { e.currentTarget.style.borderColor = "#cbd5e1"; }}
             onBlur={e => { e.currentTarget.style.borderColor = "#e4e8ef"; }}
           />
         </div>
-
-        {/* Team pill filters */}
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center",
-          gap: "2px",
-          background: "#f0f0f8",
-          borderRadius: "9999px",
-          padding: "3px",
-          height: "34px",
-          flexShrink: 1,
-          minWidth: 0,
-          overflow: "hidden",
-          boxSizing: "border-box"
-        }}>
-          <button
-            onClick={() => setTeamFilter("all")}
-            style={{
-              padding: "0 12px",
-              height: "28px",
-              borderRadius: "9999px",
-              border: "none",
-              fontSize: "0.73rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              transition: "all 0.2s",
-              display: "flex",
-              alignItems: "center",
-              background: teamFilter === "all" ? "#635bff" : "transparent",
-              color: teamFilter === "all" ? "#fff" : "#5a6282",
-              boxSizing: "border-box"
-            }}
-          >
-            All Teams
-          </button>
-          {teams.map(t => (
-            <button
-              key={t}
-              onClick={() => setTeamFilter(t)}
-              style={{
-                padding: "0 12px",
-                height: "28px",
-                borderRadius: "9999px",
-                border: "none",
-                fontSize: "0.73rem",
-                fontWeight: teamFilter === t ? 700 : 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.2s",
-                background: teamFilter === t ? "#635bff" : "transparent",
-                color: teamFilter === t ? "#fff" : "#5a6282",
-                boxSizing: "border-box"
-              }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ width: "1px", height: "18px", background: "#e4e8ef", margin: "0 2px", flexShrink: 0 }}></div>
 
         {(search !== "" || teamFilter !== "all" || weekStart.toDateString() !== getWeekStart(new Date()).toDateString()) && (
           <button 
@@ -425,7 +578,8 @@ export default function ScheduleView() {
           style={{
             height: "34px", padding: "0 16px", fontSize: "0.72rem", borderRadius: "9999px",
             background: "linear-gradient(135deg, #10b981, #059669)", color: "#ffffff", border: "none",
-            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 700,
+            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
+            boxShadow: "0 4px 12px rgba(16,185,129,0.25)",
             flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
           }}
         >
@@ -441,34 +595,103 @@ export default function ScheduleView() {
           }}
           style={{
             height: "34px", padding: "0 14px", fontSize: "0.72rem", borderRadius: "9999px",
-            background: "#ffffff", color: "#64748b", border: "1px solid #e2e8f0",
-            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 600,
+            background: "#ffffff", color: "#475569", border: "1px solid #e2e8f0",
+            display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontWeight: 500,
+            boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
             flexShrink: 0, whiteSpace: "nowrap", boxSizing: "border-box"
           }}
         >
           <Users size={13} color="#94a3b8" />
           Manage Employees
         </button>
-        </div>
       </div>
 
       {/* Schedule Grid & Legend */}
       <div style={{ flex: 1, overflow: "hidden", padding: "8px 20px 20px 20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        {/* Workload Legend Indicators */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "16px", alignItems: "center", padding: "0 4px" }}>
-          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#8f97b0" }}>Workload:</span>
-          {[
-            { label: "< 50%", color: "#ef4444" },
-            { label: "50–80%", color: "#facc15" },
-            { label: "81–100%", color: "#22c55e" },
-            { label: "101–120%", color: "#166534" },
-            { label: "> 120%", color: "#991b1b" }
-          ].map((l, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: l.color, display: "inline-block" }}></span>
-              <span style={{ fontSize: "0.72rem", fontWeight: 500, color: "#4b5675" }}>{l.label}</span>
-            </div>
-          ))}
+        {/* Sub Header: Team Filters & Workload Legend Together */}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "flex-end", 
+          alignItems: "center", 
+          gap: "20px", 
+          flexWrap: "wrap",
+          padding: "0 4px" 
+        }}>
+          {/* Left: Team Selection Pills */}
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center",
+            gap: "4px",
+            background: "#f0f0f8",
+            borderRadius: "9999px",
+            padding: "3px",
+            height: "34px",
+            maxWidth: "100%",
+            overflowX: "auto",
+            boxSizing: "border-box",
+            scrollbarWidth: "none"
+          }}>
+            <button
+              onClick={() => setTeamFilter("all")}
+              style={{
+                padding: "0 14px",
+                height: "28px",
+                borderRadius: "9999px",
+                border: "none",
+                fontSize: "0.73rem",
+                fontWeight: 700,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.2s",
+                display: "flex",
+                alignItems: "center",
+                background: teamFilter === "all" ? "#635bff" : "transparent",
+                color: teamFilter === "all" ? "#fff" : "#5a6282",
+                boxSizing: "border-box"
+              }}
+            >
+              All Teams
+            </button>
+            {teams.map(t => (
+              <button
+                key={t}
+                onClick={() => setTeamFilter(t)}
+                style={{
+                  padding: "0 14px",
+                  height: "28px",
+                  borderRadius: "9999px",
+                  border: "none",
+                  fontSize: "0.73rem",
+                  fontWeight: teamFilter === t ? 700 : 500,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.2s",
+                  background: teamFilter === t ? "#635bff" : "transparent",
+                  color: teamFilter === t ? "#fff" : "#5a6282",
+                  boxSizing: "border-box"
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Workload Legend Indicators */}
+          <div style={{ display: "flex", gap: "14px", alignItems: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#8f97b0" }}>Workload:</span>
+            {[
+              { label: "< 50%", color: "#ef4444" },
+              { label: "50–80%", color: "#facc15" },
+              { label: "81–100%", color: "#22c55e" },
+              { label: "101–120%", color: "#166534" },
+              { label: "> 120%", color: "#991b1b" }
+            ].map((l, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: l.color, display: "inline-block" }}></span>
+                <span style={{ fontSize: "0.72rem", fontWeight: 500, color: "#4b5675" }}>{l.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div style={{ 
@@ -488,6 +711,7 @@ export default function ScheduleView() {
             scheduleTasks={tasks}
             startDate={toIso(weekStart)}
             endDate={toIso(weekEnd)}
+            settingsVersion={settingsVersion}
           />
         </div>
       </div>

@@ -233,82 +233,28 @@
       locale: {
         firstDayOfWeek: 0, // Sunday
         weekdays: {
-            shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-            longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+            shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         },
         months: {
-            shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-            longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         }
       },
       dateFormat: 'Y-m-d',
       disableMobile: "true",
       monthSelectorType: 'dropdown',
       onReady: function (selectedDates, dateStr, instance) {
-        const createGrid = (type) => {
-          const container = instance.calendarContainer;
-          let grid = container.querySelector('.custom-grid-overlay');
-          if (!grid) {
-            grid = document.createElement('div');
-            grid.className = 'custom-grid-overlay';
-            container.appendChild(grid);
-          }
-          grid.innerHTML = '';
-          grid.style.display = 'grid';
-
-          if (type === 'month') {
-              const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-            months.forEach((m, i) => {
-              const btn = document.createElement('div');
-              btn.className = 'grid-item' + (instance.currentMonth === i ? ' active' : '');
-              btn.textContent = m;
-              btn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                instance.changeMonth(i, false);
-                grid.style.display = 'none';
-              };
-              grid.appendChild(btn);
-            });
-          } else {
-            const curYear = instance.currentYear;
-            for (let y = curYear - 6; y <= curYear + 5; y++) {
-              const btn = document.createElement('div');
-              btn.className = 'grid-item' + (curYear === y ? ' active' : '');
-              btn.textContent = y + 543; // Thai year
-              btn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                instance.changeYear(y);
-                grid.style.display = 'none';
-              };
-              grid.appendChild(btn);
-            }
-          }
-        };
-
-        // Direct click handlers for month and year labels in Leave Modal
-        const monthLabel = instance.calendarContainer.querySelector('.flatpickr-monthDropdown-month');
-        const yearLabel = instance.calendarContainer.querySelector('.cur-year');
-        if (monthLabel) {
-          monthLabel.style.cursor = 'pointer';
-          monthLabel.onclick = () => createGrid('month');
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
         }
-        if (yearLabel) {
-          yearLabel.style.cursor = 'pointer';
-          yearLabel.onclick = () => createGrid('year');
-        }
-
-        instance.calendarContainer.addEventListener('mousedown', (e) => {
-          if (!e.target.closest('.custom-grid-overlay') && !e.target.closest('.flatpickr-month')) {
-            const grid = instance.calendarContainer.querySelector('.custom-grid-overlay');
-            if (grid) grid.style.display = 'none';
-          }
-        });
       },
       onChange: updateLeaveDays,
       onOpen: (selectedDates, dateStr, instance) => {
         instance.calendarContainer.style.zIndex = "10000";
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
+        }
       }
     };
     let defaultRange = [];

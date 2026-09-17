@@ -32,6 +32,11 @@ export default function WorkshipView() {
       };
     }
 
+    const hasDataOnMount = !!(
+      (window.WS_DATA && window.WS_DATA.accounts && window.WS_DATA.accounts.length > 0) ||
+      (window.PREMIUM_SCOPE_DATA && window.PREMIUM_SCOPE_DATA.length > 0)
+    );
+
     // Attach lucide immediately
     window.lucide = {
       ...lucide,
@@ -65,6 +70,9 @@ export default function WorkshipView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
+            if (typeof window.syncWSData === 'function') {
+              window.syncWSData();
+            }
             if (containerRef.current && typeof window.pageWorkship === "function") {
               containerRef.current.innerHTML = window.pageWorkship();
               window.lucide.createIcons();

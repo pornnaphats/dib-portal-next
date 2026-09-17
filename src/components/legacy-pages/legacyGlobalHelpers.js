@@ -112,14 +112,69 @@ if (typeof window !== 'undefined') {
     return '#991b1b';
   };
 
+  const MASTER_TEAM_COLORS = {
+    'ACE':                  { bg: '#f97316', light: '#fff7ed', text: '#c2410c' },
+    'ETDA Call Center':     { bg: '#10b981', light: '#ecfdf5', text: '#047857' },
+    'ONIX':                 { bg: '#ec4899', light: '#fdf2f8', text: '#be185d' },
+    'OR Call Center':       { bg: '#06b6d4', light: '#ecfeff', text: '#0e7490' },
+    'RealCyber':            { bg: '#635bff', light: '#eef2ff', text: '#4f46e5' },
+    'Reclyber ระยะสั้น':    { bg: '#a855f7', light: '#f3e8ff', text: '#7e22ce' },
+    'RealCyber ระยะสั้น':   { bg: '#a855f7', light: '#f3e8ff', text: '#7e22ce' },
+    'Sale Support':         { bg: '#2563eb', light: '#eff6ff', text: '#1d4ed8' },
+    'Sertec':               { bg: '#8b5cf6', light: '#f5f3ff', text: '#6d28d9' },
+    'Graphic':              { bg: '#d97706', light: '#fffbeb', text: '#b45309' },
+    'Content':              { bg: '#e11d48', light: '#fff1f2', text: '#be123c' },
+    'ETDA':                 { bg: '#059669', light: '#e6fffa', text: '#046c4e' },
+    'Admin':                { bg: '#475569', light: '#f8fafc', text: '#334155' },
+    'Workship':             { bg: '#14b8a6', light: '#f0fdf4', text: '#0f766e' },
+    'Call Center':          { bg: '#16a34a', light: '#f0fdf4', text: '#15803d' },
+  };
+
+  const DYNAMIC_FALLBACK_PALETTE = [
+    { bg: '#0284c7', light: '#f0f9ff', text: '#0369a1' },
+    { bg: '#9333ea', light: '#faf5ff', text: '#7e22ce' },
+    { bg: '#c026d3', light: '#fdf4ff', text: '#a21caf' },
+    { bg: '#4d7c0f', light: '#f7fee7', text: '#3f6212' },
+    { bg: '#ea580c', light: '#fff7ed', text: '#c2410c' },
+    { bg: '#0891b2', light: '#ecfeff', text: '#155e75' },
+    { bg: '#7c3aed', light: '#f5f3ff', text: '#5b21b6' },
+    { bg: '#db2777', light: '#fdf2f8', text: '#9d174d' },
+  ];
+
+  window.TEAM_COLORS = MASTER_TEAM_COLORS;
+
+  window.getTeamStyle = (team) => {
+    const raw = String(team || '').trim();
+    if (!raw) return { bg: '#64748b', light: '#f8fafc', text: '#334155' };
+    if (MASTER_TEAM_COLORS[raw]) return MASTER_TEAM_COLORS[raw];
+
+    const t = raw.toLowerCase();
+    if (t.includes('or call center') || t.includes('or callcenter') || t.includes('or_callcenter')) return MASTER_TEAM_COLORS['OR Call Center'];
+    if (t.includes('etda call center') || t.includes('etda callcenter') || t.includes('etda_callcenter')) return MASTER_TEAM_COLORS['ETDA Call Center'];
+    if (t.includes('call center') || t.includes('callcenter')) return MASTER_TEAM_COLORS['Call Center'];
+    if (t.includes('ระยะสั้น') || t.includes('reclyber') || t.includes('shortterm')) return MASTER_TEAM_COLORS['Reclyber ระยะสั้น'];
+    if (t.includes('realcyber') || t.includes('qc')) return MASTER_TEAM_COLORS['RealCyber'];
+    if (t.includes('sale support') || t.includes('salesupport') || t.includes('sale')) return MASTER_TEAM_COLORS['Sale Support'];
+    if (t.includes('sertec')) return MASTER_TEAM_COLORS['Sertec'];
+    if (t.includes('ace')) return MASTER_TEAM_COLORS['ACE'];
+    if (t.includes('onix')) return MASTER_TEAM_COLORS['ONIX'];
+    if (t.includes('graphic')) return MASTER_TEAM_COLORS['Graphic'];
+    if (t.includes('content')) return MASTER_TEAM_COLORS['Content'];
+    if (t.includes('etda')) return MASTER_TEAM_COLORS['ETDA'];
+    if (t.includes('admin') || t.includes('management')) return MASTER_TEAM_COLORS['Admin'];
+    if (t.includes('workship')) return MASTER_TEAM_COLORS['Workship'];
+
+    // Dynamic hash for any brand-new unknown teams so their color is non-duplicating and consistent
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = raw.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const idx = Math.abs(hash) % DYNAMIC_FALLBACK_PALETTE.length;
+    return DYNAMIC_FALLBACK_PALETTE[idx];
+  };
+
   window.getTeamColor = (team) => {
-    const t = String(team || '').toLowerCase();
-    if (t.includes('ace')) return '#f97316';
-    if (t.includes('sertec')) return '#8b5cf6';
-    if (t.includes('onix')) return '#2563eb';
-    if (t.includes('sale support')) return '#ef4444';
-    if (t.includes('call center')) return '#10b981';
-    return '#64748b';
+    return window.getTeamStyle(team).bg;
   };
 
   window.getPosBgColor = (pos) => {
@@ -143,25 +198,31 @@ if (typeof window !== 'undefined') {
   };
   window.showToast = function (msg, type = 'info') {
     const toast = document.createElement('div');
-    const color = type === 'danger' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#6366f1';
+    const isSuccess = type === 'success';
+    const isDanger = type === 'danger' || type === 'error';
+    const isWarning = type === 'warning';
+    const color = isDanger ? '#ef4444' : isWarning ? '#f59e0b' : isSuccess ? '#10b981' : '#635bff';
     
     // Choose inline SVG based on status
-    const svgIcon = type === 'danger'
-      ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
-      : type === 'warning'
-      ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
-      : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+    const svgIcon = isDanger
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+      : isWarning
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+      : isSuccess
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
 
     toast.style.cssText = `
-      position: fixed; top: 20px; right: 20px; z-index: 999999;
-      background: white; padding: 10px 16px; border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-left: 3px solid ${color};
-      display: flex; align-items: center; gap: 8px; font-family: 'Kanit', sans-serif;
-      font-size: 0.78rem; font-weight: 600; color: #1e293b; max-width: 320px;
+      position: fixed; top: 24px; right: 24px; z-index: 999999;
+      background: #ffffff; padding: 12px 20px; border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid ${color};
+      display: flex; align-items: center; gap: 10px; font-family: 'Kanit', sans-serif;
+      font-size: 0.875rem; font-weight: 500; color: #0f172a; max-width: 400px;
       transform: translateX(120%); transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     `;
 
-    toast.innerHTML = `${svgIcon} ${msg}`;
+    toast.innerHTML = `${svgIcon} <span style="line-height:1.4;">${msg}</span>`;
     document.body.appendChild(toast);
 
     requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
@@ -207,6 +268,215 @@ if (typeof window !== 'undefined') {
     const key = `${dateObj.getMonth() + 1}-${dateObj.getDate()}`;
     if (window.HOLIDAYS && window.HOLIDAYS[key]) return window.HOLIDAYS[key];
     return window.thaiHolidays[key] || null;
+  };
+
+  window.attachScopeStyleGridOverlay = function(instance) {
+    if (!instance || !instance.calendarContainer) return;
+    const container = instance.calendarContainer;
+
+    // Bind prev/next arrows explicitly
+    const prevBtn = container.querySelector('.flatpickr-prev-month');
+    const nextBtn = container.querySelector('.flatpickr-next-month');
+
+    if (prevBtn && !prevBtn.dataset.scopeBound) {
+      prevBtn.dataset.scopeBound = 'true';
+      prevBtn.style.cursor = 'pointer';
+      prevBtn.style.pointerEvents = 'auto';
+      prevBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector('.custom-grid-overlay');
+        if (grid) {
+          grid.classList.add('hidden');
+          grid.style.display = 'none';
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === 'function') {
+          instance.changeMonth(-1, true);
+        }
+      };
+    }
+
+    if (nextBtn && !nextBtn.dataset.scopeBound) {
+      nextBtn.dataset.scopeBound = 'true';
+      nextBtn.style.cursor = 'pointer';
+      nextBtn.style.pointerEvents = 'auto';
+      nextBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector('.custom-grid-overlay');
+        if (grid) {
+          grid.classList.add('hidden');
+          grid.style.display = 'none';
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === 'function') {
+          instance.changeMonth(1, true);
+        }
+      };
+    }
+
+    const createGrid = (type) => {
+      let grid = container.querySelector('.custom-grid-overlay');
+      if (!grid) {
+        grid = document.createElement('div');
+        grid.className = 'custom-grid-overlay';
+        container.appendChild(grid);
+      }
+      grid.innerHTML = '';
+      grid.classList.remove('hidden');
+      grid.style.display = 'grid';
+
+      if (type === 'month') {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        months.forEach((m, i) => {
+          const btn = document.createElement('div');
+          btn.className = 'grid-item' + (instance.currentMonth === i ? ' active' : '');
+          btn.textContent = m;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const delta = i - instance.currentMonth;
+            grid.classList.add('hidden');
+            grid.style.display = 'none';
+            grid.remove();
+            if (delta !== 0 && typeof instance.changeMonth === 'function') {
+              instance.changeMonth(delta, true);
+            } else {
+              instance.currentMonth = i;
+              if (typeof instance.redraw === 'function') instance.redraw();
+            }
+            setTimeout(() => window.attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        });
+      } else {
+        const curYear = instance.currentYear;
+        const startYear = Math.min(2022, curYear - 5);
+        const endYear = Math.max(2028, curYear + 5);
+        for (let y = startYear; y <= endYear; y++) {
+          const btn = document.createElement('div');
+          btn.className = 'grid-item' + (curYear === y ? ' active' : '');
+          btn.textContent = y + 543;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            grid.classList.add('hidden');
+            grid.style.display = 'none';
+            grid.remove();
+            if (typeof instance.changeYear === 'function') {
+              instance.changeYear(y);
+            } else {
+              instance.currentYear = y;
+              if (typeof instance.redraw === 'function') instance.redraw();
+            }
+            setTimeout(() => window.attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        }
+      }
+    };
+
+    const currentMonthEl = container.querySelector('.flatpickr-current-month');
+    if (currentMonthEl && !currentMonthEl.dataset.scopeGridBound) {
+      currentMonthEl.dataset.scopeGridBound = 'true';
+      currentMonthEl.style.cursor = 'pointer';
+      currentMonthEl.style.pointerEvents = 'auto';
+      currentMonthEl.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.target.classList.contains('cur-year') || e.target.closest('.numInputWrapper')) {
+          createGrid('year');
+        } else {
+          createGrid('month');
+        }
+      };
+    }
+
+    if (!container.dataset.scopeGridDismissBound) {
+      container.dataset.scopeGridDismissBound = 'true';
+      container.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('.custom-grid-overlay') && !e.target.closest('.flatpickr-month')) {
+          const grid = container.querySelector('.custom-grid-overlay');
+          if (grid) {
+            grid.classList.add('hidden');
+            grid.style.display = 'none';
+            grid.remove();
+          }
+        }
+      });
+    }
+  };
+
+  window.alignFlatpickrToButton = function(instance, forceRight = false) {
+    if (!instance || !instance.calendarContainer || !instance.element) return;
+    const calendar = instance.calendarContainer;
+
+    instance.positionCalendar = function() {
+      if (typeof window.alignFlatpickrToButton === 'function') {
+        if (!instance._aligning) {
+          instance._aligning = true;
+          window.alignFlatpickrToButton(instance, forceRight);
+          instance._aligning = false;
+        }
+      }
+    };
+
+    let wrapper = instance.element.closest('.date-picker-container') ||
+                  instance.element.closest('.date-range-wrapper');
+
+    let pill = wrapper;
+
+    if (!pill) {
+      pill = instance.element.closest('.date-range-wrapper > div') || instance.element.parentNode;
+      while (pill && pill.parentNode && pill.parentNode !== document.body &&
+             (pill.previousElementSibling && (pill.previousElementSibling.tagName === 'BUTTON' || (pill.previousElementSibling.id && pill.previousElementSibling.id.includes('prev'))))) {
+        pill = pill.parentNode;
+      }
+    }
+
+    if (!pill) return;
+
+    if (calendar.parentNode !== pill) {
+      pill.appendChild(calendar);
+    }
+
+    pill.style.setProperty('position', 'relative', 'important');
+    pill.style.setProperty('overflow', 'visible', 'important');
+
+    const isRight = forceRight || 
+                    pill.classList.contains('align-right') || 
+                    (instance.element && (
+                      instance.element.closest('#myPlanMainContent') || 
+                      instance.element.closest('.align-right') ||
+                      instance.element.closest('[style*="flex-end"]') ||
+                      instance.element.closest('[style*="justify-content: flex-end"]') ||
+                      instance.element.closest('[style*="justify-content:flex-end"]') ||
+                      instance.element.closest('[style*="margin-left: auto"]') ||
+                      instance.element.closest('[style*="margin-left:auto"]')
+                    )) ||
+                    (typeof window !== 'undefined' && window.location && (
+                      window.location.pathname.includes('/my-plan') ||
+                      window.location.pathname.includes('/workship') ||
+                      window.location.pathname.includes('/schedule') ||
+                      window.location.pathname.includes('/realcyber')
+                    )) ||
+                    true; // Default right align so right edge of calendar aligns with right edge of filter pill
+
+    calendar.style.setProperty('position', 'absolute', 'important');
+    calendar.style.setProperty('top', 'calc(100% + 6px)', 'important');
+    if (isRight) {
+      calendar.style.setProperty('right', '0px', 'important');
+      calendar.style.setProperty('left', 'auto', 'important');
+      calendar.classList.add('align-right');
+    } else {
+      calendar.style.setProperty('left', '0px', 'important');
+      calendar.style.setProperty('right', 'auto', 'important');
+      calendar.classList.remove('align-right');
+    }
+    calendar.style.setProperty('margin', '0', 'important');
+    calendar.style.setProperty('transform', 'none', 'important');
+    calendar.style.setProperty('z-index', '999999', 'important');
   };
 
   window.renderDateFilter = function(onchangeFn = 'initCostCharts()', position = 'auto', onClearFn = null, showClear = true, extraFilterHtml = '', dateRangeVarName = '_currentDateRange') {
@@ -267,6 +537,7 @@ if (typeof window !== 'undefined') {
 
       const fp = flatpickr(hiddenEl, {
         mode: 'range',
+        appendTo: wrapper ? (wrapper.querySelector('.date-picker-container') || wrapper.querySelector('div') || wrapper) : wrapper,
         defaultDate: savedRange ? savedRange.split(' to ').map(d => {
           const [y, m, day] = d.split('-').map(Number);
           return new Date(y, m - 1, day);
@@ -276,12 +547,12 @@ if (typeof window !== 'undefined') {
           firstDayOfWeek: 0,
           rangeSeparator: ' to ',
           weekdays: {
-            shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-            longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+            shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
           },
           months: {
-            shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-            longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
           }
         },
         showMonths: 1,
@@ -289,74 +560,25 @@ if (typeof window !== 'undefined') {
         disableMobile: true,
         allowInput: false,
         static: false,
-        position: position,
-        monthSelectorType: 'dropdown',
-        yearSelectorType: 'dropdown',
+        monthSelectorType: 'static',
+        yearSelectorType: 'static',
         onReady: function (selectedDates, dateStr, instance) {
-          const createGrid = (type) => {
-            const container = instance.calendarContainer;
-            let grid = container.querySelector('.custom-grid-overlay');
-            if (!grid) {
-              grid = document.createElement('div');
-              grid.className = 'custom-grid-overlay';
-              container.appendChild(grid);
-            }
-            grid.innerHTML = '';
-            grid.style.display = 'grid';
-
-            if (type === 'month') {
-              const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-              months.forEach((m, i) => {
-                const btn = document.createElement('div');
-                btn.className = 'grid-item' + (instance.currentMonth === i ? ' active' : '');
-                btn.textContent = m;
-                btn.onclick = (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  instance.changeMonth(i, false);
-                  grid.style.display = 'none';
-                };
-                grid.appendChild(btn);
-              });
-            } else {
-              const curYear = instance.currentYear;
-              const startYear = Math.min(2022, curYear - 6);
-              const endYear = Math.max(2027, curYear + 6);
-              for (let y = startYear; y <= endYear; y++) {
-                const btn = document.createElement('div');
-                btn.className = 'grid-item' + (curYear === y ? ' active' : '');
-                btn.textContent = y + 543; // Thai year
-                btn.onclick = (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  instance.changeYear(y);
-                  grid.style.display = 'none';
-                };
-                grid.appendChild(btn);
-              }
-            }
-          };
-
-          const monthLabel = instance.calendarContainer.querySelector('.flatpickr-monthDropdown-month');
-          const yearLabel = instance.calendarContainer.querySelector('.cur-year');
-          if (monthLabel) {
-            monthLabel.style.cursor = 'pointer';
-            monthLabel.onclick = () => createGrid('month');
+          if (typeof window.attachScopeStyleGridOverlay === 'function') {
+            window.attachScopeStyleGridOverlay(instance);
           }
-          if (yearLabel) {
-            yearLabel.style.cursor = 'pointer';
-            yearLabel.onclick = () => createGrid('year');
+          if (typeof window.alignFlatpickrToButton === 'function') {
+            window.alignFlatpickrToButton(instance);
           }
-
-          instance.calendarContainer.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.custom-grid-overlay') && !e.target.closest('.flatpickr-month')) {
-              const grid = instance.calendarContainer.querySelector('.custom-grid-overlay');
-              if (grid) grid.style.display = 'none';
-            }
-          });
-
           updateDisplay(selectedDates);
           toggleClearButtonVisibility(selectedDates, dateStr, instance);
+        },
+        onOpen: function (selectedDates, dateStr, instance) {
+          if (typeof window.attachScopeStyleGridOverlay === 'function') {
+            window.attachScopeStyleGridOverlay(instance);
+          }
+          if (typeof window.alignFlatpickrToButton === 'function') {
+            window.alignFlatpickrToButton(instance);
+          }
         },
         onChange: function (selectedDates, dateStr, instance) {
           updateDisplay(selectedDates);
@@ -380,27 +602,27 @@ if (typeof window !== 'undefined') {
       function updateDisplay(selectedDates) {
         if (!label) return;
         if (selectedDates.length > 0) {
-          const monthsTH = [
-            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+          const monthsEN = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
           ];
-          const formatThaiDate = (d) => {
+          const formatDate = (d) => {
             if (!d) return '';
             const day = d.getDate();
-            const month = monthsTH[d.getMonth()];
-            const year = d.getFullYear() + 543;
+            const month = monthsEN[d.getMonth()];
+            const year = d.getFullYear();
             return `${day} ${month} ${year}`;
           };
           if (selectedDates.length === 2) {
             const start = selectedDates[0];
             const end = selectedDates[1];
             const startDay = start.getDate();
-            const startMonth = monthsTH[start.getMonth()];
-            const startYear = start.getFullYear() + 543;
+            const startMonth = monthsEN[start.getMonth()];
+            const startYear = start.getFullYear();
 
             const endDay = end.getDate();
-            const endMonth = monthsTH[end.getMonth()];
-            const endYear = end.getFullYear() + 543;
+            const endMonth = monthsEN[end.getMonth()];
+            const endYear = end.getFullYear();
 
             if (startYear === endYear) {
               if (start.getMonth() === end.getMonth()) {
@@ -412,10 +634,10 @@ if (typeof window !== 'undefined') {
               label.textContent = `${startDay} ${startMonth} ${startYear} – ${endDay} ${endMonth} ${endYear}`;
             }
           } else {
-            label.textContent = formatThaiDate(selectedDates[0]);
+            label.textContent = formatDate(selectedDates[0]);
           }
         } else {
-          label.textContent = 'เลือกช่วงเวลา...';
+          label.textContent = 'Select date range...';
         }
       }
 
@@ -480,7 +702,7 @@ if (typeof window !== 'undefined') {
           if (parent) {
             const siblingSelects = parent.querySelectorAll('select');
             siblingSelects.forEach(sel => {
-              sel.value = sel.options[0].value;
+              sel.value = 'all';
               sel.dispatchEvent(new Event('change'));
             });
           }
@@ -522,22 +744,22 @@ if (typeof window !== 'undefined') {
       }
     }, 100);
 
-    const iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#635bff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const iconSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#635bff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; min-width:14px; min-height:14px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
 
     return `
-    <div id="${wrapperId}" class="date-range-wrapper" style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-      <div style="display:flex; align-items:center; background:#fff; border:1px solid #e2e8f0; border-radius:9999px; overflow:hidden; height:34px; max-height:34px; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition:all 0.2s; flex-shrink:0; box-sizing:border-box;">
-        <button id="${prevId}" style="padding:0 8px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-right:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+    <div id="${wrapperId}" class="date-range-wrapper align-right" style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <div class="date-picker-container align-right" style="position:relative; display:flex; align-items:center; background:#fff; border:1px solid #e2e8f0; border-radius:9999px; height:34px; max-height:34px; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition:all 0.2s; flex-shrink:0; box-sizing:border-box;">
+        <button id="${prevId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-right:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <div onclick="const input = this.parentNode.querySelector('input'); if (input) { if (input._flatpickr) { input._flatpickr.open(); } else if (window['initFlatpickr_${id}']) { const fp = window['initFlatpickr_${id}'](); if (fp) fp.open(); } }" style="display:flex; align-items:center; gap:6px; padding:0 10px; font-size:12px; font-weight:500; line-height:1; color:#24204D; cursor:pointer; user-select:none; height:34px; max-height:34px; transition:background 0.15s; font-family:'Kanit',sans-serif; box-sizing:border-box; overflow:hidden;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+        <div onclick="const input = this.parentNode.querySelector('input'); if (input) { if (input._flatpickr) { input._flatpickr.open(); } else if (window['initFlatpickr_${id}']) { const fp = window['initFlatpickr_${id}'](); if (fp) fp.open(); } }" style="display:flex; align-items:center; gap:6px; padding:0 14px; font-size:12px; font-weight:600; line-height:1; color:#24204D; cursor:pointer; user-select:none; height:34px; max-height:34px; transition:background 0.15s; font-family:'Kanit',sans-serif; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           ${iconSvg}
-          <span id="${labelId}" style="max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;">Select Date Range</span>
+          <span id="${labelId}" style="max-width:none; white-space:nowrap; overflow:visible; text-overflow:clip; line-height:1; font-weight:600;">Select Date Range</span>
+          <input id="${id}" type="text" style="position:absolute; top:0; left:0; width:0; height:0; opacity:0; pointer-events:none" readonly />
         </div>
-        <button id="${nextId}" style="padding:0 8px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-left:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
+        <button id="${nextId}" style="padding:0 10px; border:none; background:transparent; cursor:pointer; color:#94a3b8; display:flex; align-items:center; justify-content:center; height:34px; max-height:34px; border-left:1px solid #e2e8f0; transition:background 0.15s; flex-shrink:0; box-sizing:border-box;" onmouseover="this.style.background='#f8f9fb'" onmouseout="this.style.background='transparent'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
-        <input id="${id}" type="text" style="position:absolute; width:0; height:0; opacity:0; pointer-events:none" readonly>
       </div>
       ${extraFilterHtml || ''}
       ${showClear ? `

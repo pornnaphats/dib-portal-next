@@ -6,6 +6,7 @@ import "flatpickr/dist/flatpickr.min.css";
 
 // Static imports for core legacy logic
 import "./legacyGlobalHelpers.js";
+import "../employee/legacyEmployeeLogic.js";
 import "./legacyQcPlanLogic.js";
 
 export default function QcPlanView() {
@@ -17,6 +18,14 @@ export default function QcPlanView() {
     initRef.current = true;
     document.body.dataset.page = "realcyber-plan";
     window.currentPage = "realcyber-plan";
+
+    // Force close task sidebar on page mount
+    window.IS_TASK_SIDEBAR_OPEN = false;
+    const sidebarContainer = document.getElementById("taskSidebarContainer");
+    if (sidebarContainer) {
+      sidebarContainer.classList.remove("open");
+      sidebarContainer.style.right = "-380px";
+    }
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {
@@ -33,6 +42,8 @@ export default function QcPlanView() {
         accounts: []
       };
     }
+
+    const hasDataOnMount = !!(window.QC_PLANS && window.QC_PLANS.length > 0);
 
     // Attach lucide immediately
     window.lucide = {
@@ -67,7 +78,7 @@ export default function QcPlanView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
+            if (!hasDataOnMount && containerRef.current && typeof window.renderQCWorkPlanDashboard === "function") {
               containerRef.current.innerHTML = window.renderQCWorkPlanDashboard();
               window.lucide.createIcons();
             }

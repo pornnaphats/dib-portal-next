@@ -1,3 +1,29 @@
+function syncLocalQcPlans() {
+  if (typeof window === 'undefined') return;
+  if (!window.QC_PLANS) window.QC_PLANS = [];
+  try {
+    const added = JSON.parse(localStorage.getItem('qc_plans_added') || '[]');
+    const deleted = JSON.parse(localStorage.getItem('qc_plans_deleted') || '[]');
+
+    if (deleted.length > 0) {
+      window.QC_PLANS = window.QC_PLANS.filter(p => {
+        return !deleted.some(d => {
+          if (d.id && d.id === p.id) return true;
+          if (d.name === p.name && d.qcType === p.qcType && d.channel === p.channel && (d.category || '') === (p.category || '')) return true;
+          return false;
+        });
+      });
+    }
+
+    added.forEach(ap => {
+      const exists = window.QC_PLANS.some(p => p.id === ap.id || (p.name === ap.name && p.qcType === ap.qcType && p.channel === ap.channel && (p.category || '') === (ap.category || '') && p.date === ap.date));
+      if (!exists) {
+        window.QC_PLANS.push(ap);
+      }
+    });
+  } catch(e) {}
+}
+
 export async function fetchAndSetLegacyData() {
   const parseCSV = (csv) => {
     const result = [];
@@ -153,6 +179,7 @@ export async function fetchAndSetLegacyData() {
       }
     }
   }
+  syncLocalQcPlans();
 
   // 2. Fetch Scope Data from Supabase
   if (!window.PREMIUM_SCOPE_DATA || window.PREMIUM_SCOPE_DATA.length === 0) {
@@ -292,12 +319,8 @@ export async function fetchAndSetLegacyData() {
   }
 
   // 5. Sync WS_DATA.accounts
-  if (window.PREMIUM_SCOPE_DATA && window.WS_DATA) {
-    window.PREMIUM_SCOPE_DATA.forEach(group => {
-      if (!window.WS_DATA.accounts.find(a => a.name === group.account)) {
-        window.WS_DATA.accounts.push({ id: group.account, name: group.account, node: 'N/A' });
-      }
-    });
+  if (typeof window.syncWSData === 'function') {
+    window.syncWSData();
   }
 
   })());
@@ -487,8 +510,47 @@ export async function fetchAndSetLegacyData() {
       console.warn('Failed to fetch org structure from Supabase:', err.message || err);
     }
   })());
+  promises.push((async () => {
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jfxesvvswpgeaxhhnnyt.supabase.co';
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E';
+      if (supabaseUrl && supabaseKey) {
+        const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_workload_rates`, {
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0 && rows[0].structure) {
+            let payload = rows[0].structure;
+            if (typeof payload === 'string') {
+              try { payload = JSON.parse(payload); } catch(e) {}
+            }
+            if (payload && payload.rates) {
+              localStorage.setItem('qc_workload_rates_v2', JSON.stringify(payload.rates));
+              if (payload.confMode) localStorage.setItem('qc_web_conf_mode', payload.confMode);
+              if (payload.confQc1 !== undefined) localStorage.setItem('qc_web_conf_qc1', payload.confQc1 ? 'true' : 'false');
+              if (payload.confQc2 !== undefined) localStorage.setItem('qc_web_conf_qc2', payload.confQc2 ? 'true' : 'false');
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch qc_workload_rates from Supabase:', err.message || err);
+    }
+  })());
+
+  promises.push((async () => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.qcFetchDisplaySettingsFromSupabase === 'function') {
+        await window.qcFetchDisplaySettingsFromSupabase();
+      }
+    } catch (err) {}
+  })());
 
   await Promise.all(promises);
+  if (typeof window !== 'undefined' && typeof window.syncWSData === 'function') {
+    window.syncWSData();
+  }
 }
 
 if (typeof window !== 'undefined') {

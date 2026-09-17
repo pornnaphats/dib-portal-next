@@ -150,13 +150,83 @@ export default function LeaveManagementReact() {
     const pageSize = 10;
     const tableCardRef = React.useRef(null);
     const dateInputRef = React.useRef(null);
+    const dateContainerRef = React.useRef(null);
     const fpInstance = React.useRef(null);
+
+    const handlePrevDate = () => {
+        if (!fpInstance.current) return;
+        const selected = fpInstance.current.selectedDates;
+        if (selected.length === 2) {
+            const diff = Math.round((selected[1] - selected[0]) / (1000 * 60 * 60 * 24));
+            const spanDays = diff > 0 ? diff + 1 : 7;
+            const newStart = new Date(selected[0]);
+            newStart.setDate(newStart.getDate() - spanDays);
+            const newEnd = new Date(selected[1]);
+            newEnd.setDate(newEnd.getDate() - spanDays);
+            fpInstance.current.setDate([newStart, newEnd], true);
+        } else {
+            const newDate = selected[0] ? new Date(selected[0]) : new Date();
+            newDate.setDate(newDate.getDate() - 7);
+            fpInstance.current.setDate([newDate], true);
+        }
+    };
+
+    const handleNextDate = () => {
+        if (!fpInstance.current) return;
+        const selected = fpInstance.current.selectedDates;
+        if (selected.length === 2) {
+            const diff = Math.round((selected[1] - selected[0]) / (1000 * 60 * 60 * 24));
+            const spanDays = diff > 0 ? diff + 1 : 7;
+            const newStart = new Date(selected[0]);
+            newStart.setDate(newStart.getDate() + spanDays);
+            const newEnd = new Date(selected[1]);
+            newEnd.setDate(newEnd.getDate() + spanDays);
+            fpInstance.current.setDate([newStart, newEnd], true);
+        } else {
+            const newDate = selected[0] ? new Date(selected[0]) : new Date();
+            newDate.setDate(newDate.getDate() + 7);
+            fpInstance.current.setDate([newDate], true);
+        }
+    };
 
     useEffect(() => {
         if (!loading && dateInputRef.current) {
             fpInstance.current = flatpickr(dateInputRef.current, {
                 mode: 'range',
+                appendTo: dateContainerRef.current ? (dateContainerRef.current.closest('.date-picker-container') || dateContainerRef.current.parentNode) : (dateInputRef.current.closest('.date-picker-container') || dateInputRef.current.parentNode),
                 dateFormat: 'Y-m-d',
+                locale: {
+                    firstDayOfWeek: 0,
+                    rangeSeparator: ' to ',
+                    weekdays: {
+                        shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                        longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    }
+                },
+                disableMobile: true,
+                static: false,
+                monthSelectorType: 'static',
+                yearSelectorType: 'static',
+                onReady: (selectedDates, dateStr, instance) => {
+                    if (typeof window.attachScopeStyleGridOverlay === 'function') {
+                        window.attachScopeStyleGridOverlay(instance);
+                    }
+                    if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+                        window.alignFlatpickrToButton(instance, false);
+                    }
+                },
+                onOpen: (selectedDates, dateStr, instance) => {
+                    if (typeof window.attachScopeStyleGridOverlay === 'function') {
+                        window.attachScopeStyleGridOverlay(instance);
+                    }
+                    if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+                        window.alignFlatpickrToButton(instance, false);
+                    }
+                },
                 onChange: (selectedDates, dateStr) => {
                     setSelectedDate(dateStr);
                 }
@@ -397,7 +467,7 @@ export default function LeaveManagementReact() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
     const today = now.getDate();
-    const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const englishMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const leaveDaysMap = new Map();
     requests.forEach(r => {
@@ -495,7 +565,7 @@ export default function LeaveManagementReact() {
                         ))}
                     </div>
                     {/* Charts and Calendar Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-[300px_1fr_300px_240px] gap-4 mb-6" style={{ alignItems: 'stretch' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" style={{ alignItems: 'stretch' }}>
                         {/* Leave Type Chart */}
                         <div key="chart-type" className="bg-white rounded-2xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] border-0 flex flex-col" style={{ minWidth: 0, width: '100%', padding: '20px', height: '320px', boxSizing: 'border-box' }}>
                             <div className="text-sm font-bold text-gray-800 mb-4">สถิติประเภทการลา</div>
@@ -537,7 +607,7 @@ export default function LeaveManagementReact() {
                                         วันนี้ (Today)
                                     </div>
                                     {onLeaveToday.length === 0 ? (
-                                        <div className="text-center text-xs text-gray-400 py-3 bg-slate-50 rounded-lg" style={{ fontSize: '11px' }}>ไม่มีผู้ลาวันนี้</div>
+                                        <div className="text-center text-xs text-gray-400 py-6 bg-slate-50 rounded-xl flex items-center justify-center" style={{ fontSize: '12px' }}>ไม่มีผู้ลาวันนี้</div>
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {onLeaveToday.map(r => {
@@ -574,7 +644,7 @@ export default function LeaveManagementReact() {
                                         พรุ่งนี้ (Tomorrow)
                                     </div>
                                     {onLeaveTomorrow.length === 0 ? (
-                                        <div className="text-center text-xs text-gray-400 py-3 bg-slate-50 rounded-lg" style={{ fontSize: '11px' }}>ไม่มีผู้ลาพรุ่งนี้</div>
+                                        <div className="text-center text-xs text-gray-400 py-6 bg-slate-50 rounded-xl flex items-center justify-center" style={{ fontSize: '12px' }}>ไม่มีผู้ลาพรุ่งนี้</div>
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {onLeaveTomorrow.map(r => {
@@ -614,7 +684,7 @@ export default function LeaveManagementReact() {
                                     <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="w-6 h-6 rounded-full border border-slate-100 flex items-center justify-center text-gray-400 hover:text-[#635BFF] hover:bg-slate-50 transition-all">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                                     </button>
-                                    <div className="text-[0.7rem] font-bold text-gray-800 mx-1">{thaiMonths[month]} {year + 543}</div>
+                                    <div className="text-[0.7rem] font-bold text-gray-800 mx-1">{englishMonths[month]} {year}</div>
                                     <button onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="w-6 h-6 rounded-full border border-slate-100 flex items-center justify-center text-gray-400 hover:text-[#635BFF] hover:bg-slate-50 transition-all">
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"></path></svg>
                                     </button>
@@ -700,30 +770,24 @@ export default function LeaveManagementReact() {
                                         style={{ fontSize: '13px', border: 'none', outline: 'none', backgroundColor: 'transparent', width: '100%', color: '#24204D' }}
                                     />
                                 </div>
-                                <div style={{ position: 'relative' }}>
+                                <div className="date-picker-container" style={{ position: 'relative', display: 'flex', alignItems: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '9999px', height: '34px', maxHeight: '34px', boxShadow: '0 1px 2px rgba(15,23,42,0.04)', flexShrink: 0, boxSizing: 'border-box' }}>
                                     <button 
-                                        onClick={() => fpInstance.current && fpInstance.current.open()}
-                                        style={{ 
-                                            borderRadius: '99px', 
-                                            border: '1px solid #e2e8f0', 
-                                            backgroundColor: '#ffffff', 
-                                            color: '#24204D', 
-                                            fontWeight: '500', 
-                                            height: '34px', 
-                                            minWidth: '150px', 
-                                            padding: '0 16px', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '8px', 
-                                            cursor: 'pointer', 
-                                            fontSize: '12px', 
-                                            boxShadow: '0 1px 2px rgba(15,23,42,0.04)', 
-                                            boxSizing: 'border-box',
-                                            justifyContent: 'flex-start'
-                                        }}
+                                        onClick={handlePrevDate} 
+                                        style={{ padding: '0 10px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '34px', maxHeight: '34px', borderRight: '1px solid #e2e8f0', transition: 'background 0.15s', flexShrink: 0, boxSizing: 'border-box' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f8f9fb'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                     >
-                                        <svg className="w-[14px] h-[14px] text-[#635bff] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedDate ? '#24204D' : '#94a3b8' }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                    </button>
+                                    <div 
+                                        ref={dateContainerRef}
+                                        onClick={() => fpInstance.current && fpInstance.current.open()}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 14px', fontSize: '12px', fontWeight: 600, lineHeight: 1, color: '#24204D', cursor: 'pointer', userSelect: 'none', height: '34px', maxHeight: '34px', transition: 'background 0.15s', fontFamily: "'Kanit', sans-serif", flexShrink: 0, boxSizing: 'border-box' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f8f9fb'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#635bff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <span style={{ maxContent: 'none', whiteSpace: 'nowrap', overflow: 'visible', textOverflow: 'clip', lineHeight: 1, fontWeight: 600, color: selectedDate ? '#24204D' : '#94a3b8' }}>
                                             {selectedDate ? (() => {
                                                 const formatSingle = (dStr) => {
                                                     const d = new Date(dStr);
@@ -733,18 +797,26 @@ export default function LeaveManagementReact() {
                                                 };
                                                 if (selectedDate.includes(' to ')) {
                                                     const parts = selectedDate.split(' to ');
-                                                    return `${formatSingle(parts[0])} - ${formatSingle(parts[1] || parts[0])}`;
+                                                    return `${formatSingle(parts[0])} – ${formatSingle(parts[1] || parts[0])}`;
                                                 }
                                                 return formatSingle(selectedDate);
                                             })() : 'Select Date Range'}
                                         </span>
+                                        <input 
+                                            ref={dateInputRef}
+                                            type="text" 
+                                            style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+                                            readOnly
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={handleNextDate} 
+                                        style={{ padding: '0 10px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '34px', maxHeight: '34px', borderLeft: '1px solid #e2e8f0', transition: 'background 0.15s', flexShrink: 0, boxSizing: 'border-box' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f8f9fb'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                                     </button>
-                                    <input 
-                                        ref={dateInputRef}
-                                        type="text" 
-                                        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
-                                        readOnly
-                                    />
                                 </div>
                                 <div style={{ position: 'relative', width: '180px', flexShrink: 0 }}>
                                     <button 

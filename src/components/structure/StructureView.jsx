@@ -44,6 +44,8 @@ export default function StructureView() {
       }
     };
 
+    const hasDataOnMount = !!(window.DATA && window.DATA.employees && window.DATA.employees.length > 0);
+
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
     if (containerRef.current && typeof window.pageStructureTeam === "function") {
       containerRef.current.innerHTML = window.pageStructureTeam();
@@ -55,7 +57,7 @@ export default function StructureView() {
       import("../legacy-pages/legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.pageStructureTeam === "function") {
+            if (!hasDataOnMount && containerRef.current && typeof window.pageStructureTeam === "function") {
               containerRef.current.innerHTML = window.pageStructureTeam();
               window.lucide.createIcons();
               // Auto-scroll will be triggered by the zoom-wrapped orgRenderTree

@@ -11,7 +11,7 @@ export default function Page() {
   return (
     <>
       <Topbar title="Import File" breadcrumb="Internal / Plan Workship / Import File" />
-      <div className="page-content" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", padding: 0 }}>
+      <div className="page-content" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", padding: 0, overflow: "hidden" }}>
         <QcImportView />
       </div>
     </>

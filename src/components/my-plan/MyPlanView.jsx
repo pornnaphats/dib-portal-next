@@ -20,11 +20,28 @@ import {
 } from "lucide-react";
 
 const TEAM_COLORS = {
-  ACE: { bg: "#3b82f6", light: "#eff6ff", text: "#1d4ed8" },
-  Sertec: { bg: "#8b5cf6", light: "#f5f3ff", text: "#6d28d9" },
+  ACE: { bg: "#f97316", light: "#fff7ed", text: "#c2410c" },
+  "ETDA Call Center": { bg: "#10b981", light: "#ecfdf5", text: "#047857" },
   ONIX: { bg: "#ec4899", light: "#fdf2f8", text: "#be185d" },
-  "Sale Support": { bg: "#f59e0b", light: "#fffbeb", text: "#b45309" },
-  "Call Center": { bg: "#10b981", light: "#ecfdf5", text: "#047857" },
+  "OR Call Center": { bg: "#06b6d4", light: "#ecfeff", text: "#0e7490" },
+  RealCyber: { bg: "#635bff", light: "#eef2ff", text: "#4f46e5" },
+  "Reclyber ระยะสั้น": { bg: "#a855f7", light: "#f3e8ff", text: "#7e22ce" },
+  "RealCyber ระยะสั้น": { bg: "#a855f7", light: "#f3e8ff", text: "#7e22ce" },
+  "Sale Support": { bg: "#2563eb", light: "#eff6ff", text: "#1d4ed8" },
+  Sertec: { bg: "#8b5cf6", light: "#f5f3ff", text: "#6d28d9" },
+  Graphic: { bg: "#d97706", light: "#fffbeb", text: "#b45309" },
+  Content: { bg: "#e11d48", light: "#fff1f2", text: "#be123c" },
+  ETDA: { bg: "#059669", light: "#e6fffa", text: "#046c4e" },
+  Admin: { bg: "#475569", light: "#f8fafc", text: "#334155" },
+  Workship: { bg: "#14b8a6", light: "#f0fdf4", text: "#0f766e" },
+  "Call Center": { bg: "#16a34a", light: "#f0fdf4", text: "#15803d" },
+};
+
+const getTeamStyle = (team) => {
+  if (typeof window !== "undefined" && typeof window.getTeamStyle === "function") {
+    return window.getTeamStyle(team);
+  }
+  return TEAM_COLORS[team] || { bg: "#64748b", light: "#f8fafc", text: "#334155" };
 };
 
 const PROJECT_PALETTE = [
@@ -98,14 +115,187 @@ export default function MyPlanView() {
   });
 
   const dateInputRef = useRef(null);
+  const dateContainerRef = useRef(null);
   const fpInstance = useRef(null);
+
+  // Attach custom grid overlay (month/year picker) exactly like Workship by Scope
+  const attachScopeStyleGridOverlay = (instance) => {
+    if (!instance || !instance.calendarContainer) return;
+    const container = instance.calendarContainer;
+
+    // Bind prev/next arrows explicitly
+    const prevBtn = container.querySelector(".flatpickr-prev-month");
+    const nextBtn = container.querySelector(".flatpickr-next-month");
+
+    if (prevBtn && !prevBtn.dataset.scopeBound) {
+      prevBtn.dataset.scopeBound = "true";
+      prevBtn.style.cursor = "pointer";
+      prevBtn.style.pointerEvents = "auto";
+      prevBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector(".custom-grid-overlay");
+        if (grid) {
+          grid.classList.add("hidden");
+          grid.style.display = "none";
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === "function") {
+          instance.changeMonth(-1, true);
+        }
+      };
+    }
+
+    if (nextBtn && !nextBtn.dataset.scopeBound) {
+      nextBtn.dataset.scopeBound = "true";
+      nextBtn.style.cursor = "pointer";
+      nextBtn.style.pointerEvents = "auto";
+      nextBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const grid = container.querySelector(".custom-grid-overlay");
+        if (grid) {
+          grid.classList.add("hidden");
+          grid.style.display = "none";
+          grid.remove();
+        }
+        if (typeof instance.changeMonth === "function") {
+          instance.changeMonth(1, true);
+        }
+      };
+    }
+
+    const createGrid = (type) => {
+      let grid = container.querySelector(".custom-grid-overlay");
+      if (!grid) {
+        grid = document.createElement("div");
+        grid.className = "custom-grid-overlay";
+        container.appendChild(grid);
+      }
+      grid.innerHTML = "";
+      grid.classList.remove("hidden");
+      grid.style.display = "grid";
+
+      if (type === "month") {
+        const months = [
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+        months.forEach((m, i) => {
+          const btn = document.createElement("div");
+          btn.className = "grid-item" + (instance.currentMonth === i ? " active" : "");
+          btn.textContent = m;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const delta = i - instance.currentMonth;
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+            if (delta !== 0 && typeof instance.changeMonth === "function") {
+              instance.changeMonth(delta, true);
+            } else {
+              instance.currentMonth = i;
+              if (typeof instance.redraw === "function") instance.redraw();
+            }
+            setTimeout(() => attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        });
+      } else {
+        const curYear = instance.currentYear;
+        const startYear = Math.min(2022, curYear - 5);
+        const endYear = Math.max(2028, curYear + 5);
+        for (let y = startYear; y <= endYear; y++) {
+          const btn = document.createElement("div");
+          btn.className = "grid-item" + (curYear === y ? " active" : "");
+          btn.textContent = y;
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+            if (typeof instance.changeYear === "function") {
+              instance.changeYear(y);
+            } else {
+              instance.currentYear = y;
+              if (typeof instance.redraw === "function") instance.redraw();
+            }
+            setTimeout(() => attachScopeStyleGridOverlay(instance), 0);
+          };
+          grid.appendChild(btn);
+        }
+      }
+    };
+
+    const currentMonthEl = container.querySelector(".flatpickr-current-month");
+    if (currentMonthEl && !currentMonthEl.dataset.scopeGridBound) {
+      currentMonthEl.dataset.scopeGridBound = "true";
+      currentMonthEl.style.cursor = "pointer";
+      currentMonthEl.style.pointerEvents = "auto";
+      currentMonthEl.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.target.classList.contains("cur-year") || e.target.closest(".numInputWrapper")) {
+          createGrid("year");
+        } else {
+          createGrid("month");
+        }
+      };
+    }
+
+    if (!container.dataset.scopeGridDismissBound) {
+      container.dataset.scopeGridDismissBound = "true";
+      container.addEventListener("mousedown", (e) => {
+        if (!e.target.closest(".custom-grid-overlay") && !e.target.closest(".flatpickr-month")) {
+          const grid = container.querySelector(".custom-grid-overlay");
+          if (grid) {
+            grid.classList.add("hidden");
+            grid.style.display = "none";
+            grid.remove();
+          }
+        }
+      });
+    }
+  };
 
   useEffect(() => {
     if (dateInputRef.current) {
       fpInstance.current = flatpickr(dateInputRef.current, {
         mode: "range",
+        appendTo: dateContainerRef.current ? (dateContainerRef.current.closest('.date-picker-container') || dateContainerRef.current.parentNode) : undefined,
         dateFormat: "Y-m-d",
+        defaultDate: [weekStart, weekEnd],
+        locale: {
+          firstDayOfWeek: 0,
+          rangeSeparator: ' to ',
+          weekdays: {
+            shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+          },
+          months: {
+            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+          }
+        },
         showMonths: 1,
+        disableMobile: true,
+        static: false,
+        monthSelectorType: "static",
+        yearSelectorType: "static",
+        onReady: (selectedDates, dateStr, instance) => {
+          attachScopeStyleGridOverlay(instance);
+          if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+            window.alignFlatpickrToButton(instance, true);
+          }
+        },
+        onOpen: (selectedDates, dateStr, instance) => {
+          attachScopeStyleGridOverlay(instance);
+          if (typeof window !== "undefined" && typeof window.alignFlatpickrToButton === "function") {
+            window.alignFlatpickrToButton(instance, true);
+          }
+        },
         onClose: (selectedDates) => {
           if (selectedDates.length === 2) {
             setWeekStart(selectedDates[0]);
@@ -148,7 +338,7 @@ export default function MyPlanView() {
 
   const teamStyle = useMemo(() => {
     const dept = matchedEmp?.dept || matchedEmp?.team || "";
-    return TEAM_COLORS[dept] || { bg: "#635BFF", light: "#eef2ff", text: "#4f46e5" };
+    return getTeamStyle(dept);
   }, [matchedEmp]);
 
   // Build project color map
@@ -349,17 +539,21 @@ export default function MyPlanView() {
   const selectedDayTasks = selectedDay ? tasksByDate[selectedDay] || [] : [];
   const selectedDayLeaves = selectedDay ? leavesByDate[selectedDay] || [] : [];
 
-  // Format Thai date range for header
+  // Format English date range for header
   const formatWeekRange = () => {
     const s = weekStart;
     const e = weekEnd;
+    const monthsEN = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
     if (s.getFullYear() === e.getFullYear()) {
       if (s.getMonth() === e.getMonth()) {
-        return `${s.getDate()} – ${e.getDate()} ${monthsTH[s.getMonth()]} ${s.getFullYear() + 543}`;
+        return `${s.getDate()} – ${e.getDate()} ${monthsEN[s.getMonth()]} ${s.getFullYear()}`;
       }
-      return `${s.getDate()} ${monthsTH[s.getMonth()]} – ${e.getDate()} ${monthsTH[e.getMonth()]} ${s.getFullYear() + 543}`;
+      return `${s.getDate()} ${monthsEN[s.getMonth()]} – ${e.getDate()} ${monthsEN[e.getMonth()]} ${s.getFullYear()}`;
     }
-    return `${s.getDate()} ${monthsTH[s.getMonth()]} ${s.getFullYear() + 543} – ${e.getDate()} ${monthsTH[e.getMonth()]} ${e.getFullYear() + 543}`;
+    return `${s.getDate()} ${monthsEN[s.getMonth()]} ${s.getFullYear()} – ${e.getDate()} ${monthsEN[e.getMonth()]} ${e.getFullYear()}`;
   };
 
   const initials = userName
@@ -382,7 +576,7 @@ export default function MyPlanView() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div id="myPlanMainContent" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* ── Header Profile + Week Selector ── */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -438,16 +632,22 @@ export default function MyPlanView() {
           >
             <RotateCcw size={12} /> This Week
           </button>
-          <div style={{
-            display: "flex", alignItems: "center",
-            background: "#fff", border: "1px solid #e2e8f0",
-            borderRadius: 99, overflow: "hidden", height: 34,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-          }}>
+          <div 
+            className="date-picker-container align-right"
+            style={{
+              position: "relative",
+              display: "flex", alignItems: "center",
+              background: "#fff", border: "1px solid #e2e8f0",
+              borderRadius: 99, height: 34, maxHeight: 34,
+              boxShadow: "0 1px 2px rgba(15,23,42,0.04)",
+              flexShrink: 0
+            }}
+          >
             <button onClick={handlePrev} style={{
-              width: 34, height: 34, border: "none", background: "transparent",
+              padding: "0 10px", height: 34, maxHeight: 34, border: "none", background: "transparent",
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               color: "#94a3b8", borderRight: "1px solid #e2e8f0", transition: "background 0.15s",
+              boxSizing: "border-box", flexShrink: 0
             }}
               onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -455,29 +655,31 @@ export default function MyPlanView() {
               <ChevronLeft size={14} />
             </button>
             <div 
+              ref={dateContainerRef}
               onClick={() => fpInstance.current && fpInstance.current.open()}
               style={{
                 padding: "0 14px", fontSize: "0.78rem", fontWeight: 600, color: "#1e293b",
                 display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
                 cursor: "pointer", userSelect: "none", transition: "background 0.15s",
-                position: "relative", height: "100%"
+                position: "relative", height: 34, maxHeight: 34, flexShrink: 0, boxSizing: "border-box"
               }}
               onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}
             >
-              <Calendar size={13} color="#635bff" />
+              <Calendar size={14} color="#635bff" style={{ flexShrink: 0, minWidth: 14, minHeight: 14 }} />
               {formatWeekRange()}
               <input 
                 ref={dateInputRef} 
                 type="text" 
-                style={{ position: "absolute", width: 0, height: 0, opacity: 0, pointerEvents: "none" }} 
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, pointerEvents: "none" }} 
                 readOnly 
               />
             </div>
             <button onClick={handleNext} style={{
-              width: 34, height: 34, border: "none", background: "transparent",
+              padding: "0 10px", height: 34, maxHeight: 34, border: "none", background: "transparent",
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               color: "#94a3b8", borderLeft: "1px solid #e2e8f0", transition: "background 0.15s",
+              boxSizing: "border-box", flexShrink: 0
             }}
               onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}

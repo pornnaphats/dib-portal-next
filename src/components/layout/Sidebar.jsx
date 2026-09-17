@@ -23,6 +23,15 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (!pathname) return;
+    if (typeof window !== "undefined") {
+      window.IS_TASK_SIDEBAR_OPEN = false;
+      const taskContainer = document.getElementById("taskSidebarContainer");
+      if (taskContainer) {
+        taskContainer.classList.remove("open");
+        taskContainer.style.right = "-380px";
+        taskContainer.innerHTML = "";
+      }
+    }
     if (pathname.includes("/leave-management") || pathname.includes("/employee")) {
       setExpandedGroup("employee");
     } else if (pathname.includes("/schedule") || pathname.includes("/workship") || pathname.includes("/realcyber-plan") || pathname.includes("/realcyber-import") || pathname.includes("/project-scope") || pathname.includes("/public-holiday") || pathname.includes("/my-plan") || pathname.includes("/permission-settings")) {

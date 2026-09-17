@@ -75,23 +75,7 @@ const getWorkloadColor = (hours) => {
     const thead = document.getElementById('scopeTableHead');
     if (tbody && thead) {
       thead.innerHTML = renderScopeTableHeader(days);
-      
-      tbody.innerHTML = `<tr>
-              <td colspan="100%" style="text-align: center; padding: 60px;">
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text-3);">
-                  <div style="width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;"></div>
-                  <div style="font-size:0.9rem;font-weight:500;font-family:'Kanit', sans-serif;">Applying Filter...</div>
-                </div>
-              </td>
-            </tr>`;
-            
-      // Give browser time to paint the "Applying Filter" UI before processing
-      setTimeout(() => {
-        const currentTbody = document.getElementById('scopeTableBody');
-        if (currentTbody) {
-            renderScopeTableChunked(filtered, days, currentTbody);
-        }
-      }, 50);
+      renderScopeTableChunked(filtered, days, tbody);
     }
   }
 
@@ -263,12 +247,19 @@ const getWorkloadColor = (hours) => {
       return;
     }
     
+    // Fast path: for normal size datasets (under 100 projects), render immediately in 1 frame
+    if (data.length <= 100) {
+      tbody.innerHTML = renderScopeTableRows(data, days);
+      if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody.closest('table') || tbody });
+      if (typeof window.checkScopeSelection === 'function') window.checkScopeSelection();
+      return;
+    }
+
     tbody.innerHTML = '';
     let index = 0;
-    const chunkSize = 2; // Process 2 projects at a time to prevent UI freeze
+    const chunkSize = 15;
 
     function renderNextChunk() {
-        // Stop rendering if user navigated away
         if (!document.getElementById('scopeTableBody')) return;
 
         if (index >= data.length) {
@@ -282,8 +273,12 @@ const getWorkloadColor = (hours) => {
         tbody.insertAdjacentHTML('beforeend', html);
         index += chunkSize;
 
-        // Yield to browser rendering
-        setTimeout(renderNextChunk, 10);
+        if (index < data.length) {
+          setTimeout(renderNextChunk, 10);
+        } else {
+          if (typeof window.lucide !== 'undefined') window.lucide.createIcons({ root: tbody.closest('table') || tbody });
+          if (typeof window.checkScopeSelection === 'function') window.checkScopeSelection();
+        }
     }
 
     renderNextChunk();
@@ -568,13 +563,8 @@ const getWorkloadColor = (hours) => {
               return idxA - idxB;
             });
             
-            // Start chunked rendering instead of freezing the main thread
+            // Start rendering
             renderScopeTableChunked(initialSortedData, days, bodyEl);
-            
-            // Re-apply filters after rendering starts
-            if (typeof applyScopeDashboardFilters === 'function') {
-                setTimeout(applyScopeDashboardFilters, 1000);
-            }
         }
     }, 50);
 
@@ -1486,20 +1476,34 @@ const getWorkloadColor = (hours) => {
     const mainContent = document.getElementById('scheduleMainContent');
 
     if (container) {
-      container.style.right = window.IS_TASK_SIDEBAR_OPEN ? '0px' : '-380px';
       if (window.IS_TASK_SIDEBAR_OPEN) {
-        container.innerHTML = renderTaskSidebar();
-        if (window.lucide) lucide.createIcons({ root: container });
+        container.classList.add('open');
+        container.style.right = '0px';
+        if (typeof renderTaskSidebar === 'function') {
+          container.innerHTML = renderTaskSidebar();
+          if (window.lucide) lucide.createIcons({ root: container });
+        }
+      } else {
+        container.classList.remove('open');
+        container.style.right = '-380px';
+        container.innerHTML = '';
       }
     }
 
     if (mainContent) {
-      mainContent.style.paddingRight = window.IS_TASK_SIDEBAR_OPEN ? '380px' : '0px';
+      if (window.IS_TASK_SIDEBAR_OPEN) {
+        mainContent.classList.add('sidebar-open');
+        mainContent.style.paddingRight = '380px';
+      } else {
+        mainContent.classList.remove('sidebar-open');
+        mainContent.style.paddingRight = '0px';
+      }
     }
   };
 
   window.handleTaskDragStart = function (e, taskId) {
     e.dataTransfer.setData('taskId', taskId);
+    e.dataTransfer.setData('text/plain', taskId);
     e.target.style.opacity = '0.5';
   };
 
@@ -1916,6 +1920,11 @@ const getWorkloadColor = (hours) => {
           color: typeof window.colorForProject === 'function' ? window.colorForProject(acc.account) : '#6366f1'
         });
       });
+    });
+    tasks.sort((a, b) => {
+      const cmpAcc = (a.acc || '').localeCompare(b.acc || '', undefined, { sensitivity: 'base' });
+      if (cmpAcc !== 0) return cmpAcc;
+      return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
     });
     return tasks;
   };

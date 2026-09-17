@@ -789,7 +789,7 @@ export default function QcImportView() {
   };
 
   return (
-    <div style={{ padding: "28px", fontFamily: "'Kanit', sans-serif", background: "#f4f6fa", minHeight: "100%", boxSizing: "border-box", position: "relative" }}>
+    <div style={{ padding: "20px 24px", fontFamily: "'Kanit', sans-serif", background: "#f4f6fa", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", position: "relative" }}>
       
       {/* ===== CUSTOM TOAST NOTIFICATION ===== */}
       {toast.show && (
@@ -886,7 +886,7 @@ export default function QcImportView() {
       )}
 
       {/* ===== TAB NAVIGATION BAR (Clean Right-Aligned Pill Shape) ===== */}
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "24px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "16px", flexShrink: 0 }}>
         <div style={{ display: "flex", background: "#e2e8f0", padding: "4px 6px", borderRadius: "9999px", gap: "4px" }}>
           <button
             onClick={() => setActiveTab("upload")}
@@ -935,11 +935,11 @@ export default function QcImportView() {
 
       {/* ===== UPLOAD TAB CONTENT ===== */}
       {activeTab === "upload" && (
-        <div style={{ display: "grid", gridTemplateColumns: parsedSummary ? "380px 1fr" : "1fr", gap: "28px" }}>
+        <div style={{ flex: 1, minHeight: 0, display: "grid", gridTemplateColumns: parsedSummary ? "340px 1fr" : "1fr", gap: "20px", overflow: "hidden" }}>
           
           {/* File Drag & Drop Box */}
-          <div style={{ background: "#ffffff", borderRadius: "24px", padding: "28px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0f172a", margin: "0 0 20px 0", display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "20px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", height: "100%", boxSizing: "border-box" }}>
+            <h2 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
               <div style={{ background: "#e0e7ff", color: "#4338ca", padding: "8px", borderRadius: "12px" }}>
                 <UploadCloud style={{ width: "20px", height: "20px" }} />
               </div>
@@ -951,9 +951,14 @@ export default function QcImportView() {
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
                 border: "2px dashed #cbd5e1",
                 borderRadius: "20px",
-                padding: "40px 24px",
+                padding: "32px 20px",
                 textAlign: "center",
                 background: "#f8fafc",
                 cursor: "pointer",
@@ -970,11 +975,11 @@ export default function QcImportView() {
                 style={{ display: "none" }}
               />
 
-              <div style={{ width: "60px", height: "60px", borderRadius: "20px", background: "#e0e7ff", color: "#4338ca", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px auto", boxShadow: "0 10px 20px -5px rgba(99, 102, 241, 0.3)" }}>
-                <FileSpreadsheet style={{ width: "30px", height: "30px", margin: "auto" }} />
+              <div style={{ width: "56px", height: "56px", borderRadius: "18px", background: "#e0e7ff", color: "#4338ca", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px auto", boxShadow: "0 10px 20px -5px rgba(99, 102, 241, 0.3)" }}>
+                <FileSpreadsheet style={{ width: "28px", height: "28px", margin: "auto" }} />
               </div>
 
-              <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>
+              <div style={{ fontSize: "0.92rem", fontWeight: 700, color: "#0f172a", marginBottom: "6px" }}>
                 {file ? file.name : "Click or drag & drop file here"}
               </div>
               <div style={{ fontSize: "0.78rem", color: "#64748b" }}>
@@ -983,8 +988,8 @@ export default function QcImportView() {
             </div>
 
             {isProcessing && (
-              <div style={{ marginTop: "20px", padding: "14px", borderRadius: "14px", background: "#eeeffe", border: "1px solid #c7d2fe", color: "#4338ca", fontSize: "0.88rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
-                <RefreshCw className="spin" style={{ animation: "spin 1s linear infinite", width: "20px", height: "20px" }} />
+              <div style={{ marginTop: "16px", padding: "12px", borderRadius: "14px", background: "#eeeffe", border: "1px solid #c7d2fe", color: "#4338ca", fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexShrink: 0 }}>
+                <RefreshCw className="spin" style={{ animation: "spin 1s linear infinite", width: "18px", height: "18px" }} />
                 Reading & analyzing file statistics...
               </div>
             )}
@@ -992,63 +997,63 @@ export default function QcImportView() {
 
           {/* Aggregated Preview Dashboard */}
           {parsedSummary && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%", minHeight: 0, overflow: "hidden" }}>
               
               {/* Stat Summary Cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "18px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", flexShrink: 0 }}>
                 
                 {/* Total Cases Card */}
-                <div style={{ background: "#ffffff", borderRadius: "20px", padding: "22px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", marginBottom: "8px", letterSpacing: "0.05em" }}>
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "14px 18px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase", marginBottom: "4px", letterSpacing: "0.05em" }}>
                     Total Imported Cases
                   </div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#0f172a" }}>
-                    {parsedSummary.totalCases.toLocaleString()} <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#64748b" }}>cases</span>
+                  <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f172a" }}>
+                    {parsedSummary.totalCases.toLocaleString()} <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748b" }}>cases</span>
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: 700, marginTop: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <Check style={{ width: "14px", height: "14px" }} /> Analyzed Successfully
+                  <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: 700, marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <Check style={{ width: "13px", height: "13px" }} /> Analyzed Successfully
                   </div>
                 </div>
 
                 {/* Website Card */}
-                <div style={{ background: "#ffffff", borderRadius: "20px", padding: "22px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
-                  <div style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: 700, textTransform: "uppercase", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Globe style={{ width: "15px", height: "15px" }} /> Website Channel
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "14px 18px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#2563eb", fontWeight: 700, textTransform: "uppercase", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Globe style={{ width: "14px", height: "14px" }} /> Website Channel
                   </div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#2563eb" }}>
-                    {parsedSummary.websiteCases.toLocaleString()} <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#64748b" }}>cases</span>
+                  <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "#2563eb" }}>
+                    {parsedSummary.websiteCases.toLocaleString()} <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748b" }}>cases</span>
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "6px" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
                     Share: {Math.round((parsedSummary.websiteCases / parsedSummary.totalCases) * 100)}% of total
                   </div>
                 </div>
 
                 {/* Social Card */}
-                <div style={{ background: "#ffffff", borderRadius: "20px", padding: "22px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
-                  <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: 700, textTransform: "uppercase", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Share2 style={{ width: "15px", height: "15px" }} /> Social Channel
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "14px 18px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: 700, textTransform: "uppercase", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Share2 style={{ width: "14px", height: "14px" }} /> Social Channel
                   </div>
-                  <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#16a34a" }}>
-                    {parsedSummary.socialCases.toLocaleString()} <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#64748b" }}>cases</span>
+                  <div style={{ fontSize: "1.45rem", fontWeight: 800, color: "#16a34a" }}>
+                    {parsedSummary.socialCases.toLocaleString()} <span style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748b" }}>cases</span>
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "6px" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
                     Share: {Math.round((parsedSummary.socialCases / parsedSummary.totalCases) * 100)}% of total
                   </div>
                 </div>
 
                 {/* Date Range Card */}
-                <div style={{ background: "#ffffff", borderRadius: "20px", padding: "22px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
-                  <div style={{ fontSize: "0.78rem", color: "#d97706", fontWeight: 700, textTransform: "uppercase", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Calendar style={{ width: "15px", height: "15px" }} /> Collection Date Range
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "14px 18px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.02)" }}>
+                  <div style={{ fontSize: "0.72rem", color: "#d97706", fontWeight: 700, textTransform: "uppercase", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Calendar style={{ width: "14px", height: "14px" }} /> Collection Date Range
                   </div>
-                  <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "#0f172a", marginTop: "4px", lineHeight: 1.5 }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "#0f172a", marginTop: "2px", lineHeight: 1.3 }}>
                     {parsedSummary.dateRange.min === parsedSummary.dateRange.max ? (
                       formatEngDate(parsedSummary.dateRange.min)
                     ) : (
                       <>
                         {formatEngDate(parsedSummary.dateRange.min)}
                         <br />
-                        <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: 500 }}>To</span> {formatEngDate(parsedSummary.dateRange.max)}
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 500 }}>To</span> {formatEngDate(parsedSummary.dateRange.max)}
                       </>
                     )}
                   </div>
@@ -1057,53 +1062,58 @@ export default function QcImportView() {
               </div>
 
               {/* Action Bar */}
-              <div style={{ background: "#eef2ff", borderRadius: "20px", padding: "20px 24px", border: "1px solid #c7d2fe", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-                <div style={{ fontSize: "0.88rem", color: "#312e81", fontWeight: 600 }}>
+              <div style={{ background: "#eef2ff", borderRadius: "16px", padding: "12px 20px", border: "1px solid #c7d2fe", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", flexShrink: 0 }}>
+                <div style={{ fontSize: "0.82rem", color: "#312e81", fontWeight: 600 }}>
                   💡 The system will only save these aggregated summary numbers (raw row-by-row data will not be saved).
                 </div>
                 <button
                   onClick={handleSaveSummary}
                   style={{
-                    height: "36px",
-                    padding: "0 20px",
+                    height: "34px",
+                    padding: "0 18px",
                     borderRadius: "9999px",
                     border: "none",
                     background: "linear-gradient(135deg, #6366f1, #4f46e5)",
                     color: "#ffffff",
-                    fontSize: "0.85rem",
+                    fontSize: "0.82rem",
                     fontWeight: 600,
                     cursor: "pointer",
                     boxShadow: "0 4px 14px rgba(99, 102, 241, 0.3)",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "7px",
+                    gap: "6px",
                     transition: "all 0.2s ease"
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
                   onMouseLeave={(e) => e.currentTarget.style.transform = "none"}
                 >
-                  <Database style={{ width: "16px", height: "16px" }} />
+                  <Database style={{ width: "15px", height: "15px" }} />
                   Save Summary to System
                 </button>
               </div>
 
               {/* Category Breakdown Table */}
-              <div style={{ background: "#ffffff", borderRadius: "24px", padding: "28px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0f172a", margin: "0 0 20px 0", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Layers style={{ width: "20px", height: "20px", color: "#4338ca" }} />
-                  Summary by Category
-                </h3>
+              <div style={{ flex: 1, minHeight: 0, background: "#ffffff", borderRadius: "20px", padding: "20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px", flexShrink: 0 }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Layers style={{ width: "18px", height: "18px", color: "#4338ca" }} />
+                    Summary by Category ({parsedSummary.categoryBreakdown.length} หมวดหมู่)
+                  </h3>
+                  <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 600, background: "#f1f5f9", padding: "4px 12px", borderRadius: "20px" }}>
+                    Scroll ↕ เพื่อดูหมวดหมู่ทั้งหมด
+                  </div>
+                </div>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+                <div style={{ flex: 1, minHeight: 0, overflowX: "auto", overflowY: "auto", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: "0.85rem" }}>
                     <thead>
-                      <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left" }}>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#475569" }}>Category</th>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#d97706", textAlign: "center" }}>Date</th>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#2563eb", textAlign: "right" }}>Website</th>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#16a34a", textAlign: "right" }}>Social</th>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#0f172a", textAlign: "right" }}>Total Cases</th>
-                        <th style={{ padding: "12px 16px", fontWeight: 700, color: "#64748b", textAlign: "right", width: "200px" }}>Share (%)</th>
+                      <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#475569", borderBottom: "2px solid #e2e8f0" }}>Category</th>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#d97706", textAlign: "center", borderBottom: "2px solid #e2e8f0" }}>Date</th>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#2563eb", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Website</th>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#16a34a", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Social</th>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#0f172a", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Total Cases</th>
+                        <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "10px 14px", fontWeight: 700, color: "#64748b", textAlign: "right", width: "180px", borderBottom: "2px solid #e2e8f0" }}>Share (%)</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1111,19 +1121,19 @@ export default function QcImportView() {
                         const pct = Math.round((item.total / parsedSummary.totalCases) * 100);
                         return (
                           <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                            <td style={{ padding: "12px 16px", fontWeight: 600, color: "#0f172a" }}>{item.category}</td>
-                            <td style={{ padding: "12px 16px", color: "#d97706", fontWeight: 600, fontSize: "0.82rem", textAlign: "center" }}>
+                            <td style={{ padding: "10px 14px", fontWeight: 600, color: "#0f172a" }}>{item.category}</td>
+                            <td style={{ padding: "10px 14px", color: "#d97706", fontWeight: 600, fontSize: "0.8rem", textAlign: "center" }}>
                               {formatCategoryDateSpan(item.dateRange, parsedSummary?.dateRange?.min, parsedSummary?.dateRange?.max)}
                             </td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#2563eb", fontWeight: 600 }}>{item.website.toLocaleString()}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", color: "#16a34a", fontWeight: 600 }}>{item.social.toLocaleString()}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 800, color: "#0f172a" }}>{item.total.toLocaleString()}</td>
-                            <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end" }}>
-                                <div style={{ flex: 1, height: "7px", background: "#f1f5f9", borderRadius: "99px", overflow: "hidden", maxWidth: "110px" }}>
+                            <td style={{ padding: "10px 14px", textAlign: "right", color: "#2563eb", fontWeight: 600 }}>{item.website.toLocaleString()}</td>
+                            <td style={{ padding: "10px 14px", textAlign: "right", color: "#16a34a", fontWeight: 600 }}>{item.social.toLocaleString()}</td>
+                            <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 800, color: "#0f172a" }}>{item.total.toLocaleString()}</td>
+                            <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end" }}>
+                                <div style={{ flex: 1, height: "6px", background: "#f1f5f9", borderRadius: "99px", overflow: "hidden", maxWidth: "100px" }}>
                                   <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #4338ca, #6366f1)", borderRadius: "99px" }}></div>
                                 </div>
-                                <span style={{ fontWeight: 700, color: "#64748b", fontSize: "0.82rem" }}>{pct}%</span>
+                                <span style={{ fontWeight: 700, color: "#64748b", fontSize: "0.8rem" }}>{pct}%</span>
                               </div>
                             </td>
                           </tr>
@@ -1142,15 +1152,13 @@ export default function QcImportView() {
 
       {/* ===== HISTORY LOG TAB CONTENT ===== */}
       {activeTab === "history" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "24px", padding: "28px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-              <h2 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
-                <History style={{ width: "22px", height: "22px", color: "#4338ca" }} />
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, minHeight: 0, background: "#ffffff", borderRadius: "20px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", flexWrap: "wrap", gap: "16px", flexShrink: 0 }}>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "10px" }}>
+                <History style={{ width: "20px", height: "20px", color: "#4338ca" }} />
                 Saved Import History Logs
               </h2>
-
-
             </div>
 
             {savedSummaries.length === 0 ? (
@@ -1158,55 +1166,55 @@ export default function QcImportView() {
                 No saved summary records found in system
               </div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+              <div style={{ flex: 1, minHeight: 0, overflowX: "auto", overflowY: "auto", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: "0.85rem" }}>
                   <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left" }}>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#475569" }}>File Name</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#475569" }}>Import Date</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#475569" }}>Collection Date Range</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#2563eb", textAlign: "right" }}>Website</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#16a34a", textAlign: "right" }}>Social</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#0f172a", textAlign: "right" }}>Total</th>
-                      <th style={{ padding: "14px 18px", fontWeight: 700, color: "#64748b", textAlign: "center" }}>Action</th>
+                    <tr style={{ background: "#f8fafc", textAlign: "left" }}>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#475569", borderBottom: "2px solid #e2e8f0" }}>File Name</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#475569", borderBottom: "2px solid #e2e8f0" }}>Import Date</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#475569", borderBottom: "2px solid #e2e8f0" }}>Collection Date Range</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#2563eb", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Website</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#16a34a", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Social</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#0f172a", textAlign: "right", borderBottom: "2px solid #e2e8f0" }}>Total</th>
+                      <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, padding: "12px 16px", fontWeight: 700, color: "#64748b", textAlign: "center", borderBottom: "2px solid #e2e8f0" }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {savedSummaries.map((item) => (
                       <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "14px 18px", fontWeight: 700, color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
-                          <FileText style={{ width: "18px", height: "18px", color: "#4338ca" }} />
+                        <td style={{ padding: "12px 16px", fontWeight: 700, color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                          <FileText style={{ width: "16px", height: "16px", color: "#4338ca" }} />
                           {item.fileName}
                         </td>
-                        <td style={{ padding: "14px 18px", color: "#64748b" }}>
+                        <td style={{ padding: "12px 16px", color: "#64748b" }}>
                           {new Date(item.importedAt).toLocaleString("en-US")}
                         </td>
-                        <td style={{ padding: "14px 18px", color: "#334155", fontWeight: 600 }}>
+                        <td style={{ padding: "12px 16px", color: "#334155", fontWeight: 600 }}>
                           {formatEngDate(item.dateRange.min)} - {formatEngDate(item.dateRange.max)}
                         </td>
-                        <td style={{ padding: "14px 18px", textAlign: "right", color: "#2563eb", fontWeight: 700 }}>
+                        <td style={{ padding: "12px 16px", textAlign: "right", color: "#2563eb", fontWeight: 700 }}>
                           {item.websiteCases.toLocaleString()}
                         </td>
-                        <td style={{ padding: "14px 18px", textAlign: "right", color: "#16a34a", fontWeight: 700 }}>
+                        <td style={{ padding: "12px 16px", textAlign: "right", color: "#16a34a", fontWeight: 700 }}>
                           {item.socialCases.toLocaleString()}
                         </td>
-                        <td style={{ padding: "14px 18px", textAlign: "right", fontWeight: 800, color: "#0f172a" }}>
+                        <td style={{ padding: "12px 16px", textAlign: "right", fontWeight: 800, color: "#0f172a" }}>
                           {item.totalCases.toLocaleString()}
                         </td>
-                        <td style={{ padding: "14px 18px", textAlign: "center" }}>
+                        <td style={{ padding: "12px 16px", textAlign: "center" }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                             <button
                               onClick={() => setSelectedSummaryDetail(item)}
-                              style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#2563eb", cursor: "pointer", fontSize: "0.8rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}
+                              style={{ padding: "6px 12px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#2563eb", cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}
                             >
-                              <Eye style={{ width: "14px", height: "14px" }} /> View Stats
+                              <Eye style={{ width: "13px", height: "13px" }} /> View Stats
                             </button>
                             <button
                               onClick={() => setDeleteConfirmId(item.id)}
-                              style={{ padding: "8px 10px", borderRadius: "10px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#ef4444", cursor: "pointer" }}
+                              style={{ padding: "6px 8px", borderRadius: "10px", border: "1px solid #fee2e2", background: "#fef2f2", color: "#ef4444", cursor: "pointer" }}
                               title="Delete Record"
                             >
-                              <Trash2 style={{ width: "15px", height: "15px" }} />
+                              <Trash2 style={{ width: "14px", height: "14px" }} />
                             </button>
                           </div>
                         </td>

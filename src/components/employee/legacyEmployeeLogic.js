@@ -660,15 +660,7 @@ window.pageEmployee = function() {
 
       Chart.getChart(deptCtx.canvas)?.destroy();
       
-      const teamColorsMap = {
-        'ACE': '#6366f1',
-        'Sertec': '#3b82f6',
-        'ONIX': '#818cf8',
-        'Sale Support': '#93c5fd',
-        'Call Center': '#8ecead',
-        'Other': '#10b981'
-      };
-      const colors = depts.map(d => teamColorsMap[d] || '#a855f7');
+      const colors = depts.map(d => typeof window.getTeamColor === 'function' ? window.getTeamColor(d) : '#a855f7');
 
       new Chart(deptCtx, {
         type: 'doughnut',
@@ -2491,82 +2483,28 @@ window.pageEmployee = function() {
       locale: {
         firstDayOfWeek: 0, // Sunday
         weekdays: {
-            shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-            longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+            shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         },
         months: {
-            shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-            longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+            shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         }
       },
       dateFormat: 'Y-m-d',
       disableMobile: "true",
       monthSelectorType: 'dropdown',
       onReady: function (selectedDates, dateStr, instance) {
-        const createGrid = (type) => {
-          const container = instance.calendarContainer;
-          let grid = container.querySelector('.custom-grid-overlay');
-          if (!grid) {
-            grid = document.createElement('div');
-            grid.className = 'custom-grid-overlay';
-            container.appendChild(grid);
-          }
-          grid.innerHTML = '';
-          grid.style.display = 'grid';
-
-          if (type === 'month') {
-              const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-            months.forEach((m, i) => {
-              const btn = document.createElement('div');
-              btn.className = 'grid-item' + (instance.currentMonth === i ? ' active' : '');
-              btn.textContent = m;
-              btn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                instance.changeMonth(i, false);
-                grid.style.display = 'none';
-              };
-              grid.appendChild(btn);
-            });
-          } else {
-            const curYear = instance.currentYear;
-            for (let y = curYear - 6; y <= curYear + 5; y++) {
-              const btn = document.createElement('div');
-              btn.className = 'grid-item' + (curYear === y ? ' active' : '');
-              btn.textContent = y + 543; // Thai year
-              btn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                instance.changeYear(y);
-                grid.style.display = 'none';
-              };
-              grid.appendChild(btn);
-            }
-          }
-        };
-
-        // Direct click handlers for month and year labels in Leave Modal
-        const monthLabel = instance.calendarContainer.querySelector('.flatpickr-monthDropdown-month');
-        const yearLabel = instance.calendarContainer.querySelector('.cur-year');
-        if (monthLabel) {
-          monthLabel.style.cursor = 'pointer';
-          monthLabel.onclick = () => createGrid('month');
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
         }
-        if (yearLabel) {
-          yearLabel.style.cursor = 'pointer';
-          yearLabel.onclick = () => createGrid('year');
-        }
-
-        instance.calendarContainer.addEventListener('mousedown', (e) => {
-          if (!e.target.closest('.custom-grid-overlay') && !e.target.closest('.flatpickr-month')) {
-            const grid = instance.calendarContainer.querySelector('.custom-grid-overlay');
-            if (grid) grid.style.display = 'none';
-          }
-        });
       },
       onChange: updateLeaveDays,
       onOpen: (selectedDates, dateStr, instance) => {
         instance.calendarContainer.style.zIndex = "10000";
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
+        }
       }
     };
     flatpickr('#leaveStart', { ...fpConfig, defaultDate: startVal });
@@ -7585,20 +7523,34 @@ window.pageEmployee = function() {
     const mainContent = document.getElementById('scheduleMainContent');
 
     if (container) {
-      container.style.right = window.IS_TASK_SIDEBAR_OPEN ? '0px' : '-380px';
       if (window.IS_TASK_SIDEBAR_OPEN) {
-        container.innerHTML = renderTaskSidebar();
-        if (window.lucide) lucide.createIcons({ root: container });
+        container.classList.add('open');
+        container.style.right = '0px';
+        if (typeof renderTaskSidebar === 'function') {
+          container.innerHTML = renderTaskSidebar();
+          if (window.lucide) lucide.createIcons({ root: container });
+        }
+      } else {
+        container.classList.remove('open');
+        container.style.right = '-380px';
+        container.innerHTML = '';
       }
     }
 
     if (mainContent) {
-      mainContent.style.paddingRight = window.IS_TASK_SIDEBAR_OPEN ? '380px' : '0px';
+      if (window.IS_TASK_SIDEBAR_OPEN) {
+        mainContent.classList.add('sidebar-open');
+        mainContent.style.paddingRight = '380px';
+      } else {
+        mainContent.classList.remove('sidebar-open');
+        mainContent.style.paddingRight = '0px';
+      }
     }
   };
 
   window.handleTaskDragStart = function (e, taskId) {
     e.dataTransfer.setData('taskId', taskId);
+    e.dataTransfer.setData('text/plain', taskId);
     e.target.style.opacity = '0.5';
   };
 
@@ -7608,7 +7560,7 @@ window.pageEmployee = function() {
 
   window.handleTaskDrop = function (e, personId, dateIso) {
     e.preventDefault();
-    const rawTaskId = e.dataTransfer.getData('taskId');
+    const rawTaskId = e.dataTransfer.getData('taskId') || e.dataTransfer.getData('text/plain');
 
     const doDrop = () => {
       let droppedTask = null;
@@ -7625,13 +7577,28 @@ window.pageEmployee = function() {
         const taskId = rawTaskId.replace('scheduled-', '');
         const task = window.SCHEDULE_TASKS.find(t => t.id === taskId);
         if (task) {
-          const oldPersonObj = (DATA.employees || []).find(emp => emp.id === task.person);
-          task.oldDate = task.date;
-          task.oldName = oldPersonObj ? (oldPersonObj.nickname || oldPersonObj.name) : '';
+          const isCopy = e.altKey || e.ctrlKey || e.metaKey || (e.dataTransfer && e.dataTransfer.dropEffect === 'copy') || window.IS_COPY_MODE;
+          if (isCopy) {
+            const clonedTask = {
+              ...task,
+              id: 't_copy_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+              person: personId,
+              date: dateIso
+            };
+            window.SCHEDULE_TASKS.push(clonedTask);
+            droppedTask = clonedTask;
+            if (typeof window.showToast === 'function') {
+              window.showToast(`Copied task "${task.title || ''}"!`, 'success');
+            }
+          } else {
+            const oldPersonObj = (window.DATA?.employees || []).find(emp => emp.id === task.person);
+            task.oldDate = task.date;
+            task.oldName = oldPersonObj ? (oldPersonObj.nickname || oldPersonObj.name) : '';
 
-          task.person = personId;
-          task.date = dateIso;
-          droppedTask = task;
+            task.person = personId;
+            task.date = dateIso;
+            droppedTask = task;
+          }
         }
       } else {
         const allUnassigned = [...(window.UNASSIGNED_TASKS || []), ...getTasksFromScope()];
@@ -7663,9 +7630,9 @@ window.pageEmployee = function() {
         window.filterScheduleUI();
       }
 
-      // Sync to Google Sheets
+      // Sync to Google Sheets / Supabase
       if (typeof window.apiSaveScheduleTask === 'function') {
-        const personObj = (DATA.employees || []).find(emp => emp.id === personId);
+        const personObj = (window.DATA?.employees || []).find(emp => emp.id === personId);
         if (droppedTask && personObj) {
           window.apiSaveScheduleTask(droppedTask, personObj, dateIso);
         }
@@ -7679,7 +7646,7 @@ window.pageEmployee = function() {
       isPublic = !!isThaiHoliday(dObj);
     }
 
-    const person = (DATA.employees || []).find(emp => emp.id === personId);
+    const person = (window.DATA?.employees || []).find(emp => emp.id === personId);
     let isOffDay = false;
     let isLeave = false;
 
@@ -7688,7 +7655,7 @@ window.pageEmployee = function() {
       const offDays = (person.offdays || '').split(/[,|\-]/).map(d => realDayMap[d.trim().replace('วัน', '')]).filter(v => v !== undefined);
       if (offDays.includes(dayIndex)) isOffDay = true;
 
-      if (DATA.leaveRequests) {
+      if (window.DATA && window.DATA.leaveRequests) {
         const parseThaiDate = (str) => {
           if (!str) return '';
           const parts = str.split(' ');
@@ -7699,7 +7666,7 @@ window.pageEmployee = function() {
           const y = parseInt(parts[2]) - 543;
           return `${y}-${m}-${d}`;
         };
-        const onLeave = DATA.leaveRequests.some(r => {
+        const onLeave = window.DATA.leaveRequests.some(r => {
           if (r.status !== 'approved' && r.status !== 'อนุมัติแล้ว') return false;
           if ((r.name || '').trim().toLowerCase() !== (person.name || '').trim().toLowerCase() &&
             (r.name || '').trim().toLowerCase() !== (person.nameEn || '').trim().toLowerCase()) return false;
@@ -7731,6 +7698,78 @@ window.pageEmployee = function() {
       }
     } else {
       doDrop();
+    }
+  };
+
+  window.COPIED_SCHEDULE_TASK = window.COPIED_SCHEDULE_TASK || null;
+
+  window.copyScheduledTask = function (taskIdOrObj) {
+    let taskObj = null;
+    if (typeof taskIdOrObj === 'string') {
+      taskObj = (window.SCHEDULE_TASKS || []).find(t => t.id === taskIdOrObj);
+    } else {
+      taskObj = taskIdOrObj;
+    }
+    if (!taskObj) return;
+
+    window.COPIED_SCHEDULE_TASK = { ...taskObj };
+    if (typeof window.showToast === 'function') {
+      window.showToast(`คัดลอก "${taskObj.title}" แล้ว! คลิกที่เซลล์วันที่ต้องการวาง หรือลากพร้อมกด Alt/Ctrl`, 'success');
+    }
+    if (typeof window.refreshReactSchedule === 'function') {
+      window.refreshReactSchedule();
+    }
+  };
+
+  window.pasteScheduledTask = function (personId, dateIso) {
+    if (!window.COPIED_SCHEDULE_TASK) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('ยังไม่มีงานที่คัดลอกไว้ กรุณากดปุ่ม Copy บนงานก่อน', 'warning');
+      }
+      return;
+    }
+    const task = window.COPIED_SCHEDULE_TASK;
+    const clonedTask = {
+      ...task,
+      id: 't_copy_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      person: personId,
+      date: dateIso
+    };
+    window.SCHEDULE_TASKS = window.SCHEDULE_TASKS || [];
+    window.SCHEDULE_TASKS.push(clonedTask);
+
+    const personObj = (window.DATA?.employees || []).find(emp => emp.id === personId);
+    if (typeof window.apiSaveScheduleTask === 'function' && personObj) {
+      window.apiSaveScheduleTask(clonedTask, personObj, dateIso);
+    }
+
+    if (typeof window.showToast === 'function') {
+      window.showToast(`วางงาน "${clonedTask.title}" สำเร็จ!`, 'success');
+    }
+    if (typeof window.refreshReactSchedule === 'function') {
+      window.refreshReactSchedule();
+    }
+  };
+
+  window.duplicateScheduledTask = function (taskId) {
+    const task = (window.SCHEDULE_TASKS || []).find(t => t.id === taskId);
+    if (!task) return;
+    const clonedTask = {
+      ...task,
+      id: 't_copy_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+    };
+    window.SCHEDULE_TASKS.push(clonedTask);
+
+    const personObj = (window.DATA?.employees || []).find(emp => emp.id === task.person);
+    if (typeof window.apiSaveScheduleTask === 'function' && personObj) {
+      window.apiSaveScheduleTask(clonedTask, personObj, task.date);
+    }
+
+    if (typeof window.showToast === 'function') {
+      window.showToast(`คัดลอกงาน "${clonedTask.title}" เรียบร้อยแล้ว`, 'success');
+    }
+    if (typeof window.refreshReactSchedule === 'function') {
+      window.refreshReactSchedule();
     }
   };
 
@@ -7996,10 +8035,16 @@ window.pageEmployee = function() {
                         <span style="font-size:0.75rem; font-weight:700; color:${nodeCol}">${t.node}</span>
                       </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:12px">
+                    <div style="display:flex; align-items:center; gap:8px">
                       <div style="font-size:1rem; font-weight:800; color:#1e293b">${t.hours}%</div>
-                      <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" style="background:#fef2f2; color:#ef4444; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                        <i data-lucide="trash-2" style="width:16px; height:16px"></i>
+                      <button onclick="copyScheduledTask('${t.id}')" title="Copy Task" style="background:#f1f5f9; color:#475569; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                        <i data-lucide="copy" style="width:15px; height:15px"></i>
+                      </button>
+                      <button onclick="duplicateScheduledTask('${t.id}'); document.getElementById('${modalId}').remove(); showDayDetailModal('${person.id}', '${dateIso}')" title="Duplicate Task" style="background:#f0fdf4; color:#16a34a; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                        <i data-lucide="copy-plus" style="width:15px; height:15px"></i>
+                      </button>
+                      <button onclick="deleteScheduledTask('${t.id}'); document.getElementById('${modalId}').remove()" title="Delete Task" style="background:#fef2f2; color:#ef4444; border:none; width:32px; height:32px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                        <i data-lucide="trash-2" style="width:15px; height:15px"></i>
                       </button>
                     </div>
                   </div>
@@ -8139,6 +8184,11 @@ window.pageEmployee = function() {
           color: typeof window.colorForProject === 'function' ? window.colorForProject(acc.account) : '#6366f1'
         });
       });
+    });
+    tasks.sort((a, b) => {
+      const cmpAcc = (a.acc || '').localeCompare(b.acc || '', undefined, { sensitivity: 'base' });
+      if (cmpAcc !== 0) return cmpAcc;
+      return (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
     });
     return tasks;
   };
@@ -8643,7 +8693,7 @@ window.pageSchedule = function() {
 
         <!-- Right: Filters and Actions -->
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto;">
-          <div style="height:34px; display:flex; align-items:center; overflow:hidden; flex-shrink:0;">
+          <div style="height:34px; display:flex; align-items:center; overflow:visible !important; position:relative !important; flex-shrink:0;">
              ${renderDateFilter('filterScheduleUI()', 'auto', '', false)}
           </div>
           <div class="search-box" style="width:160px; background:#fff; height:34px; display:flex; align-items:center; position:relative; border:1px solid var(--border); border-radius:8px; overflow:hidden">
@@ -8663,8 +8713,8 @@ window.pageSchedule = function() {
           <button class="btn btn-sm" onclick="toggleTaskSidebar()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(45,110,247,0.08); color:var(--primary); border:1px solid rgba(45,110,247,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600">
             <i data-lucide="plus" style="width:12px; height:12px"></i> Add Task
           </button>
-          <button class="btn btn-sm" onclick="window.qcShowManageEmployeesModal && window.qcShowManageEmployeesModal('schedule')" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:#fff; color:#475569; border:1px solid var(--border); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
-            <i data-lucide="users" style="width:12px; height:12px"></i> Manage Employees
+          <button class="btn" onclick="window.qcShowManageEmployeesModal && window.qcShowManageEmployeesModal('schedule')" style="height:34px; padding:0 14px; font-size:.72rem; border-radius:9999px; background:#fff; color:#475569; border:1px solid #e2e8f0; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:500; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04);">
+            <i data-lucide="users" style="width:13px; height:13px; color:#94a3b8"></i> Manage Employees
           </button>
           <button class="btn btn-sm" onclick="window.openExportScheduleModal()" style="height:34px; padding:0 14px; font-size:.7rem; border-radius:8px; background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight:600; font-family:'Kanit'">
             <i data-lucide="download" style="width:12px; height:12px"></i> Export Schedule
@@ -9639,16 +9689,30 @@ window.pageSchedule = function() {
         window.flatpickr(input, {
           mode: 'range',
           dateFormat: 'Y-m-d',
+          appendTo: input.parentElement,
+          monthSelectorType: 'static',
+          yearSelectorType: 'static',
           locale: {
             firstDayOfWeek: 0,
             rangeSeparator: ' to ',
             weekdays: {
-              shorthand: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
-              longhand: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']
+              shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+              longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
             },
             months: {
-              shorthand: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
-              longhand: ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+              shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+              longhand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            }
+          },
+          disableMobile: true,
+          onReady: function (selectedDates, dateStr, instance) {
+            if (typeof window.attachScopeStyleGridOverlay === 'function') {
+              window.attachScopeStyleGridOverlay(instance);
+            }
+          },
+          onOpen: function (selectedDates, dateStr, instance) {
+            if (typeof window.attachScopeStyleGridOverlay === 'function') {
+              window.attachScopeStyleGridOverlay(instance);
             }
           },
           defaultDate: defaultRange ? defaultRange.split(' to ') : []

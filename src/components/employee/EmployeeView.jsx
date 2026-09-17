@@ -32,14 +32,14 @@ export default function EmployeeView() {
       createIcons: (params) => (params && params.root === null) ? null : lucide.createIcons({ icons: lucide.icons, ...params })
     };
     
-    window.showToast = (message) => console.log(message);
-    
     window.navigate = (page) => {
       if (page === 'employee' && containerRef.current) {
         containerRef.current.innerHTML = window.pageEmployee();
         window.lucide.createIcons();
       }
     };
+
+    const hasDataOnMount = !!(window.DATA && window.DATA.employees && window.DATA.employees.length > 0);
 
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
     if (containerRef.current && typeof window.pageEmployee === "function") {
@@ -64,7 +64,7 @@ export default function EmployeeView() {
       import("../legacy-pages/legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.pageEmployee === "function") {
+            if (!hasDataOnMount && containerRef.current && typeof window.pageEmployee === "function") {
               containerRef.current.innerHTML = window.pageEmployee();
               window.lucide.createIcons();
               if (window.Chart && typeof window.initEmployeeCharts === "function") {

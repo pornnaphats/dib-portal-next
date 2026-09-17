@@ -64,6 +64,7 @@ export default function PermissionSettingsView() {
     "/schedule": "Schedule",
     "/project-scope-portal": "Workship by Scope",
     "/realcyber-plan": "RealCyber Plan",
+    "/auto-assign-plan": "Auto Assign Plan",
     "/realcyber-import": "Import File",
     "/public-holiday": "Public Holiday",
     "/my-plan": "My Plan",

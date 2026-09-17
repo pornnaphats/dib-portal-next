@@ -19,6 +19,15 @@ export default function LeaveManagementView() {
     if (initRef.current) return;
     initRef.current = true;
     document.body.dataset.page = "leave-management";
+    if (typeof window !== "undefined") {
+      window.IS_TASK_SIDEBAR_OPEN = false;
+      const sidebarContainer = document.getElementById("taskSidebarContainer");
+      if (sidebarContainer) {
+        sidebarContainer.classList.remove("open");
+        sidebarContainer.style.right = "-380px";
+        sidebarContainer.innerHTML = "";
+      }
+    }
 
     // Set up minimal globals for first render immediately
     if (!window.DATA) {

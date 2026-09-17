@@ -36,6 +36,8 @@ export default function ScopeView() {
       };
     }
 
+    const hasDataOnMount = !!(window.PREMIUM_SCOPE_DATA && window.PREMIUM_SCOPE_DATA.length > 0);
+
     // Attach lucide immediately
     window.lucide = {
       ...lucide,
@@ -69,9 +71,13 @@ export default function ScopeView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
-              containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
-              window.lucide.createIcons();
+            if (!hasDataOnMount) {
+              if (typeof window.applyScopeDashboardFilters === "function" && document.getElementById("scopeTableBody")) {
+                window.applyScopeDashboardFilters();
+              } else if (containerRef.current && typeof window.renderPremiumScopeDashboard === "function") {
+                containerRef.current.innerHTML = window.renderPremiumScopeDashboard();
+                window.lucide.createIcons();
+              }
             }
           }).catch(() => {});
         }

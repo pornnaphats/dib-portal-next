@@ -24,14 +24,29 @@ const getWorkloadGlow = (hours) => {
 };
 
 const TEAM_COLORS = {
-  'ACE':          { bg: '#3b82f6', light: '#eff6ff', text: '#1d4ed8' },
-  'Sertec':       { bg: '#8b5cf6', light: '#f5f3ff', text: '#6d28d9' },
-  'ONIX':         { bg: '#ec4899', light: '#fdf2f8', text: '#be185d' },
-  'Sale Support': { bg: '#f59e0b', light: '#fffbeb', text: '#b45309' },
-  'Call Center':  { bg: '#10b981', light: '#ecfdf5', text: '#047857' },
+  'ACE':                  { bg: '#f97316', light: '#fff7ed', text: '#c2410c' },
+  'ETDA Call Center':     { bg: '#10b981', light: '#ecfdf5', text: '#047857' },
+  'ONIX':                 { bg: '#ec4899', light: '#fdf2f8', text: '#be185d' },
+  'OR Call Center':       { bg: '#06b6d4', light: '#ecfeff', text: '#0e7490' },
+  'RealCyber':            { bg: '#635bff', light: '#eef2ff', text: '#4f46e5' },
+  'Reclyber ระยะสั้น':    { bg: '#a855f7', light: '#f3e8ff', text: '#7e22ce' },
+  'RealCyber ระยะสั้น':   { bg: '#a855f7', light: '#f3e8ff', text: '#7e22ce' },
+  'Sale Support':         { bg: '#2563eb', light: '#eff6ff', text: '#1d4ed8' },
+  'Sertec':               { bg: '#8b5cf6', light: '#f5f3ff', text: '#6d28d9' },
+  'Graphic':              { bg: '#d97706', light: '#fffbeb', text: '#b45309' },
+  'Content':              { bg: '#e11d48', light: '#fff1f2', text: '#be123c' },
+  'ETDA':                 { bg: '#059669', light: '#e6fffa', text: '#046c4e' },
+  'Admin':                { bg: '#475569', light: '#f8fafc', text: '#334155' },
+  'Workship':             { bg: '#14b8a6', light: '#f0fdf4', text: '#0f766e' },
+  'Call Center':          { bg: '#16a34a', light: '#f0fdf4', text: '#15803d' },
 };
 
-const getTeamStyle = (team) => TEAM_COLORS[team] || { bg: '#635BFF', light: '#eef2ff', text: '#4f46e5' };
+const getTeamStyle = (team) => {
+  if (typeof window !== 'undefined' && typeof window.getTeamStyle === 'function') {
+    return window.getTeamStyle(team);
+  }
+  return TEAM_COLORS[team] || { bg: '#64748b', light: '#f8fafc', text: '#334155' };
+};
 
 const getPosStyle = (pos) => {
   const p = (pos || '').toLowerCase();
@@ -93,7 +108,7 @@ const getLeaveRequestsForDate = (dateIso, p) => {
 };
 window.getLeaveRequestsForDate = getLeaveRequestsForDate;
 
-export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter, scheduleTasks, startDate, endDate }) {
+export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter, scheduleTasks, startDate, endDate, settingsVersion }) {
   const projectColorMap = useMemo(() => {
     const projects = new Set();
     if (typeof window !== "undefined" && window.PREMIUM_SCOPE_DATA) {
@@ -157,10 +172,19 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
       tasksMap[key].push(t);
     });
 
+    let hiddenEmps = [];
+    try { hiddenEmps = JSON.parse(localStorage.getItem('schedule_hidden_employees') || '[]'); } catch(e) { hiddenEmps = []; }
+    let empOrderMap = {};
+    try { empOrderMap = JSON.parse(localStorage.getItem('schedule_employee_order') || '{}'); } catch(e) { empOrderMap = {}; }
+
     const deptGroups = {};
     (employees || []).forEach(e => {
       const dept = e.team ? e.team.trim() : (e.dept ? e.dept.trim() : '');
       if (!dept || dept === '-' || dept === 'Other') return;
+
+      // Hide employees marked as hidden in Manage modal
+      if (hiddenEmps.includes(String(e.id)) || hiddenEmps.includes(String(e.name))) return;
+
       if (teamFilter && teamFilter !== 'all' && dept !== teamFilter) return;
       const posStr = String(e.position || e.pos || '').trim().toLowerCase();
       if (posStr === 'manager') return;
@@ -174,10 +198,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
       if (!deptGroups[dept]) deptGroups[dept] = [];
       const parseOffDays = (raw) => {
         if (!raw || raw === '-' || raw === '') return [];
-        // Handles formats: "เสาร์ - อาทิตย์" (form format), "เสาร์,อาทิตย์", "วันเสาร์,วันอาทิตย์", English names
         const thaiMap = { 'อาทิตย์': 0, 'จันทร์': 1, 'อังคาร': 2, 'พุธ': 3, 'พฤหัสบดี': 4, 'ศุกร์': 5, 'เสาร์': 6 };
         const enMap = { 'sun': 0, 'sunday': 0, 'mon': 1, 'monday': 1, 'tue': 2, 'tuesday': 2, 'wed': 3, 'wednesday': 3, 'thu': 4, 'thursday': 4, 'fri': 5, 'friday': 5, 'sat': 6, 'saturday': 6 };
-        // Normalize: replace " - " (space-dash-space) with comma, then split
         const normalized = raw.replace(/\s*-\s*/g, ',');
         return normalized.split(/[,|]/).map(d => {
           const t = d.trim().replace(/^วัน/, '');
@@ -213,10 +235,20 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
         if (idxB === -1) return -1;
         return idxA - idxB;
       })
-      .map(dept => ({ name: dept, members: deptGroups[dept] }));
+      .map(dept => ({
+        name: dept,
+        members: deptGroups[dept].sort((a, b) => {
+          const idxA = empOrderMap[a.id] !== undefined ? empOrderMap[a.id] : (empOrderMap[String(a.id)] !== undefined ? empOrderMap[String(a.id)] : (empOrderMap[a.fullName] !== undefined ? empOrderMap[a.fullName] : empOrderMap[a.name]));
+          const idxB = empOrderMap[b.id] !== undefined ? empOrderMap[b.id] : (empOrderMap[String(b.id)] !== undefined ? empOrderMap[String(b.id)] : (empOrderMap[b.fullName] !== undefined ? empOrderMap[b.fullName] : empOrderMap[b.name]));
+          if (idxA !== undefined && idxB !== undefined) return idxA - idxB;
+          if (idxA !== undefined) return -1;
+          if (idxB !== undefined) return 1;
+          return (a.rank || 999) - (b.rank || 999);
+        })
+      }));
 
     return { days: daysArr, teams: teamsArr, tasksByPersonDay: tasksMap };
-  }, [employees, searchQuery, teamFilter, scheduleTasks, startDate, endDate]);
+  }, [employees, searchQuery, teamFilter, scheduleTasks, startDate, endDate, settingsVersion]);
 
   const todayStr = (() => {
     const n = new Date();
@@ -260,6 +292,18 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
         .schedule-scroll-wrapper::-webkit-scrollbar-thumb:hover {
           background: #94a3b8 !important;
         }
+        /* Hover paste badge styling */
+        .schedule-day-cell .paste-badge {
+          opacity: 0 !important;
+          pointer-events: none !important;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          transform: translateY(-2px) !important;
+        }
+        .schedule-day-cell:hover .paste-badge {
+          opacity: 1 !important;
+          pointer-events: auto !important;
+          transform: translateY(0) !important;
+        }
       `}</style>
       <div className="schedule-scroll-wrapper" style={{ overflowX: 'auto', overflowY: 'auto', flex: 1, minHeight: 0, width: '100%' }}>
         <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -268,8 +312,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
             <tr>
               {/* Employee col header */}
               <th style={{
-                width: '260px', minWidth: '260px',
-                padding: '16px 20px',
+                width: '240px', minWidth: '240px',
+                padding: '14px 16px',
                 textAlign: 'left',
                 fontSize: '0.75rem', fontWeight: 700, color: '#24204D',
                 background: '#ffffff',
@@ -294,9 +338,10 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
 
                 return (
                   <th key={i} style={{
-                    padding: '14px 10px',
+                    padding: '12px 6px',
                     textAlign: 'center',
-                    width: '150px', minWidth: '150px',
+                    width: '150px',
+                    minWidth: '150px',
                     position: 'sticky', top: 0, zIndex: 10,
                     background: isToday ? '#faf8ff' : isHoliday ? '#fff1f2' : isWeekend ? '#f8fafc' : '#ffffff',
                     borderRight: '1px solid rgba(0,0,0,0.04)',
@@ -461,9 +506,17 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                           return (
                             <td
                               key={dIdx}
+                              className="schedule-day-cell"
                               data-basebg={baseBg}
                               data-hoverbg="#faf8ff"
-                              onDragOver={(e) => e.preventDefault()}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                if (e.altKey || e.ctrlKey || e.metaKey) {
+                                  e.dataTransfer.dropEffect = 'copy';
+                                } else {
+                                  e.dataTransfer.dropEffect = 'move';
+                                }
+                              }}
                               onDrop={(e) => {
                                 if (typeof window.handleTaskDrop === 'function') {
                                   window.handleTaskDrop(e, p.id, d.dateIso);
@@ -477,7 +530,8 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                 borderLeft: 'none',
                                 verticalAlign: 'top',
                                 height: '160px',
-                                maxWidth: '150px',
+                                width: '150px',
+                                minWidth: '150px',
                                 transition: 'background 0.15s',
                                 cursor: 'pointer',
                               }}
@@ -490,6 +544,38 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                               }}
                             >
                               <div style={{ height: '100%', display: 'flex', flexDirection: 'column', padding: '6px', position: 'relative', overflow: 'hidden' }}>
+                                {typeof window !== 'undefined' && window.COPIED_SCHEDULE_TASK && (
+                                  <div
+                                    className="paste-badge"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (typeof window.pasteScheduledTask === 'function') {
+                                        window.pasteScheduledTask(p.id, d.dateIso);
+                                      }
+                                    }}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '4px',
+                                      right: '4px',
+                                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                                      color: '#ffffff',
+                                      fontSize: '0.52rem',
+                                      fontWeight: 700,
+                                      padding: '3px 8px',
+                                      borderRadius: '99px',
+                                      cursor: 'pointer',
+                                      boxShadow: '0 4px 12px rgba(16,185,129,0.35)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      zIndex: 12
+                                    }}
+                                    title={`Paste "${window.COPIED_SCHEDULE_TASK.title}" here`}
+                                  >
+                                    <span style={{ fontSize: '0.65rem', fontWeight: 800, lineHeight: 1 }}>+</span>
+                                    <span>Paste</span>
+                                  </div>
+                                )}
                                 {approvedLeaves.length > 0 && dayTasks.length === 0 ? (
                                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                     {approvedLeaves.map((lv, lvIdx) => {
@@ -565,7 +651,34 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                               transition: 'all 0.15s'
                                             }}
                                           >
-                                            <div style={{ fontWeight: 700, color: nodeCol, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '10px', marginBottom: '2px' }}>{t.title}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                              <div style={{ fontWeight: 700, color: nodeCol, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingRight: '4px' }}>{t.title}</div>
+                                              <button
+                                                title="Copy task (or hold Alt/Ctrl while dragging)"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  if (typeof window.copyScheduledTask === 'function') {
+                                                    window.copyScheduledTask(t);
+                                                  }
+                                                }}
+                                                style={{
+                                                  background: 'none',
+                                                  border: 'none',
+                                                  color: '#94a3b8',
+                                                  cursor: 'pointer',
+                                                  padding: '0 2px',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  opacity: 0.6,
+                                                  transition: 'all 0.15s',
+                                                  flexShrink: 0
+                                                }}
+                                                onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#635BFF'; }}
+                                                onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = '#94a3b8'; }}
+                                              >
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                              </button>
+                                            </div>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px', gap: '4px' }}>
                                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                                                 <span style={{ fontSize: '0.52rem', color: nodeCol, fontWeight: 700, background: `${nodeCol}12`, padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{t.acc || ''}</span>

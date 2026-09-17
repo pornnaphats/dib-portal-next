@@ -67,6 +67,8 @@ export default function HolidayView() {
       }
     }
     
+    const hasDataOnMount = !!(window.HOLIDAY_LIST && window.HOLIDAY_LIST.length > 0);
+
     // Attach lucide immediately
     window.lucide = {
       ...lucide,
@@ -179,7 +181,7 @@ export default function HolidayView() {
       import("./legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (containerRef.current) {
+            if (!hasDataOnMount && containerRef.current) {
               const savedView = localStorage.getItem('holiday_current_view');
               const { name, date } = window.currentManageHoliday || {};
               if (savedView === 'holiday-summary' && typeof window.pageHolidaySummary === "function") {

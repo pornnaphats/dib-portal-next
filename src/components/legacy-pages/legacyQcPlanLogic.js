@@ -805,7 +805,7 @@ window.renderQCWorkPlanDashboard = function() {
         transition: all 0.2s;
         height: 34px;
       }
-      .btn-add-plan:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+      .btn-add-plan:hover { transform: none; box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
 
       /* Modal */
       .qc-modal-overlay {
@@ -821,7 +821,7 @@ window.renderQCWorkPlanDashboard = function() {
         animation: slideUp 0.3s ease;
       }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes slideUp { from { opacity: 0; } to { opacity: 1; } }
 
       .qc-modal h3 { font-size: 1.1rem; font-weight: 700; margin: 0 0 20px 0; color: #0f172a; display: flex; align-items: center; gap: 8px; }
       .qc-form-group { margin-bottom: 16px; }
@@ -871,16 +871,16 @@ window.renderQCWorkPlanDashboard = function() {
           ` : ''}
           <div style="width:1px; height:20px; background:#e2e8f0; margin:0 2px"></div>
 
-          <button class="btn" onclick="qcShowManageEmployeesModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
-             <i data-lucide="users" style="width:14px; height:14px"></i> Manage Employees
+          <button class="btn" onclick="qcShowManageEmployeesModal()" style="height:34px; padding:0 14px; font-size:.72rem !important; font-weight:500 !important; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #e2e8f0; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
+             <i data-lucide="users" style="width:13px; height:13px; color:#94a3b8"></i> Manage Employees
           </button>
           
-          <button class="btn" onclick="qcShowSettingsModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
-             <i data-lucide="settings" style="width:14px; height:14px"></i> Workload Settings
+          <button class="btn" onclick="qcShowSettingsModal()" style="height:34px; padding:0 14px; font-size:.72rem !important; font-weight:500 !important; border-radius:9999px; background:#ffffff !important; color:#475569; border:1px solid #e2e8f0; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-family:'Kanit'; box-shadow:0 1px 2px rgba(15,23,42,0.04); transition: all 0.2s;">
+             <i data-lucide="settings" style="width:13px; height:13px; color:#94a3b8"></i> Workload Settings
           </button>
 
-          <button class="btn btn-primary" onclick="qcShowAutoPlanModal()" style="height:34px; padding:0 16px; font-size:.75rem; border-radius:9999px; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-weight:600; font-family:'Kanit'; box-shadow:0 4px 12px rgba(99,102,241,0.25); margin-top:0; transition: all 0.2s;">
-            <i data-lucide="zap" style="width:14px; height:14px;"></i> Auto Assign Plan
+          <button class="btn btn-primary" onclick="qcShowAutoPlanView()" style="height:34px; padding:0 14px; font-size:.72rem !important; font-weight:500 !important; border-radius:9999px; background:linear-gradient(135deg, #6366f1, #4f46e5) !important; color:#fff !important; border:none; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-family:'Kanit'; box-shadow:0 4px 12px rgba(99,102,241,0.25); margin-top:0; transition: all 0.2s;">
+            <i data-lucide="zap" style="width:13px; height:13px;"></i> Auto Assign Plan
           </button>
 
 
@@ -959,7 +959,7 @@ window.renderQCWorkPlanDashboard = function() {
       </div>
 
       <!-- CHARTS ROW 2: Donuts + Overview -->
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; align-items: stretch;">
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; align-items: stretch;">
         <div class="qc-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 16px;">
           <div class="qc-section-title" style="margin-bottom: 12px;">สถิติการ QC ตามช่องทาง</div>
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 1;">
@@ -1372,7 +1372,6 @@ window.qcSavePlan = function() {
       }
     });
   } else if (targetCasesVal > 0) {
-    // No daily cases entered, but target cases specified. Let's add a single entry on the first day of the dates list.
     const id = 'QC-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const plan = {
       id: id,
@@ -1400,19 +1399,13 @@ window.qcSavePlan = function() {
     return;
   }
 
-  // Close modal
   document.getElementById('qcAddModal')?.remove();
-
-  // Show success
   if (typeof window.showToast === 'function') {
     window.showToast('เพิ่มแผนงานเรียบร้อยแล้ว!', 'success');
   }
-
-  // Re-render
   qcReloadPlan();
 };
 
-// --- Delete Plan Row ---
 window.qcDeleteRow = async function(name, qcType, channel, category) {
   const confirmed = await window.qcCustomConfirm({
     title: 'ยืนยันการลบแผนงาน',
@@ -1423,14 +1416,12 @@ window.qcDeleteRow = async function(name, qcType, channel, category) {
   });
   if (!confirmed) return;
   
-  // Update local memory state
   window.QC_PLANS = window.QC_PLANS.filter(p => !(p.name === name && p.qcType === qcType && p.channel === channel && (p.category || '') === category));
   
   if (typeof window.qcDeleteLocalPlan === 'function') {
     window.qcDeleteLocalPlan({ name, qcType, channel, category });
   }
 
-  // Call GAS to delete all matching rows from Google Sheet
   if (typeof apiSaveQcPlan === 'function') {
     apiSaveQcPlan({
       action: 'delete_qc_plan',
@@ -1444,225 +1435,522 @@ window.qcDeleteRow = async function(name, qcType, channel, category) {
   if (typeof window.showToast === 'function') {
     window.showToast('ลบแผนงานเรียบร้อยแล้ว!', 'success');
   }
-  
+};
+
+// --- Helper functions for Imported Summaries Integration ---
+window.qcGetImportedSummaries = function() {
+  try {
+    const stored = localStorage.getItem("qc_imported_summaries");
+    if (stored) {
+      const arr = JSON.parse(stored);
+      if (Array.isArray(arr)) return arr;
+    }
+  } catch (e) {
+    console.error("Failed to load local imported summaries:", e);
+  }
+  return [];
+};
+
+window.qcFetchImportedSummariesFromSupabase = async function() {
+  const supabaseUrl = typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_URL ? process.env.NEXT_PUBLIC_SUPABASE_URL : "https://jfxesvvswpgeaxhhnnyt.supabase.co";
+  const supabaseKey = typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmeGVzdnZzd3BnZWF4aGhubnl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODQyNTQsImV4cCI6MjA5Nzg2MDI1NH0.odfG9O7eHCF6nUlPFo3TxFLpPl_ncF7loxlR8i0x14E";
+
+  if (!supabaseUrl || !supabaseKey) return;
+
+  const mapRowToObj = (r) => ({
+    id: r.id,
+    fileName: r.file_name || r.fileName,
+    importedAt: r.imported_at || r.importedAt,
+    websiteSheet: r.website_sheet || r.websiteSheet,
+    socialSheet: r.social_sheet || r.socialSheet,
+    totalCases: r.total_cases !== undefined ? r.total_cases : r.totalCases,
+    websiteCases: r.website_cases !== undefined ? r.website_cases : r.websiteCases,
+    socialCases: r.social_cases !== undefined ? r.social_cases : r.socialCases,
+    dateRange: r.date_range || r.dateRange,
+    categoryBreakdown: r.category_breakdown || r.categoryBreakdown,
+    dailyBreakdown: r.daily_breakdown || r.dailyBreakdown
+  });
+
+  const localSummaries = window.qcGetImportedSummaries();
+
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/imported_summaries?select=*&order=imported_at.desc`, {
+      headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const remoteData = rows.map(mapRowToObj);
+        const map = new Map();
+        [...remoteData, ...localSummaries].forEach(item => { if (item && item.id) map.set(item.id, item); });
+        const merged = Array.from(map.values());
+        localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+        window.qcPopulateImportedDropdown(merged);
+        return;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/qc_imported_summaries?select=*&order=imported_at.desc`, {
+      headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        const remoteData = rows.map(mapRowToObj);
+        const map = new Map();
+        [...remoteData, ...localSummaries].forEach(item => { if (item && item.id) map.set(item.id, item); });
+        const merged = Array.from(map.values());
+        localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+        window.qcPopulateImportedDropdown(merged);
+        return;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/org_structure?id=eq.qc_imported_summaries`, {
+      headers: { "apikey": supabaseKey, "Authorization": `Bearer ${supabaseKey}` }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0 && Array.isArray(rows[0].structure)) {
+        const remoteData = rows[0].structure;
+        const map = new Map();
+        [...remoteData, ...localSummaries].forEach(item => { if (item && item.id) map.set(item.id, item); });
+        const merged = Array.from(map.values());
+        localStorage.setItem("qc_imported_summaries", JSON.stringify(merged));
+        window.qcPopulateImportedDropdown(merged);
+      }
+    }
+  } catch (e) {}
+};
+
+window.qcPopulateImportedDropdown = function(summaries) {
+  const select = document.getElementById("qcAutoImportedSource");
+  if (!select) return;
+  const currentVal = select.value;
+  const list = Array.isArray(summaries) ? summaries : window.qcGetImportedSummaries();
+
+  let optionsHtml = `<option value="">-- กรุณาเลือกไฟล์ที่ต้องการดึงข้อมูล --</option>`;
+  if (list.length > 0) {
+    optionsHtml += list.map((item) => {
+      const dateText = item.dateRange && item.dateRange.min ? ` (${item.dateRange.min}${item.dateRange.max && item.dateRange.max !== item.dateRange.min ? ' - ' + item.dateRange.max : ''})` : '';
+      const casesText = (item.totalCases || 0).toLocaleString('en-US');
+      const isSel = currentVal && item.id === currentVal ? 'selected' : '';
+      return `<option value="${item.id}" ${isSel}>📄 ${item.fileName || 'ไฟล์ Import'}${dateText} · ${casesText} เคส</option>`;
+    }).join('');
+  } else {
+    optionsHtml = `<option value="">-- ไม่พบข้อมูลไฟล์ที่เคย Import ไว้ --</option>`;
+  }
+  select.innerHTML = optionsHtml;
+
+  const countBadge = document.getElementById("qcAutoImportCountBadge");
+  if (countBadge) {
+    countBadge.textContent = list.length > 0 ? `พบ ${list.length} ไฟล์ที่ Import ไว้` : `ไม่พบไฟล์ที่ Import`;
+    countBadge.style.background = list.length > 0 ? '#dcfce7' : '#f1f5f9';
+    countBadge.style.color = list.length > 0 ? '#15803d' : '#64748b';
+  }
+
+  // Update preview only if user explicitly selected a value
+  if (currentVal) {
+    window.qcOnSelectImportedSource(currentVal);
+  } else {
+    const preview = document.getElementById("qcAutoImportedPreview");
+    if (preview) preview.style.display = "none";
+    if (window.QC_AUTO_PLAN_STATE) {
+      window.QC_AUTO_PLAN_STATE.selectedImportSummary = null;
+    }
+  }
+};
+
+window.qcOnSelectImportedSource = function(summaryId) {
+  const preview = document.getElementById("qcAutoImportedPreview");
+  if (!summaryId) {
+    if (preview) preview.style.display = "none";
+    if (window.QC_AUTO_PLAN_STATE) {
+      window.QC_AUTO_PLAN_STATE.selectedImportSummary = null;
+    }
+    return;
+  }
+
+  const list = window.qcGetImportedSummaries();
+  const summary = list.find(s => s.id === summaryId);
+  if (!summary) return;
+
+  if (window.QC_AUTO_PLAN_STATE) {
+    window.QC_AUTO_PLAN_STATE.selectedImportSummary = summary;
+  }
+
+  // 1. Show preview card
+  if (preview) {
+    const formatEngDate = (dStr) => {
+      if (!dStr || dStr === "-") return "-";
+      const parts = dStr.split("-");
+      if (parts.length === 3) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${parseInt(parts[2])} ${months[parseInt(parts[1]) - 1]} ${parts[0]}`;
+      }
+      return dStr;
+    };
+
+    let dateRangeText = "-";
+    if (summary.dateRange && summary.dateRange.min) {
+      const minStr = formatEngDate(summary.dateRange.min);
+      const maxStr = formatEngDate(summary.dateRange.max);
+      dateRangeText = minStr === maxStr ? minStr : `${minStr} – ${maxStr}`;
+    }
+
+    const webCount = (summary.websiteCases || 0).toLocaleString('en-US');
+    const socCount = (summary.socialCases || 0).toLocaleString('en-US');
+    const totCount = (summary.totalCases || 0).toLocaleString('en-US');
+    const catCount = Array.isArray(summary.categoryBreakdown) ? summary.categoryBreakdown.length : 0;
+
+    preview.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:700; color:#1e293b; font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="file-text" style="width:14px; height:14px; color:#10b981;"></i>
+            ${summary.fileName}
+          </span>
+          <span style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:0.7rem; padding:2px 8px; border-radius:20px;">
+            ${totCount} เคสรวม (${catCount} หมวด)
+          </span>
+        </div>
+        <div style="display:flex; gap:12px; font-size:0.72rem; color:#475569; flex-wrap:wrap; background:#f8fafc; padding:6px 10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div><strong style="color:#0ea5e9;">Web:</strong> ${webCount} เคส</div>
+          <div><strong style="color:#8b5cf6;">Social:</strong> ${socCount} เคส</div>
+          <div><strong style="color:#635bff;">ช่วงวันข้อมูล:</strong> ${dateRangeText}</div>
+        </div>
+      </div>
+    `;
+    preview.style.display = "block";
+    if (typeof lucide !== 'undefined') lucide.createIcons({ root: preview });
+  }
+
+  // 2. Set Data Date in state if present
+  if (summary.dateRange && summary.dateRange.min) {
+    const enMonthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const parts = summary.dateRange.min.split("-");
+    if (parts.length === 3) {
+      const day = parseInt(parts[2]);
+      const monthIdx = parseInt(parts[1]) - 1;
+      let displayVal = `${day} ${enMonthsShort[monthIdx]}`;
+      if (summary.dateRange.max && summary.dateRange.max !== summary.dateRange.min) {
+        const maxParts = summary.dateRange.max.split("-");
+        if (maxParts.length === 3) {
+          const maxDay = parseInt(maxParts[2]);
+          const maxMonthIdx = parseInt(maxParts[1]) - 1;
+          displayVal += ` - ${maxDay} ${enMonthsShort[maxMonthIdx]}`;
+        }
+      }
+      if (window.QC_AUTO_PLAN_STATE) window.QC_AUTO_PLAN_STATE.dataDate = displayVal;
+    }
+  }
+
+  if (typeof window.showToast === 'function') {
+    window.showToast(`ดึงข้อมูลจากไฟล์ "${summary.fileName}" เรียบร้อยแล้ว`, 'info');
+  }
+};
+
+window.qcFindImportedCategoryCount = function(catName, breakdown, channel) {
+  if (!breakdown || !Array.isArray(breakdown)) return 0;
+  const targetLower = String(catName || '').trim().toLowerCase();
+  if (!targetLower) return 0;
+
+  const isGambling = (catStr) => {
+    if (!catStr) return false;
+    const s = catStr.toLowerCase();
+    return s.includes("พนัน") || s.includes("gambling") || s.includes("ฟุตบอล") || s.includes("บาคาร่า") || s.includes("สล็อต") || s.includes("หวย") || s.includes("คาสิโน") || s.includes("ไก่ชน") || s.includes("ไฮโล");
+  };
+
+  const is5Products = (catStr) => {
+    if (!catStr) return false;
+    const s = catStr.toLowerCase();
+    return s.includes("กัญชา") || s.includes("บุหรี่ไฟฟ้า") || s.includes("แอลกอฮอล์") || s.includes("กระท่อม") || s.includes("ปืน") || s.includes("อาวุธปืน") || s.includes("สินค้า");
+  };
+
+  const getItemCount = (b) => {
+    if (channel === "Website") {
+      return (b.website !== undefined && b.website !== null) ? b.website : (b.total || 0);
+    } else if (channel === "Social") {
+      return (b.social !== undefined && b.social !== null) ? b.social : (b.total || 0);
+    }
+    return b.total !== undefined ? b.total : 0;
+  };
+
+  // 1. Target: Website - โฆษณาพนัน
+  if (targetLower === "โฆษณาพนัน") {
+    let sum = 0;
+    breakdown.forEach(b => {
+      if (isGambling(b.category)) sum += getItemCount(b);
+    });
+    return sum;
+  }
+
+  // 2. Target: Website - Exclude โฆษณาพนัน
+  if (targetLower.includes("exclude โฆษณาพนัน") || targetLower === "exclude โฆษณาพนัน") {
+    let sum = 0;
+    breakdown.forEach(b => {
+      if (!isGambling(b.category)) sum += getItemCount(b);
+    });
+    return sum;
+  }
+
+  // 3. Target: Social - พนัน
+  if (targetLower === "พนัน") {
+    let sum = 0;
+    breakdown.forEach(b => {
+      if (isGambling(b.category)) sum += getItemCount(b);
+    });
+    return sum;
+  }
+
+  // 4. Target: Social - 5 หมวดสินค้า (กัญชา บุหรี่ไฟฟ้า แอลกอฮอล์ กระท่อม ปืน)
+  if (targetLower.includes("5 หมวดสินค้า") || targetLower.includes("กัญชา")) {
+    let sum = 0;
+    breakdown.forEach(b => {
+      if (is5Products(b.category)) sum += getItemCount(b);
+    });
+    return sum;
+  }
+
+  // 5. Target: Social - อื่นๆ Exclude พนันและสินค้า
+  if (targetLower.includes("อื่นๆ exclude พนัน") || (targetLower.includes("อื่นๆ") && targetLower.includes("exclude"))) {
+    let sum = 0;
+    breakdown.forEach(b => {
+      if (!isGambling(b.category) && !is5Products(b.category)) sum += getItemCount(b);
+    });
+    return sum;
+  }
+
+  // Fallback exact match if direct breakdown category queried
+  const exactItem = breakdown.find(b => b.category && b.category.trim().toLowerCase() === targetLower);
+  if (exactItem) return getItemCount(exactItem);
+
+  return 0;
 };
 
 // --- Auto-Planner Wizard ---
-window.qcShowAutoPlanModal = function() {
-  let fromStr = '', toStr = '';
-  if (window._qcDateRange && window._qcDateRange.includes(' to ')) {
-    const parts = window._qcDateRange.split(' to ');
-    fromStr = parts[0];
-    toStr = parts[1];
-  }
-  const dates = qcGetWeekDates(fromStr, toStr);
-
-  // Default ISO date values
-  const dObj = new Date();
-  const thaiMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  const pad = n => String(n).padStart(2, '0');
-  const defaultDataDateIso = `${dObj.getFullYear()}-${pad(dObj.getMonth()+1)}-${pad(dObj.getDate())}`;
-  const defaultDataDate = `${dObj.getDate()} ${thaiMonthsShort[dObj.getMonth()]}`;
-  // Allowed work dates: the dates visible in the scheduler
-  const allowedWorkDates = dates.map(d => d.iso);
-
-  const qcCategories = window.QC_CATEGORIES;
-
-  // Manual excludes these 4 categories
+window.renderQCAutoPlanPage = function() {
+  const qcCategories = window.QC_CATEGORIES || [];
   const manualExcluded = ['Hate Speech', 'จัดหาแรงงานเถื่อน', 'ดูหมิ่นสถาบัน', 'ลิขสิทธิ์ภาพยนตร์'];
   const manualCategories = qcCategories.filter(c => !manualExcluded.includes(c));
 
   const buildCatGrid = (cats) => cats.map((cat, idx) => `
-    <div style="background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
-      <label style="font-size: 0.75rem; font-weight: 700; color: #334155; margin: 0; display: flex; align-items: flex-start; gap: 6px; line-height: 1.4;" title="${cat}">
-        <span style="display:inline-flex; width:18px; height:18px; background:#e0e7ff; color:#4f46e5; border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; flex-shrink:0; margin-top: 1px;">${idx+1}</span>
+    <div style="background: #ffffff; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; box-sizing: border-box; height: 100%;">
+      <label style="font-size: 0.78rem; font-weight: 700; color: #334155; margin: 0; display: flex; align-items: flex-start; gap: 6px; line-height: 1.3; min-height: 32px;" title="${cat}">
+        <span style="display:inline-flex; width:18px; height:18px; background:#f0efff; color:#635bff; border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; flex-shrink:0; margin-top: 1px;">${idx+1}</span>
         <span style="word-break: break-word;">${cat}</span>
       </label>
-      <div style="display: flex; align-items: center; gap: 4px;">
-        <input type="number" min="0" placeholder="0" class="qc-auto-cat-input" data-category="${cat}" oninput="qcAutoPlanRecalculateTotals()" style="flex:1; padding: 4px 6px; font-size:0.75rem; border-radius: 6px; border:1px solid #cbd5e1; outline:none; text-align:right; width:60px;">
-        <span class="qc-auto-cat-perc" data-category="${cat}" style="font-size: 0.65rem; font-weight: 700; color: #64748b; min-width: 28px; text-align: right;">0%</span>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <input type="number" min="0" placeholder="0" readonly class="qc-auto-cat-input" data-category="${cat}" oninput="qcAutoPlanRecalculateTotals()" style="flex:1; padding: 6px 8px; font-size:0.88rem; font-weight:700; border-radius: 8px; border:1.5px solid #cbd5e1; outline:none; text-align:right; width:60px; background:#f8fafc; cursor:default; user-select:none;">
+        <span class="qc-auto-cat-perc" data-category="${cat}" style="font-size: 0.68rem; font-weight: 700; color: #64748b; min-width: 28px; text-align: right;">0%</span>
       </div>
     </div>
   `).join('');
 
-  const qcCategoryGridHtml   = buildCatGrid(qcCategories);
+  const qcCategoryGridHtml = buildCatGrid(qcCategories);
   const manualCategoryGridHtml = buildCatGrid(manualCategories);
 
-  const modalHtml = `
-    <div class="qc-modal-overlay" id="qcAutoPlanModal" onclick="if(event.target===this) this.remove()">
-      <div class="qc-modal" style="width: 760px; max-width: 95vw; padding: 24px; font-family:'Kanit', sans-serif;">
-        <!-- Close Button Header -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; margin-top: -8px; margin-right: -8px;">
-          <button onclick="document.getElementById('qcAutoPlanModal').remove()" style="background: transparent; border: none; cursor: pointer; color: #94a3b8; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.color='#ef4444';" onmouseout="this.style.background='transparent'; this.style.color='#94a3b8';" title="ปิดหน้าต่าง">
-            <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-          </button>
-        </div>
-        <!-- Stepper Indicator -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; background:#f1f5f9; padding: 12px 20px; border-radius: 12px;">
-          <div id="qcAutoStepIndicator1" style="font-size: 0.78rem; font-weight: 700; color: #4f46e5; display:flex; align-items:center; gap:6px;">
-            <span style="width:20px; height:20px; background:#4f46e5; color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">1</span>
-            ตั้งค่าแผนงาน
+  return `
+    <div class="fade-in" style="font-family:'Kanit', sans-serif; padding: 14px 20px; width: 100%; box-sizing: border-box; max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- Sleek Top Header Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #635bff, #4f46e5); color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(99, 91, 255, 0.25);">
+            <i data-lucide="zap" style="width: 20px; height: 20px;"></i>
           </div>
-          <div style="width: 40px; height: 2px; background: #cbd5e1;"></div>
-          <div id="qcAutoStepIndicator2" style="font-size: 0.78rem; font-weight: 700; color: #64748b; display:flex; align-items:center; gap:6px;">
-            <span style="width:20px; height:20px; background:#cbd5e1; color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">2</span>
-            จำนวนเคส
-          </div>
-          <div style="width: 40px; height: 2px; background: #cbd5e1;"></div>
-          <div id="qcAutoStepIndicator3" style="font-size: 0.78rem; font-weight: 700; color: #64748b; display:flex; align-items:center; gap:6px;">
-            <span style="width:20px; height:20px; background:#cbd5e1; color:#fff; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.7rem;">3</span>
-            จัดสรร & ยืนยัน
+          <div>
+            <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.2;">
+              ระบบจัดแผนงานอัตโนมัติ <span style="font-size: 0.78rem; font-weight: 600; color: #635bff; background: #f0efff; padding: 2px 10px; border-radius: 20px; margin-left: 6px;">Auto-Planner Wizard</span>
+            </h2>
+            <p style="font-size: 0.78rem; color: #64748b; margin: 2px 0 0;">
+              จัดสรรเคสและสร้างแผนงานสำหรับทีมอัตโนมัติ แยกตามหมวดหมู่ช่องทาง Website และ Social
+            </p>
           </div>
         </div>
 
-        <h3 style="margin-top: 0; display:flex; align-items:center; gap:8px; font-size:1.1rem; color:#1e293b; font-weight:700;">
-          <i data-lucide="zap" style="width:22px; height:22px; color:#8b5cf6;"></i>
-          <span>ระบบจัดแผนงานอัตโนมัติ (Auto-Planner Wizard)</span>
-        </h3>
+        <button onclick="window.qcBackToQcDashboard()" style="background: #ffffff; border: 1.5px solid #e2e8f0; color: #475569; padding: 6px 16px; border-radius: 9999px; font-family: 'Kanit'; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#e2e8f0';">
+          <i data-lucide="arrow-left" style="width: 14px; height: 14px; color: #64748b;"></i> กลับหน้า RealCyber Plan
+        </button>
+      </div>
+
+      <!-- Single Main Unified Card -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 16px;">
+        
+        <!-- Integrated Stepper Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+          <div id="qcAutoStepIndicator1" style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="qcAutoPlanGoToStep(1)">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: #635bff; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800; box-shadow: 0 2px 8px rgba(99, 91, 255, 0.25);">1</div>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #635bff; line-height: 1.2;">ตั้งค่าแผนงาน</div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">เลือกไฟล์ & วันที่</div>
+            </div>
+          </div>
+
+          <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 14px; border-radius: 2px;"></div>
+
+          <div id="qcAutoStepIndicator2" style="display: flex; align-items: center; gap: 10px; opacity: 0.7;">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: #cbd5e1; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;">2</div>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; line-height: 1.2;">จำนวนเคส</div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">แยกตามหมวดหมู่</div>
+            </div>
+          </div>
+
+          <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 14px; border-radius: 2px;"></div>
+
+          <div id="qcAutoStepIndicator3" style="display: flex; align-items: center; gap: 10px; opacity: 0.7;">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: #cbd5e1; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 800;">3</div>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #64748b; line-height: 1.2;">จัดสรร & ยืนยัน</div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">สรุปสร้างแผนงาน</div>
+            </div>
+          </div>
+        </div>
 
         <!-- STEP 1 PANE -->
         <div id="qcAutoPane1" class="qc-auto-pane" style="display: block;">
-          <div class="qc-form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-            <div class="qc-form-group">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">ประเภทแผนงาน</label>
-              <select id="qcAutoPlanType" onchange="qcAutoPlanToggleQcSubtype()" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-family:Kanit; font-size:0.82rem; background:#f8fafc;">
-                <option value="" disabled selected hidden>กรุณาเลือกประเภทแผนงาน...</option>
-                <option value="QC">QC</option>
-                <option value="Manual">Manual</option>
-              </select>
-            </div>
-            <div class="qc-form-group" id="qcAutoQcSubtypeGroup" style="display:none;">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">รอบการ QC</label>
-              <select id="qcAutoQcSubtype" onchange="qcUpdateAutoModalSuboptions()" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-family:Kanit; font-size:0.82rem; background:#f8fafc;">
-                <option value="" disabled selected hidden>กรุณาเลือกรอบ...</option>
-                <option value="QC1">QC1</option>
-                <option value="QC2">QC2</option>
-              </select>
-            </div>
-          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start;">
+            
+            <!-- Left Column: Data Source Card -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%); border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-size: 0.85rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+                  <i data-lucide="file-spreadsheet" style="width: 18px; height: 18px; color: #10b981;"></i>
+                  ดึงข้อมูลจากไฟล์ที่ Import
+                </label>
+                <span id="qcAutoImportCountBadge" style="font-size: 0.7rem; background: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 10px; border-radius: 20px;">
+                  กำลังโหลด...
+                </span>
+              </div>
 
-          <div class="qc-form-row" style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:12px;">
-            <div class="qc-form-group">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">ช่องทาง (Channel)</label>
-              <select id="qcAutoChannel" onchange="qcUpdateAutoModalSuboptions()" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-family:Kanit; font-size:0.82rem; background:#f8fafc;">
-                <option value="" disabled selected hidden>กรุณาเลือกช่องทาง...</option>
-                <option value="Website">Website</option>
-                <option value="Social">Social</option>
-              </select>
-            </div>
-          </div>
+              <div>
+                <select id="qcAutoImportedSource" onchange="window.qcOnSelectImportedSource(this.value)" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-family: 'Kanit', sans-serif; font-size: 0.85rem; background: #ffffff; cursor: pointer; color: #1e293b; font-weight: 500; outline: none;">
+                  <option value="">-- กรุณาเลือกไฟล์ที่ต้องการดึงข้อมูล --</option>
+                </select>
+              </div>
 
-
-
-          <div class="qc-form-row" style="display:grid; grid-template-columns:1.5fr 1fr 1.5fr; gap:12px; margin-bottom:16px;">
-            <div class="qc-form-group">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">วันของข้อมูล</label>
-              <div style="position:relative;">
-                <input type="text" id="qcAutoDataDateDisplay" readonly placeholder="เลือกวันของข้อมูล" style="width:100%; padding: 8px 10px 8px 36px; border-radius: 10px; border:1px solid #cbd5e1; font-family:Kanit; font-size:0.82rem; background:#fff; cursor:pointer; box-sizing:border-box;">
-                <i data-lucide="calendar" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#8b5cf6; pointer-events:none;"></i>
-                <input type="hidden" id="qcAutoDataDate" value="">
+              <div id="qcAutoImportedPreview" style="display: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px;">
               </div>
             </div>
-            <div class="qc-form-group">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">ช่วงเวลา (ถ้ามี)</label>
-              <div style="display:flex; align-items:center; background:#fff; border:1px solid #cbd5e1; border-radius:10px; overflow:hidden; padding: 3px 4px; box-sizing:border-box; height: 35px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#94a3b8'" onmouseout="this.style.borderColor='#cbd5e1'">
-                <div style="padding: 0 6px 0 8px; color: #8b5cf6; display: flex; align-items: center;">
-                  <i data-lucide="clock" style="width:16px; height:16px;"></i>
+
+            <!-- Right Column: Form Settings Card -->
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <i data-lucide="sliders" style="width: 18px; height: 18px; color: #635bff;"></i>
+                ตั้งค่ารูปแบบการจัดงาน
+              </div>
+
+              <div class="qc-form-row" id="qcAutoPlanTypeRow" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="qc-form-group">
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px;">ประเภทแผนงาน</label>
+                  <select id="qcAutoPlanType" onchange="qcAutoPlanToggleQcSubtype()" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-family: 'Kanit'; font-size: 0.85rem; background: #ffffff; color: #1e293b; font-weight: 500; outline: none;">
+                    <option value="" disabled selected hidden>กรุณาเลือก...</option>
+                    <option value="QC">QC</option>
+                    <option value="Manual">Manual</option>
+                  </select>
                 </div>
-                <input type="text" id="qcAutoStartTime" placeholder="00:00" maxlength="5" style="flex:1; width:100%; min-width:0; border:none; outline:none; background:transparent; font-family:Kanit; font-size:0.82rem; color:#1e293b; padding: 0; text-align:center; cursor:pointer;" title="เวลาเริ่มต้น" oninput="this.value=this.value.replace(/[^0-9:]/g,'')">
-                <div style="color:#cbd5e1; font-weight:700; padding: 0 2px;">-</div>
-                <input type="text" id="qcAutoEndTime" placeholder="23:59" maxlength="5" style="flex:1; width:100%; min-width:0; border:none; outline:none; background:transparent; font-family:Kanit; font-size:0.82rem; color:#1e293b; padding: 0; text-align:center; cursor:pointer;" title="เวลาสิ้นสุด" oninput="this.value=this.value.replace(/[^0-9:]/g,'')">
-              </div>
-            </div>
-            <div class="qc-form-group">
-              <label style="display:block; font-size:0.8rem; font-weight:600; color:#475569; margin-bottom:6px;">วันที่ปฏิบัติงานจริง</label>
-              <div style="position:relative;">
-                <input type="text" id="qcAutoWorkDateDisplay" readonly placeholder="เลือกวันที่ปฏิบัติงาน" style="width:100%; padding: 8px 10px 8px 36px; border-radius: 10px; border:1px solid #cbd5e1; font-family:Kanit; font-size:0.82rem; background:#fff; cursor:pointer; box-sizing:border-box;">
-                <i data-lucide="calendar-check" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#8b5cf6; pointer-events:none;"></i>
-                <input type="hidden" id="qcAutoWorkDate" value="">
-              </div>
-            </div>
-          </div>
 
-          <div class="qc-modal-actions" style="margin-top:24px; display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn-modal-cancel" onclick="document.getElementById('qcAutoPlanModal').remove()" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b;">ยกเลิก</button>
-            <button class="btn-modal-save" onclick="qcAutoPlanGoToStep(2)" style="padding:10px 24px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; font-weight:600; box-shadow: 0 2px 8px rgba(139,92,246,0.3); display:flex; align-items:center; gap:6px;">ถัดไป <i data-lucide="arrow-right" style="width:14px; height:14px;"></i></button>
+                <div class="qc-form-group" id="qcAutoQcSubtypeGroup" style="display: none;">
+                  <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px;">รอบการ QC</label>
+                  <select id="qcAutoQcSubtype" onchange="qcUpdateAutoModalSuboptions()" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-family: 'Kanit'; font-size: 0.85rem; background: #ffffff; color: #1e293b; font-weight: 500; outline: none;">
+                    <option value="" disabled selected hidden>กรุณาเลือกรอบ...</option>
+                    <option value="QC1">QC1</option>
+                    <option value="QC2">QC2</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="qc-form-group">
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 5px;">วันที่ปฏิบัติงานจริง</label>
+                <div style="position: relative; width: 100%; height: 38px;">
+                  <input type="text" id="qcAutoWorkDateDisplay" readonly placeholder="เลือกวันที่ปฏิบัติงาน" onclick="window.qcInitAutoPlanFlatpickr(this)" style="width: 100%; height: 38px; padding: 7px 12px 7px 36px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-family: 'Kanit'; font-size: 0.85rem; background: #ffffff; cursor: pointer; box-sizing: border-box; font-weight: 500; color: #1e293b; outline: none;">
+                  <i data-lucide="calendar" style="position: absolute; left: 10px; top: 11px; width: 16px; height: 16px; color: #635bff; pointer-events: none; z-index: 2;"></i>
+                  <input type="hidden" id="qcAutoWorkDate" value="">
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+                <button class="btn-modal-save" onclick="qcAutoPlanGoToStep(2)" style="padding: 9px 26px; background: linear-gradient(135deg, #635bff, #4f46e5); color: #ffffff; border: none; border-radius: 9999px; cursor: pointer; font-family: 'Kanit'; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25); display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; outline: none;">
+                  ถัดไป <i data-lucide="arrow-right" style="width: 15px; height: 15px;"></i>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
         <!-- STEP 2 PANE -->
         <div id="qcAutoPane2" class="qc-auto-pane" style="display: none;">
-          
-          <!-- Info banner: plan type, data date, work date -->
-          <div id="qcAutoPane2InfoBanner" style="margin-bottom:14px;">
-          </div>
+          <!-- Info banner -->
+          <div id="qcAutoPane2InfoBanner" style="margin-bottom: 12px;"></div>
 
           <!-- Header bar -->
-          <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div style="width:8px; height:8px; border-radius:50%; background:#4f46e5;"></div>
-              <span style="font-size:0.82rem; font-weight:700; color:#1e293b;">ระบุจำนวนเคสของแต่ละหมวดหมู่</span>
+          <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 10px 18px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: #635bff;"></div>
+              <span style="font-size: 0.88rem; font-weight: 700; color: #1e293b;">จำนวนเคสของแต่ละหมวดหมู่</span>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button onclick="qcClearAutoPlanInputs()" style="display:inline-flex; align-items:center; gap:4px; border:1px solid #fca5a5; background:#fff5f5; color:#dc2626; padding: 4px 10px; border-radius: 6px; cursor:pointer; font-family:Kanit; font-size:0.75rem; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='#fee2e2'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#fff5f5'; this.style.transform='none';">
-                <i data-lucide="trash-2" style="width:13px; height:13px;"></i> ล้างค่า
-              </button>
-              <span style="font-size: 0.82rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); color:#fff; padding: 5px 14px; border-radius: 20px; display:inline-flex; align-items:center; gap:5px; font-weight:700; box-shadow:0 2px 6px rgba(79,70,229,0.3);">
-                <i data-lucide="hash" style="width:13px; height:13px;"></i>
-                Total: <strong id="qcAutoPlanTotalCases" style="font-size:1rem;">0</strong> เคส
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.85rem; background: linear-gradient(135deg, #635bff, #4f46e5); color: #fff; padding: 5px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; box-shadow: 0 2px 8px rgba(99,91,255,0.25);">
+                <i data-lucide="hash" style="width: 14px; height: 14px;"></i>
+                Total: <strong id="qcAutoPlanTotalCases" style="font-size: 1.05rem;">0</strong> เคส
               </span>
             </div>
           </div>
 
-          <div class="scheduler-scrollbar" style="max-height: 280px; overflow-y: auto; padding-right: 4px; margin-bottom: 16px;">
+          <div style="margin-bottom: 14px;">
             <!-- QC Grid: dynamically filled -->
-            <div id="qcCatGridQC" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;">
+            <div id="qcCatGridQC" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
               ${qcCategoryGridHtml}
             </div>
             <!-- Manual Grid -->
-            <div id="qcCatGridManual" style="display:none; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;">
+            <div id="qcCatGridManual" style="display: none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
               ${manualCategoryGridHtml}
             </div>
           </div>
 
-          <div class="qc-modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(1)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Back</button>
-            <button class="btn-modal-save" onclick="qcAutoPlanGoToStep(3)" style="padding:10px 24px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; font-weight:600; box-shadow: 0 2px 8px rgba(139,92,246,0.3); display:flex; align-items:center; gap:6px;">วิเคราะห์และจัดสรร <i data-lucide="wand-2" style="width:14px; height:14px;"></i></button>
+          <div class="qc-modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(1)" style="padding: 9px 20px; border: 1.5px solid #cbd5e1; background: #ffffff; border-radius: 9999px; cursor: pointer; font-family: 'Kanit'; font-size: 0.85rem; font-weight: 600; color: #64748b; display: flex; align-items: center; gap: 6px; outline: none;"><i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i> Back</button>
+            <button class="btn-modal-save" onclick="qcAutoPlanGoToStep(3)" style="padding: 9px 26px; background: linear-gradient(135deg, #635bff, #4f46e5); color: #ffffff; border: none; border-radius: 9999px; cursor: pointer; font-family: 'Kanit'; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25); display: flex; align-items: center; gap: 8px; white-space: nowrap; outline: none;">วิเคราะห์และจัดสรร <i data-lucide="wand-2" style="width: 16px; height: 16px;"></i></button>
           </div>
         </div>
 
-
         <!-- STEP 3 PANE -->
         <div id="qcAutoPane3" class="qc-auto-pane" style="display: none;">
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.78rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-            <div><strong>ประเภท:</strong> <span id="qcAutoPlanSummaryType">-</span></div>
-            <div><strong>วันของข้อมูล:</strong> <span id="qcAutoPlanSummaryDataDate">-</span></div>
-            <div><strong>เคสทั้งหมด:</strong> <span id="qcAutoPlanSummaryTotalCases">-</span> เคส</div>
+          <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; font-size: 0.82rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div><strong>ประเภท:</strong> <span id="qcAutoPlanSummaryType" style="color: #635bff; font-weight: 700;">-</span></div>
+            <div><strong>วันของข้อมูล:</strong> <span id="qcAutoPlanSummaryDataDate" style="color: #0284c7; font-weight: 700;">-</span></div>
+            <div><strong>เคสทั้งหมด:</strong> <span id="qcAutoPlanSummaryTotalCases" style="color: #10b981; font-weight: 700;">-</span> เคส</div>
           </div>
 
-          <div id="qcAutoPlanAlert" style="display:none; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:8px 12px; margin-bottom:12px; font-size:0.72rem; color:#b45309; font-weight:600; align-items:center; gap:6px;">
-            <i data-lucide="alert-triangle" style="width:14px; height:14px; color:#d97706; flex-shrink:0;"></i>
+          <div id="qcAutoPlanAlert" style="display: none; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.8rem; color: #b45309; font-weight: 600; align-items: center; gap: 8px; outline: none; box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08);">
+            <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: #d97706; flex-shrink: 0;"></i>
             <span id="qcAutoPlanAlertText">ความจุรวมของพนักงานไม่พอรองรับจำนวนเคส</span>
           </div>
 
-          <div style="font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:6px; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:4px;">
-              <i data-lucide="users" style="width:14px; height:14px; color:#8b5cf6;"></i>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="users" style="width: 18px; height: 18px; color: #635bff;"></i>
               ข้อเสนอการจัดสรรภาระงาน:
             </div>
-            <div style="font-size:0.72rem; color:#4f46e5; background:#e0e7ff; padding:2px 10px; border-radius:20px;">
+            <div style="font-size: 0.78rem; color: #635bff; background: #f0efff; padding: 3px 12px; border-radius: 20px; font-weight: 700;">
               ผู้รับเคสรวม <span id="qcAutoPlanTotalPeopleCount">0</span> คน
             </div>
           </div>
 
-          <div class="scheduler-scrollbar" style="max-height: 220px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; background:#fff; margin-bottom:16px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.72rem; text-align: left;">
+          <div style="border: 1.5px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
               <thead>
-                <tr style="background:#f1f5f9; border-bottom: 1px solid #e2e8f0; font-weight:700; color:#475569;">
-                  <th style="padding: 8px; width: 40px; text-align: center;"><input type="checkbox" id="qcAutoPlanSelectAll" checked onchange="qcAutoPlanToggleSelectAll(this)"></th>
-                  <th style="padding: 8px; width: 140px;">พนักงาน</th>
-                  <th style="padding: 8px; width: 220px; text-align:center;">ภาระงานเดิม (%)</th>
-                  <th style="padding: 8px;">จำนวนคดีที่ระบบจัดสรรให้</th>
+                <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; font-weight: 700; color: #475569;">
+                  <th style="padding: 8px 12px; width: 44px; text-align: center;"><input type="checkbox" id="qcAutoPlanSelectAll" checked onchange="qcAutoPlanToggleSelectAll(this)"></th>
+                  <th style="padding: 8px 12px; width: 170px;">พนักงาน</th>
+                  <th style="padding: 8px 12px; width: 240px; text-align: center;">ภาระงานเดิม (%)</th>
+                  <th style="padding: 8px 12px;">จำนวนคดีที่ระบบจัดสรรให้</th>
                 </tr>
               </thead>
               <tbody id="qcAutoPlanProposalTable">
@@ -1671,149 +1959,194 @@ window.qcShowAutoPlanModal = function() {
             </table>
           </div>
 
-          <div class="qc-modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
-            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(2)" style="padding:10px 20px; border:1px solid #cbd5e1; background:#fff; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; color:#64748b; display:flex; align-items:center; gap:6px;"><i data-lucide="arrow-left" style="width:14px; height:14px;"></i> Back</button>
-            <button class="btn-modal-save" onclick="qcSaveAutoPlan()" style="padding:10px 24px; background: linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; border-radius:10px; cursor:pointer; font-family:Kanit; font-size:0.82rem; font-weight:600; box-shadow: 0 2px 8px rgba(16,185,129,0.3); display:flex; align-items:center; gap:6px;"><i data-lucide="save" style="width:14px; height:14px;"></i> ยืนยันสร้างแผนงาน</button>
+          <div class="qc-modal-actions" style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+            <button class="btn-modal-cancel" onclick="qcAutoPlanGoToStep(2)" style="padding: 9px 20px; border: 1.5px solid #cbd5e1; background: #ffffff; border-radius: 9999px; cursor: pointer; font-family: 'Kanit'; font-size: 0.85rem; font-weight: 600; color: #64748b; display: flex; align-items: center; gap: 6px; outline: none;"><i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i> Back</button>
+            <button class="btn-modal-save" onclick="qcSaveAutoPlan()" style="padding: 9px 26px; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; border: none; border-radius: 9999px; cursor: pointer; font-family: 'Kanit'; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 12px rgba(16,185,129,0.25); display: flex; align-items: center; gap: 8px; white-space: nowrap; outline: none;"><i data-lucide="save" style="width: 16px; height: 16px;"></i> ยืนยันสร้างแผนงาน</button>
           </div>
         </div>
 
       </div>
     </div>
   `;
+};
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+window.qcBackToQcDashboard = function() {
+  const contentEl = document.getElementById('pageContent');
+  if (contentEl) {
+    contentEl.innerHTML = window.renderQCWorkPlanDashboard();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof initQCDashboard === 'function') initQCDashboard();
+  } else {
+    window.location.href = '/realcyber-plan';
+  }
+};
 
-  // Initialize Global Auto Plan State
-  window.QC_AUTO_PLAN_STATE = {
-    step: 1,
-    categories: {},
-    planType: '',
-    qcSubtype: '',
-    channel: '',
-    workDate: '',
-    dataDate: '',
-    allocations: []
-  };
+window.qcShowAutoPlanView = function() {
+  const contentEl = document.getElementById('pageContent');
+  if (contentEl) {
+    contentEl.innerHTML = window.renderQCAutoPlanPage();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
-  // Initialize Flatpickr for Data Date (วันของข้อมูล)
-  if (typeof flatpickr !== 'undefined') {
-    // Inject high z-index CSS for flatpickr calendar so it always floats above modal overlay
-    if (!document.getElementById('qc-flatpickr-zindex-style')) {
-      const fpStyle = document.createElement('style');
-      fpStyle.id = 'qc-flatpickr-zindex-style';
-      fpStyle.textContent = `
-        .flatpickr-calendar { z-index: 999999 !important; font-family: 'Kanit', sans-serif !important; border-radius: 12px !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important; border: 1px solid #e2e8f0 !important; padding: 0 !important; }
-        .flatpickr-calendar.hasTime.noCalendar { width: 160px !important; background: #fff !important; }
-        .flatpickr-time { border-top: none !important; border-radius: 12px !important; height: 60px !important; line-height: 60px !important; display: flex !important; justify-content: center !important; align-items: center !important; max-height: 60px !important; background: #fff !important; }
-        .flatpickr-time input.flatpickr-hour, .flatpickr-time input.flatpickr-minute { font-weight: 700 !important; font-size: 1.25rem !important; color: #4f46e5 !important; background: transparent !important; padding: 0 !important; text-align: center !important; }
-        .flatpickr-time .numInputWrapper { height: 100% !important; width: 55px !important; }
-        .flatpickr-time .flatpickr-time-separator { font-weight: 700 !important; font-size: 1.25rem !important; color: #94a3b8 !important; height: 100% !important; display: flex !important; align-items: center !important; margin: 0 4px !important; }
-        .flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: #8b5cf6 !important; }
-        .flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: #8b5cf6 !important; }
-        .flatpickr-time input:hover, .flatpickr-time input:focus { background: #f1f5f9 !important; border-radius: 8px !important; color: #6d28d9 !important; }
-        .flatpickr-time .numInputWrapper:hover { background: transparent !important; }
-      `;
-      document.head.appendChild(fpStyle);
+    window.QC_AUTO_PLAN_STATE = {
+      step: 1,
+      categories: {},
+      planType: '',
+      qcSubtype: '',
+      channel: '',
+      workDate: '',
+      dataDate: '',
+      allocations: []
+    };
+
+    if (typeof window.qcInitAutoPlanFlatpickr === 'function') {
+      window.qcInitAutoPlanFlatpickr();
     }
+    if (typeof window.qcPopulateImportedDropdown === 'function') {
+      window.qcPopulateImportedDropdown();
+    }
+    if (typeof window.qcFetchImportedSummariesFromSupabase === 'function') {
+      window.qcFetchImportedSummariesFromSupabase();
+    }
+  } else {
+    window.location.href = '/auto-assign-plan';
+  }
+};
+window.qcShowAutoPlanModal = window.qcShowAutoPlanView;
 
-    const dataDateDisplay = document.getElementById('qcAutoDataDateDisplay');
-    const dataDateHidden = document.getElementById('qcAutoDataDate');
-    if (dataDateDisplay && dataDateHidden) {
-      flatpickr(dataDateDisplay, {
-        dateFormat: 'Y-m-d',
-        locale: 'th',
-        disableMobile: true,
-        appendTo: document.body,    // Render outside modal to avoid clipping
-        onReady: function(selectedDates) {
-          // Leave it empty initially
-          dataDateDisplay.value = '';
-          dataDateHidden.value = '';
-        },
-        onChange: function(selectedDates, dateStr) {
-          if (selectedDates.length > 0) {
-            const d = selectedDates[0];
-            const display = `${d.getDate()} ${thaiMonthsShort[d.getMonth()]}`;
-            dataDateDisplay.value = display;
-            dataDateHidden.value = dateStr;
-            window.QC_AUTO_PLAN_STATE.dataDate = display;
-          }
+window.qcInitAutoPlanFlatpickr = function(targetEl) {
+  const fp = window.flatpickr || (typeof flatpickr !== 'undefined' ? flatpickr : null);
+  if (!fp) return;
+
+  if (!document.getElementById('qc-flatpickr-zindex-style')) {
+    const fpStyle = document.createElement('style');
+    fpStyle.id = 'qc-flatpickr-zindex-style';
+    fpStyle.textContent = `
+      .flatpickr-calendar { z-index: 999999 !important; font-family: 'Kanit', sans-serif !important; border-radius: 8px !important; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12) !important; border: 1px solid #e2e8f0 !important; padding: 0 !important; }
+      .flatpickr-calendar.hasTime.noCalendar { width: 110px !important; min-width: 110px !important; background: #fff !important; border-radius: 8px !important; }
+      .flatpickr-time { border-top: none !important; border-radius: 8px !important; height: 36px !important; line-height: 36px !important; display: flex !important; justify-content: center !important; align-items: center !important; max-height: 36px !important; background: #fff !important; padding: 0 4px !important; }
+      .flatpickr-time input.flatpickr-hour, .flatpickr-time input.flatpickr-minute { font-weight: 600 !important; font-size: 0.85rem !important; color: #4f46e5 !important; background: transparent !important; padding: 0 !important; text-align: center !important; height: 26px !important; line-height: 26px !important; }
+      .flatpickr-time .numInputWrapper { height: 26px !important; width: 36px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+      .flatpickr-time .flatpickr-time-separator { font-weight: 600 !important; font-size: 0.85rem !important; color: #94a3b8 !important; height: 26px !important; display: flex !important; align-items: center !important; margin: 0 2px !important; }
+      .flatpickr-time .numInputWrapper span.arrowUp:after { border-bottom-color: #8b5cf6 !important; }
+      .flatpickr-time .numInputWrapper span.arrowDown:after { border-top-color: #8b5cf6 !important; }
+      .flatpickr-time input:hover, .flatpickr-time input:focus { background: #f1f5f9 !important; border-radius: 6px !important; color: #6d28d9 !important; }
+      .flatpickr-time .numInputWrapper:hover { background: transparent !important; }
+    `;
+    document.head.appendChild(fpStyle);
+  }
+
+  const dataDateDisplay = document.getElementById('qcAutoDataDateDisplay');
+  const dataDateHidden = document.getElementById('qcAutoDataDate');
+  if (dataDateDisplay && dataDateHidden && !dataDateDisplay._flatpickr) {
+    fp(dataDateDisplay, {
+      dateFormat: 'Y-m-d',
+      disableMobile: true,
+      appendTo: dataDateDisplay.parentElement,
+      monthSelectorType: 'static',
+      yearSelectorType: 'static',
+      onReady: function(selectedDates, dateStr, instance) {
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
         }
-      });
-    }
-
-    // Initialize Flatpickr for Work Date (วันที่ปฏิบัติงาน)
-    const workDateDisplay = document.getElementById('qcAutoWorkDateDisplay');
-    const workDateHidden = document.getElementById('qcAutoWorkDate');
-    if (workDateDisplay && workDateHidden) {
-      flatpickr(workDateDisplay, {
-        dateFormat: 'Y-m-d',
-        locale: 'th',
-        disableMobile: true,
-        appendTo: document.body,
-        position: 'above',
-        onReady: function(selectedDates) {
-          // Leave it empty initially
-          workDateDisplay.value = '';
-          workDateHidden.value = '';
-        },
-        onChange: function(selectedDates, dateStr) {
-          if (selectedDates.length > 0) {
-            const d = selectedDates[0];
-            const enDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-            const enMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            workDateDisplay.value = `${enDays[d.getDay()]} (${d.getDate()} ${enMonths[d.getMonth()]})`;
-            workDateHidden.value = dateStr;
-            window.QC_AUTO_PLAN_STATE.workDate = dateStr;
-          }
+      },
+      onOpen: function(selectedDates, dateStr, instance) {
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
         }
-      });
-    }
+      },
+      onChange: function(selectedDates, dateStr) {
+        if (selectedDates.length > 0) {
+          const d = selectedDates[0];
+          const enMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          const display = `${d.getDate()} ${enMonths[d.getMonth()]}`;
+          dataDateDisplay.value = display;
+          dataDateHidden.value = dateStr;
+          window.QC_AUTO_PLAN_STATE.dataDate = display;
+        }
+      }
+    });
+  }
 
-    // Initialize flatpickr for time fields (24-hour format)
-    const startTimeEl = document.getElementById('qcAutoStartTime');
-    const endTimeEl = document.getElementById('qcAutoEndTime');
-    if (startTimeEl && typeof flatpickr !== 'undefined') {
-      flatpickr(startTimeEl, {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: 'H:i',
-        time_24hr: true,
-        disableMobile: true,
-        appendTo: document.body,
-        placeholder: '00:00',
-      });
-    }
-    if (endTimeEl && typeof flatpickr !== 'undefined') {
-      flatpickr(endTimeEl, {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: 'H:i',
-        time_24hr: true,
-        disableMobile: true,
-        appendTo: document.body,
-        placeholder: '23:59',
-      });
-    }
+  const workDateDisplay = document.getElementById('qcAutoWorkDateDisplay');
+  const workDateHidden = document.getElementById('qcAutoWorkDate');
+  if (workDateDisplay && workDateHidden && !workDateDisplay._flatpickr) {
+    fp(workDateDisplay, {
+      dateFormat: 'Y-m-d',
+      disableMobile: true,
+      appendTo: workDateDisplay.parentElement,
+      monthSelectorType: 'static',
+      yearSelectorType: 'static',
+      onReady: function(selectedDates, dateStr, instance) {
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
+        }
+      },
+      onOpen: function(selectedDates, dateStr, instance) {
+        if (typeof window.attachScopeStyleGridOverlay === 'function') {
+          window.attachScopeStyleGridOverlay(instance);
+        }
+      },
+      onChange: function(selectedDates, dateStr) {
+        if (selectedDates.length > 0) {
+          const d = selectedDates[0];
+          const enDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const enMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          workDateDisplay.value = `${enDays[d.getDay()]} (${d.getDate()} ${enMonths[d.getMonth()]})`;
+          workDateHidden.value = dateStr;
+          window.QC_AUTO_PLAN_STATE.workDate = dateStr;
+        }
+      }
+    });
+  }
+
+  const startTimeEl = document.getElementById('qcAutoStartTime');
+  const endTimeEl = document.getElementById('qcAutoEndTime');
+  if (startTimeEl && !startTimeEl._flatpickr) {
+    fp(startTimeEl, {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: 'H:i',
+      time_24hr: true,
+      disableMobile: true,
+      placeholder: '00:00',
+    });
+  }
+  if (endTimeEl && !endTimeEl._flatpickr) {
+    fp(endTimeEl, {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: 'H:i',
+      time_24hr: true,
+      disableMobile: true,
+      placeholder: '23:59',
+    });
+  }
+
+  if (targetEl && targetEl._flatpickr) {
+    targetEl._flatpickr.open();
   }
 };
 
 window.qcAutoPlanToggleQcSubtype = function() {
   const type = document.getElementById('qcAutoPlanType')?.value;
   const subGroup = document.getElementById('qcAutoQcSubtypeGroup');
+  const typeRow = document.getElementById('qcAutoPlanTypeRow');
   const gridQC = document.getElementById('qcCatGridQC');
   const gridManual = document.getElementById('qcCatGridManual');
 
   if (type === 'QC') {
     if (subGroup) subGroup.style.display = 'block';
+    if (typeRow) typeRow.style.gridTemplateColumns = '1fr 1fr';
     if (gridQC) { gridQC.style.display = 'grid'; }
     if (gridManual) { gridManual.style.display = 'none'; }
   } else if (type === 'Manual') {
     if (subGroup) subGroup.style.display = 'none';
+    if (typeRow) typeRow.style.gridTemplateColumns = '1fr';
     if (gridQC) { gridQC.style.display = 'none'; }
     if (gridManual) { gridManual.style.display = 'grid'; }
   } else {
     if (subGroup) subGroup.style.display = 'none';
+    if (typeRow) typeRow.style.gridTemplateColumns = '1fr';
     if (gridQC) { gridQC.style.display = 'none'; }
     if (gridManual) { gridManual.style.display = 'none'; }
   }
@@ -1853,30 +2186,35 @@ window.qcGetDynamicCategories = function(qcType, subType, channel) {
     return ['จำนวนเคสทั้งหมด'];
   }
   
-  if (subType === 'QC1') {
-    if (channel === 'Website') {
-      return ['โฆษณาพนัน', 'อื่นๆ ยกเว้นโฆษณาพนัน'];
-    } else if (channel === 'Social') {
-      return ['พนัน', 'อื่นๆ ที่ไม่ใช่หมวดพนันและหมวดสินค้า (12 หมวด)', 'สินค้า (5 หมวด มี กัญชา บุหรี่ไฟฟ่้า แอลกอฮอล์ กระท่อม ปืน)'];
-    }
-  } else if (subType === 'QC2') {
-    if (channel === 'Website') {
-      return ['Confidence 70-100', 'Confidence 0-69', 'URL'];
-    } else if (channel === 'Social') {
-      return ['พนัน', 'สินค้า', 'อื่นๆ ที่ไม่ใช่หมวดพนันและหมวดสินค้า (12 หมวด)'];
-    }
+  if (channel === 'Website') {
+    return [
+      'โฆษณาพนัน',
+      'Exclude โฆษณาพนัน'
+    ];
+  } else if (channel === 'Social') {
+    return [
+      'พนัน',
+      '5 หมวดสินค้า (กัญชา บุหรี่ไฟฟ้า แอลกอฮอล์ กระท่อม ปืน)',
+      'อื่นๆ Exclude พนันและสินค้า'
+    ];
   }
   
-  return window.QC_CATEGORIES || [];
+  return [
+    'โฆษณาพนัน',
+    'Exclude โฆษณาพนัน',
+    'พนัน',
+    '5 หมวดสินค้า (กัญชา บุหรี่ไฟฟ้า แอลกอฮอล์ กระท่อม ปืน)',
+    'อื่นๆ Exclude พนันและสินค้า'
+  ];
 };
 
 window.qcAutoPlanGoToStep = function(stepNum) {
   // Validate and read fields for Step 1
   if (stepNum === 2) {
-    const type = document.getElementById('qcAutoPlanType').value;
+    const type = document.getElementById('qcAutoPlanType')?.value || '';
     let subType = document.getElementById('qcAutoQcSubtype')?.value || '';
-    const channel = document.getElementById('qcAutoChannel').value;
-    
+    const workDate = document.getElementById('qcAutoWorkDate')?.value?.trim() || '';
+
     if (!type) {
       if (typeof window.showToast === 'function') window.showToast('กรุณาเลือกประเภทแผนงาน', 'warning');
       return;
@@ -1885,53 +2223,26 @@ window.qcAutoPlanGoToStep = function(stepNum) {
       if (typeof window.showToast === 'function') window.showToast('กรุณาเลือกรอบการ QC', 'warning');
       return;
     }
-    if (!channel) {
-      if (typeof window.showToast === 'function') window.showToast('กรุณาเลือกช่องทาง (Channel)', 'warning');
-      return;
-    }
-
-    const confMode = localStorage.getItem('qc_web_conf_mode') === 'conf';
-    const confQc1 = localStorage.getItem('qc_web_conf_qc1') === 'true';
-    const confQc2 = localStorage.getItem('qc_web_conf_qc2') === 'true';
-    const showForQc1 = (subType === 'QC1' && confMode && confQc1);
-    const showForQc2 = (subType === 'QC2' && confMode && confQc2);
-    // Subcondition radio overrides removed as they are now handled via dynamic categories
-
-    // dataDate: read Thai format from display field (e.g. "22 พ.ค."), fallback to hidden ISO value
-    const dataDateDisplay = document.getElementById('qcAutoDataDateDisplay')?.value?.trim();
-    const dataDateIso = document.getElementById('qcAutoDataDate')?.value?.trim();
-    const startTime = document.getElementById('qcAutoStartTime')?.value;
-    const endTime = document.getElementById('qcAutoEndTime')?.value;
-    let dataTime = '';
-    if (startTime && endTime) {
-      dataTime = `${startTime}-${endTime}`;
-    } else if (startTime) {
-      dataTime = `ตั้งแต่ ${startTime}`;
-    } else if (endTime) {
-      dataTime = `ถึง ${endTime}`;
-    }
-    const workDate = document.getElementById('qcAutoWorkDate')?.value?.trim();
-
-    // Convert ISO to Thai if display is empty
-    const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-    let dataDate = dataDateDisplay;
-    if (!dataDate && dataDateIso) {
-      const d = new Date(dataDateIso);
-      dataDate = `${d.getDate()} ${thaiMonths[d.getMonth()]}`;
-    }
-
-    if (!dataDate) {
-      if (typeof window.showToast === 'function') window.showToast('กรุณาเลือกวันของข้อมูล', 'warning');
-      return;
-    }
-    
-    if (dataTime) {
-      dataDate += ` (${dataTime})`;
-    }
-
     if (!workDate) {
       if (typeof window.showToast === 'function') window.showToast('กรุณาเลือกวันที่ปฏิบัติงาน', 'warning');
       return;
+    }
+
+    const summary = window.QC_AUTO_PLAN_STATE ? window.QC_AUTO_PLAN_STATE.selectedImportSummary : null;
+    const userChannel = document.getElementById('qcAutoChannel')?.value || '';
+    let channel = userChannel || 'Website';
+    if (!userChannel && summary) {
+      if ((summary.websiteCases || 0) > 0 && (summary.socialCases || 0) === 0) channel = 'Website';
+      else if ((summary.socialCases || 0) > 0 && (summary.websiteCases || 0) === 0) channel = 'Social';
+    }
+
+    let dataDate = window.QC_AUTO_PLAN_STATE ? window.QC_AUTO_PLAN_STATE.dataDate : '';
+    if (!dataDate) {
+      if (summary && summary.dateRange && summary.dateRange.min) {
+        dataDate = summary.dateRange.min;
+      } else {
+        dataDate = workDate;
+      }
     }
 
     window.QC_AUTO_PLAN_STATE.planType = type;
@@ -1971,11 +2282,11 @@ window.qcAutoPlanGoToStep = function(stepNum) {
 
     // Summary
     const summaryType = window.QC_AUTO_PLAN_STATE.planType === 'QC' 
-      ? `${window.QC_AUTO_PLAN_STATE.qcSubtype} (${window.QC_AUTO_PLAN_STATE.channel})`
-      : `Manual (${window.QC_AUTO_PLAN_STATE.channel})`;
+      ? `${window.QC_AUTO_PLAN_STATE.qcSubtype}`
+      : `Manual`;
       
     document.getElementById('qcAutoPlanSummaryType').textContent = summaryType;
-    document.getElementById('qcAutoPlanSummaryDataDate').textContent = window.QC_AUTO_PLAN_STATE.dataDate;
+    document.getElementById('qcAutoPlanSummaryDataDate').textContent = window.QC_AUTO_PLAN_STATE.dataDate || '-';
     document.getElementById('qcAutoPlanSummaryTotalCases').textContent = total.toLocaleString('en-US');
 
     // Run allocation
@@ -1992,98 +2303,140 @@ window.qcAutoPlanGoToStep = function(stepNum) {
 
     // --- Populate Info Banner ---
     const planTypeLabel = state.planType === 'QC' ? `${state.qcSubtype}` : 'Manual';
-    const channelColor = state.channel === 'Website' ? '#0ea5e9' : '#8b5cf6';
-    const channelBg = state.channel === 'Website' ? '#e0f2fe' : '#ede9fe';
-    const channelIcon = state.channel === 'Website' ? 'globe' : 'share-2';
     const typeColor = state.planType === 'Manual' ? '#f59e0b' : (state.qcSubtype === 'QC1' ? '#10b981' : '#4f46e5');
     const typeBg = state.planType === 'Manual' ? '#fef3c7' : (state.qcSubtype === 'QC1' ? '#d1fae5' : '#ede9fe');
 
-    // Work date & Data date display
     const workDateDisplay = document.getElementById('qcAutoWorkDateDisplay')?.value || document.getElementById('qcAutoWorkDate')?.value || '-';
-    const dataDateDisplay = document.getElementById('qcAutoDataDateDisplay')?.value || document.getElementById('qcAutoDataDate')?.value || '-';
-    const startTime = document.getElementById('qcAutoStartTime')?.value || '';
-    const endTime = document.getElementById('qcAutoEndTime')?.value || '';
-    let timeText = '';
-    if (startTime && endTime) timeText = `${startTime} – ${endTime} น.`;
-    else if (startTime) timeText = `ตั้งแต่ ${startTime} น.`;
-    else if (endTime) timeText = `ถึง ${endTime} น.`;
+    const summary = state.selectedImportSummary;
 
     const banner = document.getElementById('qcAutoPane2InfoBanner');
     if (banner) {
       banner.innerHTML = `
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:8px;">
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">ประเภทงาน</span>
-            <span style="font-size:0.82rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:5px;">
-              <span style="background:${typeBg}; color:${typeColor}; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:700;">${planTypeLabel}</span>
+        <div style="display:flex; align-items:stretch; gap:10px; width:100%; box-sizing:border-box;">
+          <div style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:10px 16px; display:flex; flex-direction:column; gap:4px; flex-shrink:0;">
+            <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">ประเภทงาน</span>
+            <span style="font-size:0.85rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:5px;">
+              <span style="background:${typeBg}; color:${typeColor}; padding:2px 10px; border-radius:20px; font-size:0.78rem; font-weight:700;">${planTypeLabel}</span>
             </span>
           </div>
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">ช่องทาง</span>
-            <span style="background:${channelBg}; color:${channelColor}; padding:2px 8px; border-radius:20px; font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; width:fit-content; margin-top:2px;">
-              <i data-lucide="${channelIcon}" style="width:11px; height:11px;"></i> ${state.channel}
+          <div style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:10px 16px; display:flex; flex-direction:column; gap:4px; flex-shrink:0;">
+            <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">วันทำงาน</span>
+            <span style="font-size:0.85rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="briefcase" style="width:14px; height:14px; color:#f59e0b;"></i> ${workDateDisplay || '-'}
             </span>
           </div>
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">วันของข้อมูล</span>
-            <span style="font-size:0.8rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:4px;">
-              <i data-lucide="calendar" style="width:12px; height:12px; color:#8b5cf6;"></i> ${dataDateDisplay || '-'}
-            </span>
-          </div>
-          ${timeText ? `
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">ช่วงเวลา</span>
-            <span style="font-size:0.8rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:4px;">
-              <i data-lucide="clock" style="width:12px; height:12px; color:#0ea5e9;"></i> ${timeText}
+          ${summary ? `
+          <div style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:10px 16px; display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+            <span style="font-size:0.68rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">ไฟล์ข้อมูลที่ Import</span>
+            <span style="font-size:0.85rem; font-weight:700; color:#10b981; display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${summary.fileName || 'ไฟล์ Import'} (${(summary.totalCases || 0).toLocaleString('en-US')} เคส)">
+              <i data-lucide="file-text" style="width:14px; height:14px; flex-shrink:0;"></i> ${summary.fileName || 'ไฟล์ Import'} (${(summary.totalCases || 0).toLocaleString('en-US')} เคส)
             </span>
           </div>` : ''}
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:3px;">
-            <span style="font-size:0.65rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">วันทำงาน</span>
-            <span style="font-size:0.8rem; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:4px;">
-              <i data-lucide="briefcase" style="width:12px; height:12px; color:#f59e0b;"></i> ${workDateDisplay || '-'}
-            </span>
-          </div>
         </div>
       `;
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     // --- Populate Grid ---
-    const catColors = ['#4f46e5','#0ea5e9','#10b981','#f59e0b','#e11d48','#8b5cf6','#06b6d4','#84cc16'];
-    const gridHtml = cats.map((cat, idx) => {
-      const accent = catColors[idx % catColors.length];
-      const prevVal = state.categories && state.categories[cat] ? state.categories[cat] : '';
-      const formattedPrevVal = prevVal ? Number(prevVal).toLocaleString('en-US') : '';
-      return `
-        <div style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 12px; display:flex; flex-direction:column; gap:8px; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.05);"
-             onmouseover="this.style.borderColor='${accent}'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.transform='translateY(-2px)';"
-             onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.05)'; this.style.transform='none';">
-          <div style="display:flex; align-items:center; gap:6px;">
-            <div style="width:8px; height:8px; border-radius:50%; background:${accent}; flex-shrink:0;"></div>
-            <label style="font-size:0.73rem; color:#334155; font-weight:700; line-height:1.3;">${cat}</label>
+    const breakdown = summary && Array.isArray(summary.categoryBreakdown) ? summary.categoryBreakdown : null;
+
+    if (state.planType === 'Manual') {
+      const activeGrid = document.getElementById('qcCatGridManual');
+      const inactiveGrid = document.getElementById('qcCatGridQC');
+      if (activeGrid) {
+        let prevVal = state.categories && state.categories['Manual_จำนวนเคสทั้งหมด'] ? state.categories['Manual_จำนวนเคสทั้งหมด'].cases : '';
+        if (!prevVal && summary) prevVal = summary.totalCases || 0;
+        const formattedPrevVal = prevVal ? Number(prevVal).toLocaleString('en-US') : '';
+        activeGrid.innerHTML = `
+          <div class="qc-auto-cat-card" style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <label style="font-size:0.8rem; color:#334155; font-weight:700;">จำนวนเคสทั้งหมด (Manual)</label>
+            <div style="position:relative; width:100%;">
+              <input type="text" inputmode="numeric" class="qc-auto-cat-input" data-category="จำนวนเคสทั้งหมด" data-channel="Manual" placeholder="0" value="${formattedPrevVal}" readonly style="width:100%; padding:10px 40px 10px 12px; border-radius:8px; border:1.5px solid #e2e8f0; font-family:Kanit; font-size:1.1rem; font-weight:700; text-align:center; background:#f8fafc; box-sizing:border-box; outline:none;">
+              <span class="unit-badge" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:0.7rem; color:#94a3b8; font-weight:600;">เคส</span>
+            </div>
           </div>
-          <div style="position:relative;">
-            <input type="text" inputmode="numeric" class="qc-auto-cat-input" data-category="${cat}" placeholder="0"
-              value="${formattedPrevVal}"
-              oninput="window.qcAutoPlanOnInputCat(this); this.parentElement.querySelector('.unit-badge').style.color='${accent}';"
-              style="width:100%; padding:8px 36px 8px 10px; border-radius:8px; border:1.5px solid #e2e8f0; font-family:Kanit; font-size:1rem; font-weight:700; text-align:center; background:#f8fafc; box-sizing:border-box; outline:none; transition:border 0.2s;"
-              onfocus="this.style.borderColor='${accent}'; this.style.background='#fff';"
-              onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
-            <span class="unit-badge" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:0.65rem; color:#94a3b8; font-weight:600; pointer-events:none;">เคส</span>
+        `;
+        activeGrid.style.display = 'grid';
+      }
+      if (inactiveGrid) inactiveGrid.style.display = 'none';
+    } else {
+      const websiteCats = ['โฆษณาพนัน', 'Exclude โฆษณาพนัน'];
+      const socialCats = ['พนัน', '5 หมวดสินค้า (กัญชา บุหรี่ไฟฟ้า แอลกอฮอล์ กระท่อม ปืน)', 'อื่นๆ Exclude พนันและสินค้า'];
+
+      const renderCard = (cat, chan, accent) => {
+        const key = `${chan}_${cat}`;
+        let prevVal = state.categories && state.categories[key] ? state.categories[key].cases : '';
+        if (!prevVal && breakdown) {
+          const importedVal = window.qcFindImportedCategoryCount(cat, breakdown, chan);
+          if (importedVal > 0) prevVal = importedVal;
+        }
+        const formattedPrevVal = prevVal ? Number(prevVal).toLocaleString('en-US') : '';
+        return `
+          <div class="qc-auto-cat-card" style="background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between; gap:8px; transition:all 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.03); height:100%; box-sizing:border-box;"
+               onmouseover="this.style.borderColor='${accent}'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.06)';"
+               onmouseout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.03)';">
+            <div style="display:flex; align-items:flex-start; gap:6px; min-height:30px;">
+              <div style="width:8px; height:8px; border-radius:50%; background:${accent}; flex-shrink:0; margin-top:5px;"></div>
+              <label style="font-size:0.78rem; color:#334155; font-weight:700; line-height:1.3; word-break:break-word; margin:0;">${cat}</label>
+            </div>
+            <div style="position:relative; width:100%;">
+              <input type="text" inputmode="numeric" class="qc-auto-cat-input" data-category="${cat}" data-channel="${chan}" placeholder="0"
+                value="${formattedPrevVal}"
+                readonly
+                style="width:100%; padding:6px 34px 6px 10px; border-radius:8px; border:1.5px solid #e2e8f0; font-family:Kanit; font-size:0.95rem; font-weight:700; text-align:center; background:#f8fafc; box-sizing:border-box; outline:none; cursor:default; user-select:none;">
+              <span class="unit-badge" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:0.65rem; color:#94a3b8; font-weight:600; pointer-events:none;">เคส</span>
+            </div>
+          </div>
+        `;
+      };
+
+      const webCardsHtml = websiteCats.map(cat => renderCard(cat, 'Website', '#0ea5e9')).join('');
+      const socCardsHtml = socialCats.map(cat => renderCard(cat, 'Social', '#8b5cf6')).join('');
+
+      const gridHtml = `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <!-- Website Section -->
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #e2e8f0;">
+              <span style="background:#e0f2fe; color:#0369a1; font-weight:700; font-size:0.78rem; padding:3px 12px; border-radius:9999px; display:inline-flex; align-items:center; gap:5px;">
+                <i data-lucide="globe" style="width:14px; height:14px;"></i> ช่องทาง Website
+              </span>
+              <span style="font-size:0.78rem; color:#0369a1; background:#e0f2fe; padding:2px 10px; border-radius:20px; font-weight:700;">
+                รวม Website: <strong id="qcAutoPlanTotalWebsite" style="font-size:0.85rem;">0</strong> เคส
+              </span>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              ${webCardsHtml}
+            </div>
+          </div>
+
+          <!-- Social Section -->
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #e2e8f0;">
+              <span style="background:#f3e8ff; color:#7e22ce; font-weight:700; font-size:0.78rem; padding:3px 12px; border-radius:9999px; display:inline-flex; align-items:center; gap:5px;">
+                <i data-lucide="share-2" style="width:14px; height:14px;"></i> ช่องทาง Social
+              </span>
+              <span style="font-size:0.78rem; color:#7e22ce; background:#f3e8ff; padding:2px 10px; border-radius:20px; font-weight:700;">
+                รวม Social: <strong id="qcAutoPlanTotalSocial" style="font-size:0.85rem;">0</strong> เคส
+              </span>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              ${socCardsHtml}
+            </div>
           </div>
         </div>
       `;
-    }).join('');
 
-    const activeGrid = state.planType === 'Manual' ? document.getElementById('qcCatGridManual') : document.getElementById('qcCatGridQC');
-    const inactiveGrid = state.planType === 'Manual' ? document.getElementById('qcCatGridQC') : document.getElementById('qcCatGridManual');
-    
-    if (activeGrid) {
-      activeGrid.innerHTML = gridHtml;
-      activeGrid.style.display = 'grid';
-    }
-    if (inactiveGrid) {
-      inactiveGrid.style.display = 'none';
+      const activeGrid = document.getElementById('qcCatGridQC');
+      const inactiveGrid = document.getElementById('qcCatGridManual');
+      if (activeGrid) {
+        activeGrid.innerHTML = gridHtml;
+        activeGrid.style.display = 'block';
+      }
+      if (inactiveGrid) {
+        inactiveGrid.style.display = 'none';
+      }
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     qcAutoPlanRecalculateTotals();
@@ -2092,20 +2445,69 @@ window.qcAutoPlanGoToStep = function(stepNum) {
   // Toggle indicators
   for (let i = 1; i <= 3; i++) {
     const ind = document.getElementById('qcAutoStepIndicator' + i);
-    const badge = ind.querySelector('span');
+    if (!ind) continue;
+    const badge = ind.querySelector('div') || ind.querySelector('span');
+    const titleEl = ind.querySelector('div > div:first-child');
+
     if (i === stepNum) {
-      ind.style.color = '#4f46e5';
-      badge.style.background = '#4f46e5';
+      ind.style.opacity = '1';
+      if (titleEl) titleEl.style.color = '#635bff';
+      if (badge) {
+        badge.style.background = '#635bff';
+        badge.style.color = '#ffffff';
+        badge.style.boxShadow = '0 4px 10px rgba(99, 91, 255, 0.25)';
+      }
     } else if (i < stepNum) {
-      ind.style.color = '#10b981';
-      badge.style.background = '#10b981';
+      ind.style.opacity = '1';
+      if (titleEl) titleEl.style.color = '#10b981';
+      if (badge) {
+        badge.style.background = '#10b981';
+        badge.style.color = '#ffffff';
+        badge.style.boxShadow = 'none';
+      }
     } else {
-      ind.style.color = '#64748b';
-      badge.style.background = '#cbd5e1';
+      ind.style.opacity = '0.7';
+      if (titleEl) titleEl.style.color = '#64748b';
+      if (badge) {
+        badge.style.background = '#cbd5e1';
+        badge.style.color = '#ffffff';
+        badge.style.boxShadow = 'none';
+      }
     }
   }
 
   window.QC_AUTO_PLAN_STATE.step = stepNum;
+};
+
+window.qcApplyImportedFileInStep2 = function() {
+  const state = window.QC_AUTO_PLAN_STATE;
+  const summary = state ? state.selectedImportSummary : null;
+  if (!summary) {
+    if (typeof window.showToast === 'function') {
+      window.showToast('ยังไม่ได้เลือกไฟล์ Import ใน Step 1 (กรุณากลับไปเลือกไฟล์ก่อน)', 'warning');
+    }
+    return;
+  }
+
+  const breakdown = summary.categoryBreakdown;
+  const channel = state ? state.channel : '';
+  const activeGrid = state.planType === 'Manual' ? document.getElementById('qcCatGridManual') : document.getElementById('qcCatGridQC');
+  const inputs = activeGrid ? activeGrid.querySelectorAll('.qc-auto-cat-input') : [];
+
+  let filledCount = 0;
+  inputs.forEach(inp => {
+    const cat = inp.getAttribute('data-category');
+    const val = window.qcFindImportedCategoryCount(cat, breakdown, channel);
+    if (val > 0) {
+      inp.value = val.toLocaleString('en-US');
+      filledCount++;
+    }
+  });
+
+  window.qcAutoPlanRecalculateTotals();
+  if (typeof window.showToast === 'function') {
+    window.showToast(`ดึงจำนวนเคสจากไฟล์ "${summary.fileName}" สำเร็จ (${filledCount} หมวดหมู่)`, 'success');
+  }
 };
 
 window.qcClearAutoPlanInputs = async function() {
@@ -2140,12 +2542,25 @@ window.qcAutoPlanRecalculateTotals = function() {
   const activeGrid = window.QC_AUTO_PLAN_STATE.planType === 'Manual' ? document.getElementById('qcCatGridManual') : document.getElementById('qcCatGridQC');
   const inputs = activeGrid ? activeGrid.querySelectorAll('.qc-auto-cat-input') : [];
   let total = 0;
+  let websiteTotal = 0;
+  let socialTotal = 0;
+
   inputs.forEach(inp => {
-    total += parseInt((inp.value || '').replace(/,/g, ''), 10) || 0;
+    const val = parseInt((inp.value || '').replace(/,/g, ''), 10) || 0;
+    const chan = inp.getAttribute('data-channel');
+    if (chan === 'Website') websiteTotal += val;
+    else if (chan === 'Social') socialTotal += val;
+    total += val;
   });
 
   const totalEl = document.getElementById('qcAutoPlanTotalCases');
   if (totalEl) totalEl.textContent = total.toLocaleString('en-US');
+
+  const webTotalEl = document.getElementById('qcAutoPlanTotalWebsite');
+  if (webTotalEl) webTotalEl.textContent = websiteTotal.toLocaleString('en-US');
+
+  const socTotalEl = document.getElementById('qcAutoPlanTotalSocial');
+  if (socTotalEl) socTotalEl.textContent = socialTotal.toLocaleString('en-US');
 
   const channel = window.QC_AUTO_PLAN_STATE.channel || '';
   const qcSubtype = window.QC_AUTO_PLAN_STATE.qcSubtype || '';
@@ -2298,62 +2713,57 @@ function qcAutoPlanRunAllocation(totalCases, categoriesMap) {
       const planChan = window.QC_AUTO_PLAN_STATE.channel || '';
       const planType = window.QC_AUTO_PLAN_STATE.planType === 'QC' ? window.QC_AUTO_PLAN_STATE.qcSubtype : 'Manual';
 
+      const getEmpPct = (emp) => {
+        let pct = emp.currentPercent;
+        for (const [c, val] of Object.entries(emp.allocatedCases)) {
+          const rate = typeof window.qcGetRateForTask === 'function' 
+            ? window.qcGetRateForTask(ratesV2, c, planChan, planType) 
+            : 0.1;
+          pct += val * rate;
+        }
+        return pct;
+      };
+
       let remainingCasesMap = { ...categoriesMap };
-      let currentEmpIndex = 0;
       window.QC_AUTO_PLAN_CAPACITY_EXCEEDED = false;
 
       for (const [cat, count] of Object.entries(remainingCasesMap)) {
         let rem = count;
-        
         const ratePerCase = typeof window.qcGetRateForTask === 'function' 
           ? window.qcGetRateForTask(ratesV2, cat, planChan, planType) 
           : 0.1;
 
-        while (rem > 0 && currentEmpIndex < checkedEmployees.length) {
-          const emp = checkedEmployees[currentEmpIndex];
-          
-          let newlyAllocatedPercent = 0;
-          for (const [aCat, aVal] of Object.entries(emp.allocatedCases)) {
-             const aRate = typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, aCat, planChan, planType) : 0.1;
-             newlyAllocatedPercent += aVal * aRate;
-          }
-          
-          const totalEmpPercent = emp.currentPercent + newlyAllocatedPercent;
-          const remainingPercent = 120 - totalEmpPercent;
-          
-          let spaceLeftCases = ratePerCase > 0 ? Math.floor(remainingPercent / ratePerCase) : rem;
-          
-          if (spaceLeftCases <= 0) {
-            currentEmpIndex++;
-            continue;
-          }
+        while (rem > 0 && checkedEmployees.length > 0) {
+          // Sort employees by current combined workload % ascending (lowest workload first)
+          checkedEmployees.sort((a, b) => getEmpPct(a) - getEmpPct(b));
 
-          const give = Math.min(rem, spaceLeftCases);
-          emp.allocatedCases[cat] = (emp.allocatedCases[cat] || 0) + give;
-          emp.totalAllocated += give;
-          rem -= give;
+          const availableUnderLimit = checkedEmployees.filter(e => getEmpPct(e) < 120);
 
-          if (rem > 0) {
-            currentEmpIndex++;
-          }
-        }
-        
-        // If we ran out of employees but still have cases, it means capacity exceeded
-        if (rem > 0) {
-          window.QC_AUTO_PLAN_CAPACITY_EXCEEDED = true;
-          // Distribute remaining cases evenly to those with least workload
-          while (rem > 0 && checkedEmployees.length > 0) {
-            checkedEmployees.sort((a, b) => {
-               let pctA = a.currentPercent;
-               for(let c in a.allocatedCases) pctA += a.allocatedCases[c] * (typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, c, planChan, planType) : 0.1);
-               let pctB = b.currentPercent;
-               for(let c in b.allocatedCases) pctB += b.allocatedCases[c] * (typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, c, planChan, planType) : 0.1);
-               return pctA - pctB;
-            });
+          if (availableUnderLimit.length === 0) {
+            // Over 120% capacity for everyone
+            window.QC_AUTO_PLAN_CAPACITY_EXCEEDED = true;
             const topEmp = checkedEmployees[0];
             topEmp.allocatedCases[cat] = (topEmp.allocatedCases[cat] || 0) + 1;
             topEmp.totalAllocated += 1;
             rem -= 1;
+          } else {
+            const lowestEmp = availableUnderLimit[0];
+            const secondLowestPct = availableUnderLimit.length > 1 ? getEmpPct(availableUnderLimit[1]) : 120;
+            const currentLowestPct = getEmpPct(lowestEmp);
+            const pctDiff = Math.max(0.1, secondLowestPct - currentLowestPct);
+
+            let chunk = ratePerCase > 0 ? Math.ceil(pctDiff / ratePerCase) : 1;
+            chunk = Math.max(1, Math.min(rem, chunk));
+
+            const remainingPctTo120 = 120 - currentLowestPct;
+            const maxCasesTo120 = ratePerCase > 0 ? Math.floor(remainingPctTo120 / ratePerCase) : rem;
+            if (maxCasesTo120 > 0 && maxCasesTo120 < chunk) {
+              chunk = maxCasesTo120;
+            }
+
+            lowestEmp.allocatedCases[cat] = (lowestEmp.allocatedCases[cat] || 0) + chunk;
+            lowestEmp.totalAllocated += chunk;
+            rem -= chunk;
           }
         }
       }
@@ -2431,8 +2841,8 @@ function qcAutoPlanRunAllocation(totalCases, categoriesMap) {
             <span>${cat}:</span>
             <input type="hidden" class="qc-proposal-val" data-emp="${emp.name}" data-category="${cat}" value="${val}">
             <span style="font-weight:800; color:#1d4ed8;">${Number(val).toLocaleString('en-US')}</span>
-            <button type="button" onclick="qcAutoPlanRemoveAllocationItem(this, '${idx}', '${cat}')" style="background:#fee2e2; border:none; cursor:pointer; color:#ef4444; width:16px; height:16px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; transition:all 0.15s; outline:none;" onmouseover="this.style.background='#fca5a5'; this.style.color='#b91c1c';" onmouseout="this.style.background='#fee2e2'; this.style.color='#ef4444';" title="ลบรายการนี้">
-              <span style="font-size:9px; font-weight:900; font-family:system-ui, sans-serif; line-height:1; transform:translateY(-0.5px);">✕</span>
+            <button type="button" onclick="qcAutoPlanRemoveAllocationItem(this, '${idx}', '${cat}', event)" style="background:#fee2e2; border:none; cursor:pointer; color:#ef4444; width:16px; height:16px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin-left:6px; transition:all 0.15s; outline:none;" onmouseover="this.style.background='#fca5a5'; this.style.color='#b91c1c';" onmouseout="this.style.background='#fee2e2'; this.style.color='#ef4444';" title="ลบรายการนี้">
+              <span style="font-size:9px; font-weight:900; font-family:system-ui, sans-serif; line-height:1;">✕</span>
             </button>
           </div>
         `;
@@ -2566,9 +2976,34 @@ window.qcAutoPlanToggleEmpRow = function(cb) {
 };
 
 window.qcAutoPlanReRun = function() {
+  const documentContainers = document.querySelectorAll('.overflow-y-auto, .page-content, .main-content');
+  const scrollStates = [];
+  documentContainers.forEach(dc => {
+    scrollStates.push({ el: dc, top: dc.scrollTop, left: dc.scrollLeft });
+  });
+  const winTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  const winLeft = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
+  scrollStates.push({ el: window, top: winTop, left: winLeft });
+
+  const restoreAllScrolls = () => {
+    scrollStates.forEach(s => {
+      if (s.el === window) {
+        window.scrollTo(s.left, s.top);
+      } else if (s.el) {
+        s.el.scrollTop = s.top;
+        s.el.scrollLeft = s.left;
+      }
+    });
+  };
+
   const categories = window.QC_AUTO_PLAN_STATE.categories || {};
   const total = Object.values(categories).reduce((a, b) => a + b, 0);
   qcAutoPlanRunAllocation(total, categories);
+
+  restoreAllScrolls();
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(restoreAllScrolls);
+  setTimeout(restoreAllScrolls, 0);
+  setTimeout(restoreAllScrolls, 50);
 };
 
 window.qcAutoPlanUpdatePeopleCount = function() {
@@ -2644,16 +3079,15 @@ window.qcSaveAutoPlan = function() {
     return;
   }
 
-  // Remove Modal
-  document.getElementById('qcAutoPlanModal')?.remove();
-
   // Show Success
   if (typeof window.showToast === 'function') {
     window.showToast('จัดแผนงานอัตโนมัติเรียบร้อยแล้ว!', 'success');
   }
 
-  // Reload
-  qcReloadPlan();
+  // Redirect or Reload
+  setTimeout(() => {
+    window.location.href = '/realcyber-plan';
+  }, 600);
 };
 
 // --- Chart Init ---
@@ -2701,6 +3135,7 @@ function initQCDashboard() {
   // 1. Bar + Line Chart
   const lineCtx = document.getElementById('qcLineChart');
   if (lineCtx) {
+    if (Chart.getChart(lineCtx)) Chart.getChart(lineCtx).destroy();
     new Chart(lineCtx, {
       type: 'bar',
       data: {
@@ -2767,6 +3202,7 @@ function initQCDashboard() {
   // 2. QC Donut Chart
   const donutCtx = document.getElementById('qcDonutChart');
   if (donutCtx) {
+    if (Chart.getChart(donutCtx)) Chart.getChart(donutCtx).destroy();
     new Chart(donutCtx, {
       type: 'doughnut',
       data: {
@@ -2783,6 +3219,7 @@ function initQCDashboard() {
   // 3. Manual Donut Chart
   const manualDonutCtx = document.getElementById('qcManualDonutChart');
   if (manualDonutCtx) {
+    if (Chart.getChart(manualDonutCtx)) Chart.getChart(manualDonutCtx).destroy();
     new Chart(manualDonutCtx, {
       type: 'doughnut',
       data: {
@@ -2980,17 +3417,40 @@ window.qcSaveManageEmployees = function(context = 'qc') {
   const orderKey = context === 'schedule' ? 'schedule_employee_order' : 'qc_employee_order';
   localStorage.setItem(orderKey, JSON.stringify(empOrderMap));
 
-  document.getElementById('qcManageEmployeesModal').remove();
+  const modal = document.getElementById('qcManageEmployeesModal');
+  if (modal) modal.remove();
   
+  const toastMessage = context === 'schedule'
+    ? 'บันทึกการแสดงผลและลำดับรายชื่อเรียบร้อยแล้ว'
+    : 'บันทึกการแสดงผลและลำดับรายชื่อเรียบร้อยแล้ว';
+
   if (typeof window.showToast === 'function') {
-    window.showToast('อัปเดตการแสดงผลและลำดับรายชื่อเรียบร้อยแล้ว', 'success');
+    window.showToast(toastMessage, 'success');
+  } else {
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed; top:24px; right:24px; z-index:9999999; background:#ffffff; padding:12px 20px; border-radius:12px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.12); border-left:4px solid #10b981; display:flex; align-items:center; gap:10px; font-family:"Kanit",sans-serif; font-size:0.875rem; font-weight:500; color:#0f172a; transform:translateX(120%); transition:all 0.35s cubic-bezier(0.175,0.885,0.32,1.275);';
+    toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span>${toastMessage}</span>`;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.style.transform = 'translateX(0)');
+    setTimeout(() => {
+      toast.style.transform = 'translateX(120%)';
+      setTimeout(() => toast.remove(), 350);
+    }, 3000);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('schedule_settings_changed'));
+    window.dispatchEvent(new CustomEvent('qc_settings_changed'));
+    if (typeof window.refreshReactSchedule === 'function') {
+      window.refreshReactSchedule();
+    }
   }
 
   // Reload the correct page
   if (context === 'schedule' && typeof window.filterScheduleUI === 'function') {
     window.filterScheduleUI();
-  } else {
-    qcReloadPlan();
+  } else if (typeof window.qcReloadPlan === 'function') {
+    window.qcReloadPlan();
   }
 };
 
@@ -3318,7 +3778,7 @@ window.qcShowSettingsModal = function() {
           border: 1px solid rgba(245, 158, 11, 0.2) !important;
         }
 
-        /* Modern input styling */
+        /* Modern input styling - Pill shape */
         .qc-rate-input {
           width: 100%;
           max-width: 60px;
@@ -3328,7 +3788,7 @@ window.qcShowSettingsModal = function() {
           font-family: 'Kanit', sans-serif;
           text-align: center;
           border: 1px solid #cbd5e1;
-          border-radius: 6px;
+          border-radius: 9999px;
           background-color: #f8fafc;
           color: #1e293b;
           outline: none;
@@ -3418,23 +3878,24 @@ window.qcShowSettingsModal = function() {
           background-color: #f1f5f9 !important;
         }
 
-        /* Segmented Controller (Mode Selector) */
+        /* Segmented Controller (Mode Selector) - Full Pill Shape (ทรงเม็ดยา) */
         .qc-segmented-control {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 2px;
+          gap: 4px;
           background: #f1f5f9;
-          padding: 3px;
-          border-radius: 8px;
+          padding: 4px;
+          border-radius: 9999px;
           border: 1px solid #e2e8f0;
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
           width: fit-content;
         }
         .qc-segmented-control button {
-          padding: 6px 14px;
+          padding: 7px 20px;
           border: none;
-          border-radius: 6px;
+          border-radius: 9999px;
           font-family: 'Kanit', sans-serif;
-          font-size: 0.78rem;
+          font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -3443,33 +3904,44 @@ window.qcShowSettingsModal = function() {
         }
         .qc-segmented-control button.active {
           background: #ffffff;
-          color: #1e293b;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+          color: #0f172a;
+          font-weight: 700;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
         }
         .qc-segmented-control button:hover:not(.active) {
-          color: #334155;
+          color: #1e293b;
+          background: rgba(255,255,255,0.5);
         }
 
-        /* Beautiful Pills for Target Checkboxes */
+        /* Beautiful Pills for Target Checkboxes (ทรงเม็ดยา) */
         .qc-pills-container {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           background: #f0fdf4;
           border: 1px solid #bbf7d0;
-          padding: 4px 12px;
-          border-radius: 10px;
+          padding: 4px 14px;
+          border-radius: 9999px;
         }
         .qc-pill-label {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           font-size: 0.78rem;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
-          color: #1e293b;
+          color: #15803d;
+          background: #ffffff;
+          padding: 3px 12px;
+          border-radius: 9999px;
+          border: 1px solid #dcfce7;
           margin: 0;
           user-select: none;
+          transition: all 0.15s;
+        }
+        .qc-pill-label:hover {
+          border-color: #86efac;
+          box-shadow: 0 1px 4px rgba(16,185,129,0.15);
         }
         .qc-pill-label input[type="checkbox"] {
           width: 14px;
@@ -3478,52 +3950,13 @@ window.qcShowSettingsModal = function() {
           cursor: pointer;
         }
 
-        /* Action Buttons */
-        .qc-btn-secondary {
-          padding: 8px 14px;
-          border: 1px solid #cbd5e1;
-          background: #f1f5f9;
-          border-radius: 8px;
-          cursor: pointer;
-          font-family: 'Kanit', sans-serif;
-          font-size: 0.75rem;
-          color: #475569;
-          font-weight: 500;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.15s;
-        }
-        .qc-btn-secondary:hover {
-          background: #e2e8f0;
-          color: #1e293b;
-          border-color: #cbd5e1;
-        }
-        
-        .qc-btn-cancel {
-          padding: 8px 16px;
-          border: 1px solid #cbd5e1;
-          background: #ffffff;
-          border-radius: 8px;
-          cursor: pointer;
-          font-family: 'Kanit', sans-serif;
-          font-size: 0.82rem;
-          color: #64748b;
-          font-weight: 500;
-          transition: all 0.15s;
-        }
-        .qc-btn-cancel:hover {
-          background: #f1f5f9;
-          color: #334155;
-          border-color: #cbd5e1;
-        }
-
-        .qc-btn-save {
+        /* Action Buttons - Pill Shape */
+        .qc-btn-danger-solid {
           padding: 8px 20px;
-          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          background: #ef4444;
           color: #ffffff;
           border: none;
-          border-radius: 8px;
+          border-radius: 9999px;
           cursor: pointer;
           font-family: 'Kanit', sans-serif;
           font-size: 0.82rem;
@@ -3532,10 +3965,34 @@ window.qcShowSettingsModal = function() {
           align-items: center;
           gap: 6px;
           transition: all 0.15s;
+          box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+        }
+        .qc-btn-danger-solid:hover {
+          background: #dc2626;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+
+        .qc-btn-save {
+          padding: 8px 24px;
+          background: linear-gradient(135deg, #635bff, #4f46e5);
+          color: #ffffff;
+          border: none;
+          border-radius: 9999px;
+          cursor: pointer;
+          font-family: 'Kanit', sans-serif;
+          font-size: 0.82rem;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.15s;
+          box-shadow: 0 3px 12px rgba(99, 91, 255, 0.35);
         }
         .qc-btn-save:hover {
-          background: linear-gradient(135deg, #1d4ed8, #1e40af);
+          background: linear-gradient(135deg, #4f46e5, #4338ca);
           transform: translateY(-1px);
+          box-shadow: 0 5px 16px rgba(99, 91, 255, 0.45);
         }
       </style>
       
@@ -3659,19 +4116,15 @@ window.qcShowSettingsModal = function() {
           </table>
         </div>
 
-        <div class="qc-modal-actions" style="margin-top: 10px; display:flex; justify-content:space-between; gap:10px; width:100%;">
-          <div style="display:flex; gap:10px;">
-            <button class="qc-btn-secondary" onclick="qcExportRates()">
-              <i data-lucide="copy" style="width:14px; height:14px;"></i> ส่งค่าให้โปรแกรมเมอร์ (Export)
-            </button>
-            <button class="qc-btn-secondary" onclick="qcClearSettingsInputs()" style="color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 600;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">
-              <i data-lucide="trash-2" style="width:14px; height:14px; color: #dc2626;"></i> ล้างค่าทั้งหมด
+        <div class="qc-modal-actions" style="margin-top: 10px; display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%;">
+          <div>
+            <button type="button" class="qc-btn-danger-solid" onclick="qcClearSettingsInputs()">
+              <i data-lucide="trash-2" style="width:14px; height:14px; color:#ffffff;"></i> ล้างค่าทั้งหมด
             </button>
           </div>
           
-          <div style="display:flex; gap:10px;">
-            <button class="qc-btn-cancel" onclick="document.getElementById('qcSettingsModal').remove()">ยกเลิก</button>
-            <button class="qc-btn-save" onclick="qcSaveSettingsV3()">
+          <div>
+            <button type="button" class="qc-btn-save" onclick="qcSaveSettingsV3()">
               <i data-lucide="save" style="width:14px; height:14px;"></i> บันทึกการตั้งค่า
             </button>
           </div>
@@ -4022,10 +4475,49 @@ window.qcDeleteLocalPlan = function(filter) {
   } catch(e) {}
 };
 
-window.qcAutoPlanRemoveAllocationItem = function(btn, empIdx, cat) {
-  const state = window.QC_AUTO_PLAN_STATE;
+window.qcAutoPlanRemoveAllocationItem = function(btn, empIdx, cat, evt) {
+  if (evt) {
+    if (typeof evt.preventDefault === 'function') evt.preventDefault();
+    if (typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  }
+
+  // Save scroll positions of ALL elements on the page that are currently scrolled
+  const scrollableStates = [];
+  document.querySelectorAll('*').forEach(el => {
+    if (el.scrollTop > 0 || el.scrollLeft > 0) {
+      scrollableStates.push({ el: el, top: el.scrollTop, left: el.scrollLeft });
+    }
+  });
+
+  const winTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  const winLeft = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
+
+  const restoreAllScrolls = () => {
+    scrollableStates.forEach(s => {
+      if (s.el) {
+        s.el.scrollTop = s.top;
+        s.el.scrollLeft = s.left;
+      }
+    });
+    window.scrollTo(winLeft, winTop);
+  };
+
+  // Shift focus to row checkbox to avoid document.body focus reset & scroll jumps
   const idx = parseInt(empIdx);
-  const emp = state.allocations[idx];
+  const row = document.getElementById('qc_prop_row_' + idx);
+  if (row) {
+    const cb = row.querySelector('.qc-proposal-checkbox');
+    if (cb && typeof cb.focus === 'function') {
+      try { cb.focus({ preventScroll: true }); } catch(e) { cb.focus(); }
+    }
+  }
+
+  if (btn && typeof btn.blur === 'function') {
+    btn.blur();
+  }
+
+  const state = window.QC_AUTO_PLAN_STATE;
+  const emp = state.allocations ? state.allocations[idx] : null;
   if (!emp) return;
 
   // Set the allocation value to 0
@@ -4034,9 +4526,11 @@ window.qcAutoPlanRemoveAllocationItem = function(btn, empIdx, cat) {
   }
 
   // Remove the chip element
-  const chip = btn.closest('.qc-alloc-chip');
-  const parent = chip.parentNode;
-  chip.remove();
+  const chip = btn ? btn.closest('.qc-alloc-chip') : null;
+  const parent = chip ? chip.parentNode : null;
+  if (chip) {
+    chip.remove();
+  }
 
   // If no chips remain, show placeholder
   if (parent && parent.querySelectorAll('.qc-alloc-chip').length === 0) {
@@ -4066,7 +4560,6 @@ window.qcAutoPlanRemoveAllocationItem = function(btn, empIdx, cat) {
   const combinedColor = typeof window.getWorkloadColor === 'function' ? window.getWorkloadColor(combinedPct) : (combinedPct > 100 ? '#ef4444' : '#10b981');
 
   // Find the parent row
-  const row = document.getElementById('qc_prop_row_' + idx);
   if (row) {
     const proposalChipsCol = document.getElementById('qc_proposal_chips_' + emp.name) || row.cells[3];
     if (proposalChipsCol) {
@@ -4104,6 +4597,15 @@ window.qcAutoPlanRemoveAllocationItem = function(btn, empIdx, cat) {
   if (typeof qcAutoPlanUpdatePeopleCount === 'function') {
     qcAutoPlanUpdatePeopleCount();
   }
+
+  // Restore scroll positions
+  restoreAllScrolls();
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(restoreAllScrolls);
+  }
+  setTimeout(restoreAllScrolls, 0);
+  setTimeout(restoreAllScrolls, 50);
+  setTimeout(restoreAllScrolls, 150);
 };
 
 window.qcAutoPlanOnInputCat = function(el) {
@@ -4285,14 +4787,21 @@ window.showQcDayDetailModal = function (personId, empName, empNameEn, empNick, d
 
 // --- Automatically Sync QC/Manual Plan to Schedule ---
 window.qcSyncPlanToSchedule = function(action, plan) {
-  if (typeof window.apiSaveScheduleTask !== 'function') return;
-  
+  if (!window.QC_PLANS) window.QC_PLANS = [];
+  if (action === 'add') {
+    const existsInQc = window.QC_PLANS.some(p => p.id === plan.id);
+    if (!existsInQc) window.QC_PLANS.push(plan);
+  } else if (action === 'delete') {
+    window.QC_PLANS = window.QC_PLANS.filter(p => p.id !== plan.id);
+  }
+
+  const cleanPName = (plan.name || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
   const personObj = (typeof DATA !== 'undefined' && DATA.employees || []).find(e => {
-    const eName = (e.name || '').trim().toLowerCase();
-    const eNameEn = (e.nameEn || '').trim().toLowerCase();
+    const eName = (e.name || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+    const eNameEn = (e.nameEn || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
     const eNick = (e.nickname || '').trim().toLowerCase();
-    const pName = (plan.name || '').trim().toLowerCase();
-    return eName === pName || eNameEn === pName || eNick === pName;
+    const eId = String(e.id || '').trim().toLowerCase();
+    return eName === cleanPName || eNameEn === cleanPName || eNick === cleanPName || eId === cleanPName || (eName && eName.includes(cleanPName)) || (cleanPName && cleanPName.includes(eName));
   });
   if (!personObj) return;
 
@@ -4321,7 +4830,7 @@ window.qcSyncPlanToSchedule = function(action, plan) {
   if (action === 'add') {
     const schedTask = {
       id: 'SCH-' + plan.id,
-      acc: 'ตรวจจับ',
+      acc: 'RealCyber',
       node: 'Monitor',
       title: workDetail,
       hours: pct
@@ -4343,9 +4852,12 @@ window.qcSyncPlanToSchedule = function(action, plan) {
       }
     }
     
-    window.apiSaveScheduleTask(schedTask, cleanedPerson, plan.date);
+    if (typeof window.apiSaveScheduleTask === 'function') {
+      window.apiSaveScheduleTask(schedTask, cleanedPerson, plan.date);
+    }
   } else if (action === 'delete') {
     const schedTask = {
+      id: 'SCH-' + plan.id,
       date: plan.date,
       title: workDetail
     };
