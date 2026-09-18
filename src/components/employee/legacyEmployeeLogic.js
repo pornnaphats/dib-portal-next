@@ -7938,7 +7938,55 @@ window.pageEmployee = function() {
     const person = DATA.employees.find(e => e.id === personId);
     if (!person) return;
 
-    const dayTasks = window.SCHEDULE_TASKS.filter(t => t.person === personId && t.date === dateIso);
+    const dayTasks = [...(window.SCHEDULE_TASKS || []).filter(t => t.person === personId && t.date === dateIso)];
+
+    if (Array.isArray(window.QC_PLANS)) {
+      let ratesV2 = {};
+      try {
+        const raw = localStorage.getItem('qc_workload_rates_v2');
+        ratesV2 = (raw && raw !== '{}') ? JSON.parse(raw) : (window.DEFAULT_QC_RATES_V2 || {});
+      } catch(e) {
+        ratesV2 = window.DEFAULT_QC_RATES_V2 || {};
+      }
+
+      window.QC_PLANS.forEach(plan => {
+        if (!plan.name || !plan.date || plan.date !== dateIso) return;
+        const cleanPName = String(plan.name).replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+        const emp = ((window.DATA && window.DATA.employees) || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === cleanPName;
+          const matchName = String(e.name || e.fullName || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase() === cleanPName;
+          const matchNameEn = String(e.nameEn || e.name_en || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase() === cleanPName;
+          const matchNickname = String(e.nickname || '').trim().toLowerCase() === cleanPName;
+          const empName = String(e.name || e.fullName || '').trim().toLowerCase();
+          return matchId || matchName || matchNameEn || matchNickname || (empName && (empName.includes(cleanPName) || cleanPName.includes(empName)));
+        });
+
+        const targetId = emp ? emp.id : plan.name;
+        if (String(targetId).trim().toLowerCase() === String(personId).trim().toLowerCase()) {
+          const taskId = 'SCH-' + plan.id;
+          if (!dayTasks.some(t => t.id === taskId)) {
+            const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
+            const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
+            const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
+            const workDetail = `${dpType}${channelText}${plan.category ? ` - ${plan.category}` : ''}`;
+            const rate = typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, plan.category, plan.channel, dpType) : 0;
+            const pct = Math.round((plan.cases || 0) * rate);
+
+            dayTasks.push({
+              id: taskId,
+              date: plan.date,
+              person: targetId,
+              acc: 'RealCyber',
+              node: dpType,
+              title: workDetail,
+              hours: pct,
+              cases: plan.cases,
+              isQcPlan: true
+            });
+          }
+        }
+      });
+    }
     
     // Holiday tasks parsing
     const localShifts = JSON.parse(localStorage.getItem('holiday_shifts') || '[]');

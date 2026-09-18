@@ -318,6 +318,7 @@ export default function ScheduleView() {
     };
     if (typeof window !== "undefined") {
       window.addEventListener("schedule_settings_changed", handleSettingsChange);
+      window.addEventListener("qc_plans_changed", handleSettingsChange);
     }
 
     // Import legacy employee & sidebar logic
@@ -351,6 +352,7 @@ export default function ScheduleView() {
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("schedule_settings_changed", handleSettingsChange);
+        window.removeEventListener("qc_plans_changed", handleSettingsChange);
       }
       if (fpInstance.current) {
         fpInstance.current.destroy();

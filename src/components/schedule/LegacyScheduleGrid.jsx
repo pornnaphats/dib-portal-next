@@ -172,6 +172,64 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
       tasksMap[key].push(t);
     });
 
+    if (typeof window !== 'undefined' && Array.isArray(window.QC_PLANS)) {
+      let ratesV2 = {};
+      try {
+        const raw = localStorage.getItem('qc_workload_rates_v2');
+        ratesV2 = (raw && raw !== '{}') ? JSON.parse(raw) : (window.DEFAULT_QC_RATES_V2 || {});
+      } catch(e) {
+        ratesV2 = window.DEFAULT_QC_RATES_V2 || {};
+      }
+
+      window.QC_PLANS.forEach(plan => {
+        if (!plan.name || !plan.date) return;
+        const cleanPName = String(plan.name).replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+        const emp = (employees || []).find(e => {
+          const matchId = String(e.id).trim().toLowerCase() === cleanPName;
+          const matchName = String(e.fullName || e.name || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase() === cleanPName;
+          const matchNameEn = String(e.nameEn || e.name_en || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase() === cleanPName;
+          const matchNickname = String(e.nickname || '').trim().toLowerCase() === cleanPName;
+          const empName = String(e.fullName || e.name || '').trim().toLowerCase();
+          const matchPartial = empName && (empName.includes(cleanPName) || cleanPName.includes(empName));
+          return matchId || matchName || matchNameEn || matchNickname || matchPartial;
+        });
+
+        const targetId = emp ? emp.id : plan.name;
+        const key = `${targetId}_${plan.date}`;
+        const taskId = 'SCH-' + plan.id;
+
+        if (!tasksMap[key]) tasksMap[key] = [];
+        const exists = tasksMap[key].some(t => t.id === taskId);
+        if (!exists) {
+          const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
+          const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
+          const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
+          const workDetail = `${dpType}${channelText}${plan.category ? ` - ${plan.category}` : ''}`;
+
+          let rate = 0;
+          if (typeof window.qcGetRateForTask === 'function') {
+            rate = window.qcGetRateForTask(ratesV2, plan.category, plan.channel, dpType);
+          }
+          const pct = Math.round((plan.cases || 0) * rate);
+
+          tasksMap[key].push({
+            id: taskId,
+            date: plan.date,
+            person: targetId,
+            acc: 'RealCyber',
+            node: dpType,
+            title: workDetail,
+            hours: pct,
+            cases: plan.cases,
+            category: plan.category,
+            channel: plan.channel,
+            qcType: plan.qcType,
+            isQcPlan: true
+          });
+        }
+      });
+    }
+
     let hiddenEmps = [];
     try { hiddenEmps = JSON.parse(localStorage.getItem('schedule_hidden_employees') || '[]'); } catch(e) { hiddenEmps = []; }
     let empOrderMap = {};
@@ -684,6 +742,9 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                                 <span style={{ fontSize: '0.52rem', color: nodeCol, fontWeight: 700, background: `${nodeCol}12`, padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{t.acc || ''}</span>
                                                 {t.node && (
                                                   <span style={{ fontSize: '0.52rem', color: '#64748b', fontWeight: 500, background: '#f1f5f9', padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{t.node}</span>
+                                                )}
+                                                {t.cases !== undefined && (
+                                                  <span style={{ fontSize: '0.52rem', color: '#635BFF', fontWeight: 700, background: '#eef2ff', padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{(t.cases || 0).toLocaleString('en-US')} เคส</span>
                                                 )}
                                               </div>
                                               <span style={{ fontSize: '0.58rem', fontWeight: 700, color: nodeCol, flexShrink: 0 }}>{t.hours || 0}%</span>
