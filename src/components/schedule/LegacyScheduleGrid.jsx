@@ -204,7 +204,7 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
           const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
           const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
           const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
-          const workDetail = `${dpType}${channelText}${plan.category ? ` - ${plan.category}` : ''}`;
+          const workDetail = `${dpType}${channelText}`;
 
           let rate = 0;
           if (typeof window.qcGetRateForTask === 'function') {
@@ -742,9 +742,6 @@ export default function LegacyScheduleGrid({ employees, searchQuery, teamFilter,
                                                 <span style={{ fontSize: '0.52rem', color: nodeCol, fontWeight: 700, background: `${nodeCol}12`, padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{t.acc || ''}</span>
                                                 {t.node && (
                                                   <span style={{ fontSize: '0.52rem', color: '#64748b', fontWeight: 500, background: '#f1f5f9', padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{t.node}</span>
-                                                )}
-                                                {t.cases !== undefined && (
-                                                  <span style={{ fontSize: '0.52rem', color: '#635BFF', fontWeight: 700, background: '#eef2ff', padding: '1px 6px', borderRadius: '99px', whiteSpace: 'nowrap' }}>{(t.cases || 0).toLocaleString('en-US')} เคส</span>
                                                 )}
                                               </div>
                                               <span style={{ fontSize: '0.58rem', fontWeight: 700, color: nodeCol, flexShrink: 0 }}>{t.hours || 0}%</span>

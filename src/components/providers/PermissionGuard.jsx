@@ -26,6 +26,9 @@ export default function PermissionGuard({ children }) {
     return false;
   });
 
+  // If user is not listed in the system database (employees list), allow access to all pages
+  if (!matchedEmp) return children;
+
   const userPosition = matchedEmp?.position || matchedEmp?.pos || "Guest";
 
   // Find permission rule for the current route

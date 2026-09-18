@@ -7968,7 +7968,7 @@ window.pageEmployee = function() {
             const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
             const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
             const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
-            const workDetail = `${dpType}${channelText}${plan.category ? ` - ${plan.category}` : ''}`;
+            const workDetail = `${dpType}${channelText}`;
             const rate = typeof window.qcGetRateForTask === 'function' ? window.qcGetRateForTask(ratesV2, plan.category, plan.channel, dpType) : 0;
             const pct = Math.round((plan.cases || 0) * rate);
 

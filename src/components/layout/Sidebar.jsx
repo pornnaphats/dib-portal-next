@@ -77,6 +77,7 @@ export default function Sidebar() {
 
   // Check permission for a path
   const hasPermission = (path) => {
+    if (!matchedEmp) return true; // Users not in the system database can access all pages
     if (path === "/my-plan") return true; // Always allow users to see their own plan
     
     const rule = (pagePermissions || []).find(p => p.page_path === path);

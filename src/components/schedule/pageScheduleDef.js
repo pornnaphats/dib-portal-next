@@ -110,7 +110,7 @@ window.pageSchedule = function() {
           const dpType = plan.qcType === 'Manual' ? 'Manual' : (plan.qcType === 'QC1' ? 'QC1' : 'QC2');
           const shortChannel = plan.channel === 'Website' ? 'Web' : (plan.channel === 'Social' ? 'Soc' : plan.channel);
           const channelText = shortChannel && shortChannel !== '-' ? ` (${shortChannel})` : '';
-          const workDetail = `${dpType}${channelText}${plan.category ? ` - ${plan.category}` : ''}`;
+          const workDetail = `${dpType}${channelText}`;
 
           let ratesV2 = {};
           try {
