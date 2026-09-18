@@ -3,22 +3,26 @@ window.showOrgEmployeeDetails = function(nodeId) {
     const sidebar = document.getElementById('teamStructureSidebar');
     if (!sidebar) return;
 
-    // find node in org structure
-    function findNode(node, id) {
+    // find node in org structure with cycle protection
+    function findNode(node, id, visited = new Set()) {
+      if (!node || !node.id || visited.has(node.id)) return null;
+      visited.add(node.id);
       if (node.id === id) return node;
       if (node.children) {
         for (let child of node.children) {
-          const found = findNode(child, id);
+          const found = findNode(child, id, visited);
           if (found) return found;
         }
       }
       return null;
     }
 
-    let structure = null;
-    try {
-      structure = JSON.parse(localStorage.getItem('org_structure'));
-    } catch(e) {}
+    let structure = window.orgLoadStructure ? window.orgLoadStructure() : null;
+    if (!structure) {
+      try {
+        structure = JSON.parse(localStorage.getItem('org_structure'));
+      } catch(e) {}
+    }
     
     if (!structure) return;
     
@@ -45,24 +49,28 @@ window.showOrgEmployeeDetails = function(nodeId) {
         avatarHtml = `<div style="width:100px; height:100px; border-radius:50%; background:linear-gradient(135deg, #818cf8 0%, #635BFF 100%); color:#ffffff; display:flex; align-items:center; justify-content:center; font-family:'Prompt', sans-serif; font-weight:400; font-size:${nick.length > 5 ? '14px' : (nick.length > 3 ? '16px' : '20px')}; line-height:1.2; box-shadow:0 8px 24px rgba(99, 91, 255, 0.35); margin: 0 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 8px; box-sizing:border-box;">${nick}</div>`;
     }
     
-    // Calculate team size (descendants)
-    function countDescendants(n) {
+    // Calculate team size (descendants) with cycle protection
+    function countDescendants(n, visited = new Set()) {
       let count = 0;
+      if (!n || !n.id || visited.has(n.id)) return 0;
+      visited.add(n.id);
       if (n.children) {
         count += n.children.length;
-        n.children.forEach(c => count += countDescendants(c));
+        n.children.forEach(c => count += countDescendants(c, visited));
       }
       return count;
     }
     const teamSize = countDescendants(node);
 
-    // Find reporting to
+    // Find reporting to with cycle protection
     let reporting = '-';
-    function findParent(current, targetId) {
+    function findParent(current, targetId, visited = new Set()) {
+      if (!current || !current.id || visited.has(current.id)) return null;
+      visited.add(current.id);
       if (current.children) {
-        if (current.children.some(c => c.id === targetId)) return current;
+        if (current.children.some(c => c && c.id === targetId)) return current;
         for (let child of current.children) {
-          const p = findParent(child, targetId);
+          const p = findParent(child, targetId, visited);
           if (p) return p;
         }
       }
@@ -164,6 +172,23 @@ window.showOrgEmployeeDetails = function(nodeId) {
      return root;
   };
 
+  window.orgSanitizeStructure = function(node, visited = new Set()) {
+     if (!node || typeof node !== 'object') return window.orgGetDefaultStructure();
+     const id = node.id || ('node_' + Math.random().toString(36).substring(2, 9));
+     if (visited.has(id)) return null;
+     visited.add(id);
+
+     const cleanNode = { ...node, id };
+     if (Array.isArray(node.children)) {
+        cleanNode.children = node.children
+           .map(c => window.orgSanitizeStructure(c, visited))
+           .filter(Boolean);
+     } else {
+        cleanNode.children = [];
+     }
+     return cleanNode;
+  };
+
   window.orgLoadStructure = function() {
      let struct = window.orgStructureData;
      if (!struct) {
@@ -189,7 +214,7 @@ window.showOrgEmployeeDetails = function(nodeId) {
          window.orgSaveStructure(struct);
      }
      
-     return struct;
+     return window.orgSanitizeStructure(struct);
   };
 
   window.orgSaveStructure = function(struct) {
@@ -560,17 +585,21 @@ window.showOrgEmployeeDetails = function(nodeId) {
      if (!container) return;
      const struct = window.orgLoadStructure();
      
-     function countPeople(node) {
+     function countPeople(node, visited = new Set()) {
+         if (!node || !node.id || visited.has(node.id)) return 0;
+         visited.add(node.id);
          let count = node.empId ? 1 : 0;
          if (node.children) {
              node.children.forEach(c => {
-                 count += countPeople(c);
+                 count += countPeople(c, visited);
              });
          }
          return count;
      }
 
-     function renderNode(node, level = 0, isVerticalStack = false, branchIndex = 0) {
+     function renderNode(node, level = 0, isVerticalStack = false, branchIndex = 0, visited = new Set()) {
+         if (!node || !node.id || visited.has(node.id)) return '';
+         visited.add(node.id);
          let emps = [];
          if (node.empId && typeof window.DATA !== 'undefined' && (window.DATA && window.DATA.employees)) {
              const ids = node.empId.split(',');
@@ -630,8 +659,6 @@ window.showOrgEmployeeDetails = function(nodeId) {
                  if (p && p.avatar && p.avatar.startsWith('http') && !p.avatar.includes('ui-avatars.com')) {
                      avatarHtml = `<img src="${p.avatar}" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.08);">`;
                  } else {
-                     const posBg = typeof getPosBgColor === 'function' ? getPosBgColor(pPos) : '#93c5fd';
-                     const posText = typeof getPosTextColor === 'function' ? getPosTextColor(pPos) : '#000';
                      const nick = (p && p.nickname && p.nickname !== '-') ? p.nickname : pName.split(' ')[0];
                      avatarHtml = `<div style="width:${size}px; height:${size}px; border-radius:50%; background:linear-gradient(135deg, #818cf8 0%, #635BFF 100%); color:#ffffff; display:flex; align-items:center; justify-content:center; font-family:'Prompt', sans-serif; font-weight:400; font-size:${nick.length > 5 ? '9px' : (nick.length > 3 ? '11px' : '13px')}; line-height:1.2; padding:0 4px; box-sizing:border-box; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border:none; box-shadow:0 4px 12px rgba(99, 91, 255, 0.35);">${nick}</div>`;
                  }
@@ -743,7 +770,7 @@ window.showOrgEmployeeDetails = function(nodeId) {
              
              node.children.forEach((c, idx) => {
                  const childBranchIndex = level === 0 ? idx : branchIndex;
-                 html += renderNode(c, level + 1, willBeVertical, childBranchIndex);
+                 html += renderNode(c, level + 1, willBeVertical, childBranchIndex, visited);
              });
              html += `</ul>`;
          }
@@ -779,13 +806,15 @@ window.showOrgEmployeeDetails = function(nodeId) {
          
          const wrapperRect = wrapper.getBoundingClientRect();
          
-         function findNodesWithExtraParents(n, list) {
+         function findNodesWithExtraParents(n, list, visited = new Set()) {
+             if (!n || !n.id || visited.has(n.id)) return;
+             visited.add(n.id);
              if (n.extraParentIds && n.extraParentIds.length > 0) {
                  list.push(n);
              }
              if (n.children) {
                  for (let c of n.children) {
-                     findNodesWithExtraParents(c, list);
+                     findNodesWithExtraParents(c, list, visited);
                  }
              }
          }
@@ -821,7 +850,6 @@ window.showOrgEmployeeDetails = function(nodeId) {
      }, 100);
   };
 
-  // ---- Auto-scroll to current user's card ----
   window.orgScrollToCurrentUser = function() {
     const email = window.currentUserEmail;
     if (!email) return;
@@ -830,19 +858,23 @@ window.showOrgEmployeeDetails = function(nodeId) {
     const me = employees.find(e => e.email && e.email.toLowerCase() === email.toLowerCase());
     if (!me) return;
 
-    // Find the node element that contains this employee
-    let structure = null;
-    try { structure = JSON.parse(localStorage.getItem('org_structure')); } catch(e) {}
+    // Find the node element that contains this employee using sanitized structure
+    let structure = window.orgLoadStructure ? window.orgLoadStructure() : null;
+    if (!structure) {
+       try { structure = JSON.parse(localStorage.getItem('org_structure')); } catch(e) {}
+    }
     if (!structure) return;
 
-    function findNodeForEmp(node, empId) {
+    function findNodeForEmp(node, empId, visited = new Set()) {
+      if (!node || !node.id || visited.has(node.id)) return null;
+      visited.add(node.id);
       if (node.empId) {
         const ids = node.empId.split(',');
         if (ids.includes(empId)) return node.id;
       }
       if (node.children) {
         for (let c of node.children) {
-          const found = findNodeForEmp(c, empId);
+          const found = findNodeForEmp(c, empId, visited);
           if (found) return found;
         }
       }

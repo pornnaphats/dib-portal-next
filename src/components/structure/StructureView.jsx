@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import * as lucide from "lucide";
 
 // Static imports for core legacy logic
+import "../legacy-pages/legacyGlobalHelpers.js";
 import "../employee/legacyEmployeeLogic.js";
 import { initModernOrg } from "./legacyOrgLogic.js";
 
@@ -44,8 +45,6 @@ export default function StructureView() {
       }
     };
 
-    const hasDataOnMount = !!(window.DATA && window.DATA.employees && window.DATA.employees.length > 0);
-
     // RENDER IMMEDIATELY (Zero Promises, Zero Wait)
     if (containerRef.current && typeof window.pageStructureTeam === "function") {
       containerRef.current.innerHTML = window.pageStructureTeam();
@@ -57,10 +56,9 @@ export default function StructureView() {
       import("../legacy-pages/legacyDataFetcher.js").then(mod => {
         if (mod?.fetchAndSetLegacyData) {
           mod.fetchAndSetLegacyData().then(() => {
-            if (!hasDataOnMount && containerRef.current && typeof window.pageStructureTeam === "function") {
-              containerRef.current.innerHTML = window.pageStructureTeam();
-              window.lucide.createIcons();
-              // Auto-scroll will be triggered by the zoom-wrapped orgRenderTree
+            if (containerRef.current && typeof window.orgRenderTree === "function") {
+              window.orgRenderTree();
+              if (window.lucide) window.lucide.createIcons();
             }
           }).catch(() => {});
         }
