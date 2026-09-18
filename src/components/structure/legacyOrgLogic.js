@@ -498,7 +498,6 @@ window.showOrgEmployeeDetails = function(nodeId) {
                      let parentOptions = '';
 
                      const eligibleNodes = window._orgEditParentNodes.filter(n => {
-                         if (curParentIds.includes(n.id)) return true;
                          if (!q) return true;
                          
                          let match = (n.title && n.title.toLowerCase().includes(q)) || (n.dept && n.dept.toLowerCase().includes(q));
@@ -517,7 +516,9 @@ window.showOrgEmployeeDetails = function(nodeId) {
                          return match;
                      });
 
-                     eligibleNodes.forEach(n => {
+                     const hasCurrentParentMatch = eligibleNodes.some(n => curParentIds.includes(n.id));
+
+                     eligibleNodes.forEach((n, idx) => {
                          let empName = n.title;
                          if (n.empId && typeof window.DATA !== 'undefined' && (window.DATA && window.DATA.employees)) {
                              const ids = n.empId.split(',');
@@ -529,7 +530,8 @@ window.showOrgEmployeeDetails = function(nodeId) {
                                  }).join(' & ');
                              }
                          }
-                         const isSelected = curParentIds.includes(n.id) ? 'selected' : '';
+                         const shouldSelect = hasCurrentParentMatch ? curParentIds.includes(n.id) : (q ? idx === 0 : curParentIds.includes(n.id));
+                         const isSelected = shouldSelect ? 'selected' : '';
                          parentOptions += `<option value="${n.id}" ${isSelected}>${empName} (${n.dept || n.title})</option>`;
                      });
 
@@ -1312,7 +1314,7 @@ window.showOrgEmployeeDetails = function(nodeId) {
                  <label style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">รายงานตรงต่อ (หัวหน้า)</label>
                  <div style="position:relative; margin-bottom:6px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="orgEditParentSearch" placeholder="ค้นหาชื่อ / ชื่อเล่น หัวหน้า..." class="org-input" style="padding-left:34px; font-size:0.83rem; background:#f8fafc; border-radius:10px; height:36px; border:1px solid #cbd5e1;" onkeyup="window.orgRenderParentOptions(this.value)">
+                    <input type="text" id="orgEditParentSearch" placeholder="ค้นหาชื่อ / ชื่อเล่น หัวหน้า..." class="org-input" style="padding-left:34px; font-size:0.83rem; background:#f8fafc; border-radius:10px; height:36px; border:1px solid #cbd5e1;" oninput="window.orgRenderParentOptions(this.value)" onkeyup="window.orgRenderParentOptions(this.value)">
                  </div>
                  <select id="orgEditParent" class="org-input" data-custom-select="skip" style="border-radius:10px; height:38px; font-size:0.83rem; border:1px solid #cbd5e1; background:#ffffff;">
                     <!-- Options populated by JS -->
