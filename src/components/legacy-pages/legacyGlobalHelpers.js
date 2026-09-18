@@ -998,7 +998,7 @@ if (typeof window !== 'undefined') {
 
       const selects = document.querySelectorAll('select.select-input:not([data-custom-select]), select.form-input:not([data-custom-select]), select:not([data-custom-select])');
       selects.forEach(select => {
-        if (select.classList.contains('flatpickr-monthDropdown-month') || select.closest('.flatpickr-calendar')) {
+        if (select.multiple || select.hasAttribute('multiple') || select.getAttribute('data-custom-select') === 'skip' || select.closest('#orgEditModal') || select.closest('.org-modal-content') || select.classList.contains('flatpickr-monthDropdown-month') || select.closest('.flatpickr-calendar')) {
           select.setAttribute('data-custom-select', 'skip');
           return;
         }

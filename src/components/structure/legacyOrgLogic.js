@@ -418,10 +418,12 @@ window.showOrgEmployeeDetails = function(nodeId) {
                      if (!q) return true;
                      return (e.id && e.id.toLowerCase().includes(q)) || 
                             (e.name && e.name.toLowerCase().includes(q)) || 
-                            (e.nameEn && e.nameEn.toLowerCase().includes(q));
+                            (e.nameEn && e.nameEn.toLowerCase().includes(q)) ||
+                            (e.nickname && e.nickname !== '-' && e.nickname.toLowerCase().includes(q));
                  });
                  emps.forEach(e => {
-                     const name = e.name + (e.nameEn ? ' (' + e.nameEn + ')' : '');
+                     const nickText = (e.nickname && e.nickname !== '-') ? ` (${e.nickname})` : '';
+                     const name = e.name + nickText + (e.nameEn ? ' [' + e.nameEn + ']' : '');
                      const isSelected = (window._currentEditEmpId && window._currentEditEmpId.split(',').includes(e.id)) ? 'selected' : '';
                      empOptions += `<option value="${e.id}" ${isSelected}>${e.id} - ${name}</option>`;
                  });
@@ -440,7 +442,7 @@ window.showOrgEmployeeDetails = function(nodeId) {
              };
          }
          
-         // Populate parent dropdown
+         // Populate parent dropdown with nickname search support
          const parentSelect = document.getElementById('orgEditParent');
          if (parentSelect) {
              let currentParentIds = [];
@@ -459,12 +461,21 @@ window.showOrgEmployeeDetails = function(nodeId) {
              }
              traverseAndFindParent(struct, null);
 
+             window._orgEditCurrentParentIds = currentParentIds;
+
              if (currentParentIds.length === 0 && struct.id === nodeId) {
                  parentSelect.innerHTML = '<option value="">-- This is the Root Node --</option>';
                  parentSelect.disabled = true;
+                 const parentSearch = document.getElementById('orgEditParentSearch');
+                 if (parentSearch) parentSearch.disabled = true;
              } else {
-                 let parentOptions = '';
-                 
+                 parentSelect.disabled = false;
+                 const parentSearch = document.getElementById('orgEditParentSearch');
+                 if (parentSearch) {
+                     parentSearch.disabled = false;
+                     parentSearch.value = '';
+                 }
+
                  // Prevent circular reference
                  function isDescendant(n, targetId) {
                      if (!n.children) return false;
@@ -474,19 +485,59 @@ window.showOrgEmployeeDetails = function(nodeId) {
                      return false;
                  }
                  
-                 allNodes.forEach(n => {
-                     if (n.id !== nodeId && !isDescendant(node, n.id)) {
+                 window._orgEditParentNodes = allNodes.filter(n => n.id !== nodeId && !isDescendant(node, n.id));
+                 
+                 window.orgRenderParentOptions = function(query = '') {
+                     const pSelect = document.getElementById('orgEditParent');
+                     if (!pSelect || !window._orgEditParentNodes) return;
+                     
+                     const q = query.toLowerCase().trim();
+                     const curParentIds = window._orgEditCurrentParentIds || [];
+                     let parentOptions = '';
+
+                     const eligibleNodes = window._orgEditParentNodes.filter(n => {
+                         if (curParentIds.includes(n.id)) return true;
+                         if (!q) return true;
+                         
+                         let match = (n.title && n.title.toLowerCase().includes(q)) || (n.dept && n.dept.toLowerCase().includes(q));
+                         if (n.empId && typeof window.DATA !== 'undefined' && (window.DATA && window.DATA.employees)) {
+                             const ids = n.empId.split(',');
+                             const emps = ids.map(id => (window.DATA && window.DATA.employees).find(x => x.id === id)).filter(Boolean);
+                             emps.forEach(e => {
+                                 if ((e.id && e.id.toLowerCase().includes(q)) ||
+                                     (e.name && e.name.toLowerCase().includes(q)) ||
+                                     (e.nameEn && e.nameEn.toLowerCase().includes(q)) ||
+                                     (e.nickname && e.nickname !== '-' && e.nickname.toLowerCase().includes(q))) {
+                                     match = true;
+                                 }
+                             });
+                         }
+                         return match;
+                     });
+
+                     eligibleNodes.forEach(n => {
                          let empName = n.title;
                          if (n.empId && typeof window.DATA !== 'undefined' && (window.DATA && window.DATA.employees)) {
                              const ids = n.empId.split(',');
                              const emps = ids.map(id => (window.DATA && window.DATA.employees).find(x => x.id === id)).filter(Boolean);
-                             if (emps.length > 0) empName = emps.map(e => e.name).join(' & ');
+                             if (emps.length > 0) {
+                                 empName = emps.map(e => {
+                                     const nick = (e.nickname && e.nickname !== '-') ? ` (${e.nickname})` : '';
+                                     return e.name + nick;
+                                 }).join(' & ');
+                             }
                          }
-                         parentOptions += `<option value="${n.id}" ${currentParentIds.includes(n.id) ? 'selected' : ''}>${empName} (${n.dept || n.title})</option>`;
+                         const isSelected = curParentIds.includes(n.id) ? 'selected' : '';
+                         parentOptions += `<option value="${n.id}" ${isSelected}>${empName} (${n.dept || n.title})</option>`;
+                     });
+
+                     if (!parentOptions) {
+                         parentOptions = '<option value="">-- ไม่พบผู้บังคับบัญชาที่ค้นหา --</option>';
                      }
-                 });
-                 parentSelect.innerHTML = parentOptions;
-                 parentSelect.disabled = false;
+                     pSelect.innerHTML = parentOptions;
+                 };
+
+                 window.orgRenderParentOptions();
              }
          }
          
@@ -1208,37 +1259,39 @@ window.showOrgEmployeeDetails = function(nodeId) {
         
         <!-- Edit Modal Overlay -->
         <div class="org-modal-overlay" id="orgEditModal">
-           <div class="org-modal-content">
-              <div class="org-modal-title">แก้ไขตำแหน่ง</div>
+           <div class="org-modal-content" style="width: 440px; border-radius: 20px; padding: 28px; background: #ffffff;">
+              <div class="org-modal-title" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #1e293b;">แก้ไขตำแหน่ง</div>
               
-              <div class="org-input-group">
-                 <label>ชื่อตำแหน่ง</label>
-                 <select id="orgEditTitle" class="org-input"></select>
+              <div class="org-input-group" style="margin-bottom: 16px;">
+                 <label style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">ชื่อตำแหน่ง</label>
+                 <select id="orgEditTitle" class="org-input" data-custom-select="skip" style="border-radius: 10px; height: 38px; font-size: 0.85rem; border: 1px solid #cbd5e1; background: #ffffff;"></select>
               </div>
               
-              <!-- Department input removed -->
-              
-              <div class="org-input-group">
-                 <label>มอบหมายพนักงาน <small style="color:#94a3b8; font-weight:normal;">(กดปุ่ม Ctrl หรือ Cmd ค้างไว้ เพื่อเลือกหลายคน หรือกรณี Co-Heads)</small></label>
-                 <div style="position:relative; margin-bottom:8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="orgEditEmpSearch" placeholder="ค้นหาชื่อพนักงานที่ต้องการมอบหมาย..." class="org-input" style="padding-left:32px; font-size:0.85rem; background:#f8fafc;" onkeyup="window.orgRenderEmpOptions(this.value)">
+              <div class="org-input-group" style="margin-bottom: 16px;">
+                 <label style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">มอบหมายพนักงาน <small style="color:#94a3b8; font-weight:normal;">(เลือกหลายคนได้โดยกด Ctrl/Cmd)</small></label>
+                 <div style="position:relative; margin-bottom:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="orgEditEmpSearch" placeholder="ค้นหาชื่อ / ชื่อเล่น พนักงาน..." class="org-input" style="padding-left:34px; font-size:0.83rem; background:#f8fafc; border-radius:10px; height:36px; border:1px solid #cbd5e1;" onkeyup="window.orgRenderEmpOptions(this.value)">
                  </div>
-                 <select id="orgEditEmp" class="org-input" multiple style="height:100px;">
+                 <select id="orgEditEmp" class="org-input" multiple data-custom-select="skip" style="height:105px; border-radius:10px; font-size:0.82rem; padding:6px 10px; border:1px solid #cbd5e1; background:#ffffff;">
                     <!-- Options populated by JS -->
                  </select>
               </div>
               
-              <div class="org-input-group">
-                 <label>รายงานตรงต่อ (หัวหน้า)</label>
-                 <select id="orgEditParent" class="org-input">
+              <div class="org-input-group" style="margin-bottom: 20px;">
+                 <label style="font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; display: block;">รายงานตรงต่อ (หัวหน้า)</label>
+                 <div style="position:relative; margin-bottom:6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="orgEditParentSearch" placeholder="ค้นหาชื่อ / ชื่อเล่น หัวหน้า..." class="org-input" style="padding-left:34px; font-size:0.83rem; background:#f8fafc; border-radius:10px; height:36px; border:1px solid #cbd5e1;" onkeyup="window.orgRenderParentOptions(this.value)">
+                 </div>
+                 <select id="orgEditParent" class="org-input" data-custom-select="skip" style="border-radius:10px; height:38px; font-size:0.83rem; border:1px solid #cbd5e1; background:#ffffff;">
                     <!-- Options populated by JS -->
                  </select>
               </div>
               
-              <div class="org-modal-actions">
-                 <button onclick="window.orgCloseModal()" class="btn btn-outline" style="font-family:'Kanit', sans-serif;">ยกเลิก</button>
-                 <button onclick="window.orgSaveEdit()" class="btn btn-primary" style="font-family:'Kanit', sans-serif; min-width:120px; justify-content:center;">บันทึกข้อมูล</button>
+              <div class="org-modal-actions" style="display:flex; justify-content:flex-end; gap:10px;">
+                 <button onclick="window.orgCloseModal()" class="btn btn-outline" style="font-family:'Kanit', sans-serif; border-radius:99px !important; padding:6px 18px; font-size:0.83rem;">ยกเลิก</button>
+                 <button onclick="window.orgSaveEdit()" class="btn btn-primary" style="font-family:'Kanit', sans-serif; border-radius:99px !important; padding:6px 20px; font-size:0.83rem; background:#635BFF; color:#fff;">บันทึกข้อมูล</button>
               </div>
            </div>
         </div>
