@@ -3539,11 +3539,13 @@ window.pageEmployee = function() {
   window.orgMoveNode = function(nodeId, direction) {
      const struct = window.orgLoadStructure();
      
-     function findParent(node, targetId) {
+     function findParent(node, targetId, visited = new Set()) {
+        if (!node || !node.id || visited.has(node.id)) return null;
+        visited.add(node.id);
         if (node.children) {
            for (let c of node.children) {
-              if (c.id === targetId) return node;
-              const found = findParent(c, targetId);
+              if (c && c.id === targetId) return node;
+              const found = findParent(c, targetId, visited);
               if (found) return found;
            }
         }
@@ -3553,7 +3555,7 @@ window.pageEmployee = function() {
      const parent = findParent(struct, nodeId);
      if (!parent || !parent.children) return;
      
-     const idx = parent.children.findIndex(c => c.id === nodeId);
+     const idx = parent.children.findIndex(c => c && c.id === nodeId);
      if (idx === -1) return;
      
      const newIdx = idx + direction;
@@ -3887,10 +3889,10 @@ window.pageEmployee = function() {
                   </button>` : ''}
                </div>
                ${level > 0 ? `
-               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', -1)" style="position:absolute; left:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10; transition:all 0.15s;" title="Move Left" onmouseover="this.style.background='#d97706';this.style.transform='translateY(-50%) scale(1.15)'" onmouseout="this.style.background='#f59e0b';this.style.transform='translateY(-50%) scale(1)'">
+               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', -1)" class="org-move-btn org-move-btn-left" title="Move Left">
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                </button>
-               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', 1)" style="position:absolute; right:-16px; top:50%; transform:translateY(-50%); background:#f59e0b; color:#fff; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10; transition:all 0.15s;" title="Move Right" onmouseover="this.style.background='#d97706';this.style.transform='translateY(-50%) scale(1.15)'" onmouseout="this.style.background='#f59e0b';this.style.transform='translateY(-50%) scale(1)'">
+               <button onclick="event.stopPropagation(); window.orgMoveNode('${node.id}', 1)" class="org-move-btn org-move-btn-right" title="Move Right">
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>` : ''}
                <button onclick="event.stopPropagation(); window.orgAddNode('${node.id}')" style="position:absolute; bottom:-14px; left:50%; transform:translateX(-50%); background:#10b981; color:#fff; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-sm); z-index:10;" title="Add Subordinate">
@@ -4125,6 +4127,34 @@ window.pageEmployee = function() {
         style.innerHTML = `
           .org-tree-wrapper ul {
             position: relative;
+          }
+          .org-move-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f59e0b;
+            color: #ffffff;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            z-index: 10;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+          }
+          .org-move-btn:hover {
+            background: #d97706;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.3);
+          }
+          .org-move-btn-left {
+            left: -16px;
+          }
+          .org-move-btn-right {
+            right: -16px;
           }
           /* Horizontal Tree Styles */
           .org-horizontal-li {
